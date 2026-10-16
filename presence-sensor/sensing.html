@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sensing Modalities — Presence Sensor</title>
+<link rel="stylesheet" href="assets/style.css">
+<script>(function(){try{var t=null;var m=window.location.search.match(/[?&]theme=(dark|light)/);if(m){t=m[1];}if(!t&&window.name){try{var wn=JSON.parse(window.name);if(wn&&wn.psTheme)t=wn.psTheme;}catch(e){}}if(!t){try{t=localStorage.getItem('ps-theme');}catch(e){}}if(!t){try{t=sessionStorage.getItem('ps-theme');}catch(e){}}if(!t&&document.cookie){var cm=document.cookie.match(/(?:^|;\s*)ps-theme=(dark|light)/);if(cm)t=cm[1];}if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
+</head>
+<body>
+<div id="reading-progress"></div>
+<div class="wrap">
+
+<aside class="sidebar">
+  <div class="brand">
+    <div class="brand-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/>
+      </svg>
+    </div>
+    <div>Presence Sensor<small>Design Wiki · v1.5</small></div>
+  </div>
+
+  <details class="nav-toggle" open>
+    <summary>Contents</summary>
+    <div class="nav-group">
+      <h4>Decided</h4>
+      <a href="index.html"><span>The design</span></a>
+      <a href="control.html"><span>Control logic</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Reference</h4>
+      <a href="mounting.html"><span>Mounting &amp; fan physics</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Technical choices</h4>
+      <a href="sensing.html" aria-current="page">
+        <span>Sensing modalities</span>
+        <span class="badge badge-accent">Physics</span>
+      </a>
+      <a href="radio.html"><span>Local transport</span></a>
+      <a href="hardware.html"><span>Hardware &amp; buying guide</span></a>
+    </div>
+  </details>
+
+  <div class="sidebar-footer">
+    <div><b>Non-Commercial DIY Guide</b></div>
+    <div class="license-pill">
+      <span>CC BY-NC-SA 4.0</span> · <span>MIT</span>
+    </div>
+    <div style="margin-top:.45rem;">
+      <a href="https://robu.in" target="_blank" rel="noopener">Priority store: <b>robu.in</b></a>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+<div class="doc wide">
+
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="index.html">Wiki</a> &rsaquo;
+  <span>Technical choice</span> &rsaquo;
+    <span>Sensing Modalities</span>
+  </nav>
+
+  <h1>Sensing Modalities</h1>
+  <p class="lede">The single most consequential engineering choice in the project. This page documents the physical physics separating motion sensors from true presence sensors.</p>
+
+  <div class="quick-nav">
+    <span class="quick-nav-title">Jump to:</span>
+    <a href="#locked">The Locked Modality</a>
+    <a href="#comparison">Modality Comparison</a>
+    <a href="#motion-vs-presence">Motion vs. Presence</a>
+    <a href="#fmcw">How mmWave FMCW Works</a>
+    <a href="#visuals">Component Macro Photos</a>
+  </div>
+
+  <div class="box verdict" id="locked">
+    <span class="label">Decided Architecture</span>
+    <p><strong>HLK-LD2410 24 GHz mmWave FMCW radar.</strong> It can detect moving and micro-moving human targets, making it more suitable than PIR for a person seated reading or resting. Detection still depends on placement, target posture, sensitivity, and environmental reflections; it is not a guarantee of continuous occupancy detection.</p>
+  </div>
+
+  <h2 id="comparison">Evaluating Five Competing Modalities</h2>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Modality Tested</th><th>Sensor Type</th><th>Decisive Failure Reason</th><th>Verdict</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>PIR (Passive Infrared)</strong></td>
+        <td>AM312 / Panasonic EKMC</td>
+        <td>Motion only. May stop reporting after a person sits still, so it cannot reliably maintain light while reading.</td>
+        <td><span class="badge badge-warn">Disqualified</span></td>
+      </tr>
+      <tr>
+        <td><strong>Cheap 24 GHz Doppler</strong></td>
+        <td>RCWL-0516</td>
+        <td>Gross motion only, single uncalibrated threshold, no distance telemetry. Locks ON continuously near ceiling fans.</td>
+        <td><span class="badge badge-warn">Disqualified</span></td>
+      </tr>
+      <tr>
+        <td><strong>ToF Laser Ranging</strong></td>
+        <td>VL53L1X</td>
+        <td>Measures distance along a 27° narrow cone. Blind to dark clothing; narrow field of view fails for room coverage.</td>
+        <td><span class="badge badge-warn">Inadequate</span></td>
+      </tr>
+      <tr>
+        <td><strong>Camera + AI Pose Model</strong></td>
+        <td>ESP32-S3 Eye / Pi Camera</td>
+        <td>Intrusive privacy concern in bedrooms/living rooms; draws 300–800 mA; fails when occupant is covered by a blanket.</td>
+        <td><span class="badge badge-warn">Rejected</span></td>
+      </tr>
+      <tr>
+        <td><strong>mmWave FMCW Radar</strong></td>
+        <td>HLK-LD2410</td>
+        <td>Distinguishes moving walking targets from stationary breathing micro-motion. Distance gates reject ceiling fans.</td>
+        <td><span class="badge badge-ok">Selected (Optimal)</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2 id="motion-vs-presence">Motion vs. True Presence Detection</h2>
+
+  <p>The distinction between motion sensing and presence sensing is the entire reason radar justifies its modest cost premium over PIR:</p>
+
+  <figure class="diagram-card">
+  <svg viewBox="0 0 720 220" role="img" aria-label="Timeline comparing PIR and radar behaviour when a person sits still">
+    <text x="24" y="32" class="t-fg" font-size="12" font-weight="650">Person walks in, sits down, reads for two hours</text>
+
+    <!-- activity -->
+    <text x="24" y="72" class="t-mut" font-size="11">actual movement</text>
+    <line x1="120" y1="68" x2="660" y2="68" class="s-mut" stroke-width="1"/>
+    <path d="M120 68 L152 68 L152 30 L168 30 L168 68 L250 68 L250 42 L262 42 L262 68 L660 68"
+          style="fill:none;stroke:var(--c-bad);stroke-width:2"/>
+    <text x="420" y="44" font-size="10.5" style="fill:var(--c-bad)">motion flatlines after 20 s</text>
+
+    <!-- PIR -->
+    <text x="24" y="124" class="t-mut" font-size="11">PIR sensor state</text>
+    <path d="M120 120 L660 120" class="s-mut" stroke-width="1"/>
+    <path d="M120 120 L120 86 L270 86 L270 120 L660 120" style="fill:none;stroke:var(--c-fan);stroke-width:2"/>
+    <text x="290" y="102" font-size="10.5" style="fill:var(--c-fan)">drops to 0 &mdash; room assumed vacant</text>
+
+    <!-- radar -->
+    <text x="24" y="176" class="t-mut" font-size="11">mmWave radar state</text>
+    <path d="M120 172 L660 172" class="s-mut" stroke-width="1"/>
+    <path d="M120 172 L120 138 L640 138 L640 172 L660 172" style="fill:none;stroke:var(--c-person);stroke-width:2"/>
+    <text x="400" y="154" font-size="10.5" style="fill:var(--c-person)">&#10003; breathing detected &mdash; sustained presence</text>
+
+    <line x1="120" y1="46" x2="120" y2="196" class="s-mut s-dash" stroke-width="1.2"/>
+    <text x="126" y="204" class="t-mut" font-size="10">entry</text>
+    <line x1="660" y1="46" x2="660" y2="196" class="s-mut s-dash" stroke-width="1.2"/>
+    <text x="656" y="204" class="t-mut" font-size="10" text-anchor="end">departure</text>
+  </svg>
+  <figcaption>
+    <b>PIR vs. mmWave Radar:</b> PIR detects changes in infrared motion and may stop reporting a still occupant. The LD2410 can report micro-motion, but its output must be validated in the installed room and should be treated as a presence signal with known false-positive and false-negative limits.
+  </figcaption>
+  </figure>
+
+  <h2 id="fmcw">How mmWave FMCW Radar Detects Stillness</h2>
+
+  <ol>
+    <li><strong>FMCW processing:</strong> The 24 GHz module uses frequency-modulated continuous-wave radar processing and reports configured distance-gate energy plus moving/static target states. Consult the current Hi-Link manual for implementation-level waveform details.</li>
+    <li><strong>Beat Frequency Mixing:</strong> The reflected echo from the human body mixes with the outgoing chirp. The intermediate beat frequency is linearly proportional to the target's distance.</li>
+    <li><strong>Distance gating:</strong> The LD2410 reports configurable distance gates and target energy over its rated range. Gate numbering and resolution vary by firmware/manual revision, so configure and verify the actual module rather than assuming “Gate 8” is always valid.</li>
+    <li><strong>Micro-Motion Thresholding:</strong> The sensor firmware applies a specialized static energy threshold tuned to 1&ndash;3 mm thoracic excursions caused by human breathing.</li>
+  </ol>
+
+  <!-- ================= VISUALS ================= -->
+  <h2 id="visuals">Photographic Sensor Inspection</h2>
+
+  <div class="product-grid">
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="assets/images/ld2410-radar.jpg" alt="Macro studio photo of HLK-LD2410 microstrip antenna array" loading="lazy">
+        <span class="product-badge">mmWave Core</span>
+      </div>
+      <div class="product-body">
+        <h3 class="product-title">HLK-LD2410 Patch Array</h3>
+        <p class="product-spec">Gold-plated planar microstrip antenna array providing &plusmn;60&deg; azimuth and &plusmn;40&deg; elevation beam coverage. Compact 35x7 mm footprint with 5-pin UART interface.</p>
+        <div class="product-meta">
+          <span class="product-price">&#8377;280 <small>approx.</small></span>
+          <span class="badge badge-accent">Priority: robu.in</span>
+        </div>
+        <div class="product-actions">
+          <a class="btn-robu" href="https://robu.in/?s=LD2410&post_type=product" target="_blank" rel="noopener">Buy on robu.in</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="product-card">
+      <div class="product-img-wrap">
+        <img src="assets/images/gl5528-ldr.jpg" alt="Macro photo of GL5528 cadmium sulfide optical sensor" loading="lazy">
+        <span class="product-badge">Optical Divider</span>
+      </div>
+      <div class="product-body">
+        <h3 class="product-title">GL5528 Optical LDR</h3>
+        <p class="product-spec">Cadmium sulfide (CdS) photo-conductive track under clear epoxy encapsulation. Forms a simple analog voltage divider with a 10 k&Omega; resistor on the ESP32-C6 ADC.</p>
+        <div class="product-meta">
+          <span class="product-price">&#8377;15 <small>set</small></span>
+          <span class="badge badge-ok">In Stock</span>
+        </div>
+        <div class="product-actions">
+          <a class="btn-robu" href="https://robu.in/?s=GL5528+LDR&post_type=product" target="_blank" rel="noopener">Buy on robu.in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="pagenav">
+    <a href="index.html">
+      <span class="dir">Previous Page</span>
+      &larr; The Design &amp; BOM
+    </a>
+    <a class="next" href="mounting.html">
+      <span class="dir">Next Page</span>
+      Mounting &amp; Fan Physics &rarr;
+    </a>
+  </nav>
+
+  <footer class="page-footer">
+    <div>&copy; 2026 Local-First Presence Sensor Project · Educational &amp; DIY Maker Guide</div>
+    <div>Dual-Licensed: <a href="LICENSE.md">CC BY-NC-SA 4.0</a> (Docs &amp; Hardware) · <a href="LICENSE.md">MIT</a> (Firmware)</div>
+  </footer>
+
+</div>
+</main>
+</div>
+
+<button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button>
+<script src="assets/theme.js"></script>
+</body>
+</html>
