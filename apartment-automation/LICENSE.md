@@ -21,9 +21,9 @@ See the full legal text at [https://creativecommons.org/licenses/by-nc-sa/4.0/](
 
 ---
 
-## 2. Firmware & Configuration Code
+## 2. Firmware, Hardware & Configuration Code
 
-All ESPHome configuration files (`.yaml`), C++ custom sensor lambda components, and automation scripts are licensed under the **MIT License**:
+All hardware schematics, configurations, and automation scripts are licensed under the **MIT License**:
 
 ```text
 MIT License

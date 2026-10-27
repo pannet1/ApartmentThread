@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sensing Modalities — Presence Sensor</title>
+<title>Why Radar &mdash; Apartment Automation</title>
 <link rel="stylesheet" href="assets/style.css">
 <script>(function(){try{var t=null;var m=window.location.search.match(/[?&]theme=(dark|light)/);if(m){t=m[1];}if(!t&&window.name){try{var wn=JSON.parse(window.name);if(wn&&wn.psTheme)t=wn.psTheme;}catch(e){}}if(!t){try{t=localStorage.getItem('ps-theme');}catch(e){}}if(!t){try{t=sessionStorage.getItem('ps-theme');}catch(e){}}if(!t&&document.cookie){var cm=document.cookie.match(/(?:^|;\s*)ps-theme=(dark|light)/);if(cm)t=cm[1];}if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
 </head>
@@ -11,45 +11,50 @@
 <div id="reading-progress"></div>
 <div class="wrap">
 
-<aside class="sidebar">
+<aside class="sidebar" data-ui>
   <div class="brand">
     <div class="brand-icon">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/>
       </svg>
     </div>
-    <div>Presence Sensor<small>Design Wiki · v1.5</small></div>
+    <div>Apartment Automation<small>Build Wiki · v2.0</small></div>
   </div>
 
   <details class="nav-toggle" open>
     <summary>Contents</summary>
     <div class="nav-group">
-      <h4>Decided</h4>
+      <h4>Start here</h4>
       <a href="index.html"><span>The design</span></a>
-      <a href="control.html"><span>Control logic</span></a>
+      <a href="bom.html"><span>Buy list</span><span class="badge badge-accent">5 components</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Components</h4>
+      <a href="sensor.html"><span>Presence sensor</span><span class="badge badge-warn">PS</span></a>
+      <a href="aziot.html"><span>Aziot switch</span><span class="badge badge-warn">SW</span></a><a href="server.html"><span>Server</span><span class="badge badge-warn">SRV</span></a>
+      <a href="thread-router.html"><span>Thread router</span><span class="badge badge-warn">BR</span></a>
+      <a href="bathroom.html"><span>Bathroom input</span><span class="badge badge-warn">BATH</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Set up</h4>
+      <a href="install.html"><span>Install order</span></a>
+      <a href="rooms.html"><span>HA automations</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Checks</h4>
+      <a href="open.html"><span>Open items</span><span class="badge badge-warn">12</span></a>
     </div>
     <div class="nav-group">
       <h4>Reference</h4>
-      <a href="mounting.html"><span>Mounting &amp; fan physics</span></a>
-    </div>
-    <div class="nav-group">
-      <h4>Technical choices</h4>
-      <a href="sensing.html" aria-current="page">
-        <span>Sensing modalities</span>
-        <span class="badge badge-accent">Physics</span>
-      </a>
-      <a href="radio.html"><span>Local transport</span></a>
-      <a href="hardware.html"><span>Hardware &amp; buying guide</span></a>
+      <a href="mounting.html"><span>Radar placement</span></a>
+      <a href="sensing.html" aria-current="page"><span>Why radar</span></a>
     </div>
   </details>
 
   <div class="sidebar-footer">
-    <div><b>Non-Commercial DIY Guide</b></div>
+    <div><b>Local-first · India build</b></div>
     <div class="license-pill">
-      <span>CC BY-NC-SA 4.0</span> · <span>MIT</span>
-    </div>
-    <div style="margin-top:.45rem;">
-      <a href="https://robu.in" target="_blank" rel="noopener">Priority store: <b>robu.in</b></a>
+      <span>Home Assistant</span>
     </div>
   </div>
 </aside>
@@ -59,25 +64,24 @@
 
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="index.html">Wiki</a> &rsaquo;
-  <span>Technical choice</span> &rsaquo;
-    <span>Sensing Modalities</span>
+  <span>Reference</span> &rsaquo;
+    <span>Why radar</span>
   </nav>
 
-  <h1>Sensing Modalities</h1>
-  <p class="lede">The single most consequential engineering choice in the project. This page documents the physical physics separating motion sensors from true presence sensors.</p>
+  <h1>Why Radar</h1>
+  <p class="lede">The one sensing choice the whole system hangs on. A motion sensor and a presence sensor are different things &mdash; this page is the physics that separates them.</p>
 
   <div class="quick-nav">
     <span class="quick-nav-title">Jump to:</span>
-    <a href="#locked">The Locked Modality</a>
-    <a href="#comparison">Modality Comparison</a>
-    <a href="#motion-vs-presence">Motion vs. Presence</a>
-    <a href="#fmcw">How mmWave FMCW Works</a>
-    <a href="#visuals">Component Macro Photos</a>
+    <a href="#locked">The selected sensor</a>
+    <a href="#comparison">Modality comparison</a>
+    <a href="#motion-vs-presence">Motion vs. presence</a>
+    <a href="#fmcw">How FMCW detects stillness</a>
   </div>
 
   <div class="box verdict" id="locked">
-    <span class="label">Decided Architecture</span>
-    <p><strong>HLK-LD2410 24 GHz mmWave FMCW radar.</strong> It can detect moving and micro-moving human targets, making it more suitable than PIR for a person seated reading or resting. Detection still depends on placement, target posture, sensitivity, and environmental reflections; it is not a guarantee of continuous occupancy detection.</p>
+    <span class="label">Selected</span>
+    <p><strong>HLK-LD2410S 24 GHz mmWave FMCW radar.</strong> It detects moving <em>and</em> micro-moving human targets, so it works for a person seated reading &mdash; which no PIR does. Rated 10 m moving, 4 m stationary, 0.04&ndash;0.6 mA average. Detection still depends on placement, posture and reflections: validate it in the actual room. <a href="sensor.html">Build details</a>.</p>
   </div>
 
   <h2 id="comparison">Evaluating Five Competing Modalities</h2>
@@ -112,7 +116,7 @@
       </tr>
       <tr>
         <td><strong>mmWave FMCW Radar</strong></td>
-        <td>HLK-LD2410</td>
+        <td>HLK-LD2410S</td>
         <td>Distinguishes moving walking targets from stationary breathing micro-motion. Distance gates reject ceiling fans.</td>
         <td><span class="badge badge-ok">Selected (Optimal)</span></td>
       </tr>
@@ -153,7 +157,7 @@
     <text x="656" y="204" class="t-mut" font-size="10" text-anchor="end">departure</text>
   </svg>
   <figcaption>
-    <b>PIR vs. mmWave Radar:</b> PIR detects changes in infrared motion and may stop reporting a still occupant. The LD2410 can report micro-motion, but its output must be validated in the installed room and should be treated as a presence signal with known false-positive and false-negative limits.
+    <b>PIR vs. mmWave Radar:</b> PIR detects changes in infrared motion and may stop reporting a still occupant. The LD2410S reports micro-motion, but its output must be validated in the installed room and should be treated as a presence signal with known false-positive and false-negative limits.
   </figcaption>
   </figure>
 
@@ -162,65 +166,20 @@
   <ol>
     <li><strong>FMCW processing:</strong> The 24 GHz module uses frequency-modulated continuous-wave radar processing and reports configured distance-gate energy plus moving/static target states. Consult the current Hi-Link manual for implementation-level waveform details.</li>
     <li><strong>Beat Frequency Mixing:</strong> The reflected echo from the human body mixes with the outgoing chirp. The intermediate beat frequency is linearly proportional to the target's distance.</li>
-    <li><strong>Distance gating:</strong> The LD2410 reports configurable distance gates and target energy over its rated range. Gate numbering and resolution vary by firmware/manual revision, so configure and verify the actual module rather than assuming “Gate 8” is always valid.</li>
+    <li><strong>Distance gating:</strong> The LD2410S reports configurable distance gates and target energy over its rated range. Gate numbering and resolution vary by firmware/manual revision, so configure and verify the actual module rather than assuming “Gate 8” is always valid.</li>
     <li><strong>Micro-Motion Thresholding:</strong> The sensor firmware applies a specialized static energy threshold tuned to 1&ndash;3 mm thoracic excursions caused by human breathing.</li>
   </ol>
 
-  <!-- ================= VISUALS ================= -->
-  <h2 id="visuals">Photographic Sensor Inspection</h2>
-
-  <div class="product-grid">
-    <div class="product-card">
-      <div class="product-img-wrap">
-        <img src="assets/images/ld2410-radar.jpg" alt="Macro studio photo of HLK-LD2410 microstrip antenna array" loading="lazy">
-        <span class="product-badge">mmWave Core</span>
-      </div>
-      <div class="product-body">
-        <h3 class="product-title">HLK-LD2410 Patch Array</h3>
-        <p class="product-spec">Gold-plated planar microstrip antenna array providing &plusmn;60&deg; azimuth and &plusmn;40&deg; elevation beam coverage. Compact 35x7 mm footprint with 5-pin UART interface.</p>
-        <div class="product-meta">
-          <span class="product-price">&#8377;280 <small>approx.</small></span>
-          <span class="badge badge-accent">Priority: robu.in</span>
-        </div>
-        <div class="product-actions">
-          <a class="btn-robu" href="https://robu.in/?s=LD2410&post_type=product" target="_blank" rel="noopener">Buy on robu.in</a>
-        </div>
-      </div>
-    </div>
-
-    <div class="product-card">
-      <div class="product-img-wrap">
-        <img src="assets/images/gl5528-ldr.jpg" alt="Macro photo of GL5528 cadmium sulfide optical sensor" loading="lazy">
-        <span class="product-badge">Optical Divider</span>
-      </div>
-      <div class="product-body">
-        <h3 class="product-title">GL5528 Optical LDR</h3>
-        <p class="product-spec">Cadmium sulfide (CdS) photo-conductive track under clear epoxy encapsulation. Forms a simple analog voltage divider with a 10 k&Omega; resistor on the ESP32-C6 ADC.</p>
-        <div class="product-meta">
-          <span class="product-price">&#8377;15 <small>set</small></span>
-          <span class="badge badge-ok">In Stock</span>
-        </div>
-        <div class="product-actions">
-          <a class="btn-robu" href="https://robu.in/?s=GL5528+LDR&post_type=product" target="_blank" rel="noopener">Buy on robu.in</a>
-        </div>
-      </div>
-    </div>
+  <div class="box info">
+    <span class="label">Where to buy</span>
+    <p>Parts and search terms are on the <a href="bom.html">buy list</a> &mdash; one store, one link, listed once.</p>
   </div>
 
-  <nav class="pagenav">
-    <a href="index.html">
-      <span class="dir">Previous Page</span>
-      &larr; The Design &amp; BOM
-    </a>
-    <a class="next" href="mounting.html">
-      <span class="dir">Next Page</span>
-      Mounting &amp; Fan Physics &rarr;
-    </a>
-  </nav>
+  <nav class="pagenav"><a href="mounting.html"><span class="dir">Previous Page</span>&larr; Radar placement</a><a class="next" href="index.html"><span class="dir">Next Page</span>The design &rarr;</a></nav>
 
   <footer class="page-footer">
-    <div>&copy; 2026 Local-First Presence Sensor Project · Educational &amp; DIY Maker Guide</div>
-    <div>Dual-Licensed: <a href="LICENSE.md">CC BY-NC-SA 4.0</a> (Docs &amp; Hardware) · <a href="LICENSE.md">MIT</a> (Firmware)</div>
+    <div>&copy; 2026 Apartment Automation · Local-first build guide</div>
+    <div>Physics reference &mdash; validate against the module you receive</div>
   </footer>
 
 </div>
@@ -228,6 +187,6 @@
 </div>
 
 <button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button>
-<script src="assets/theme.js"></script>
+<script src="assets/theme.js"></script><script src="assets/motion.js"></script>
 </body>
 </html>

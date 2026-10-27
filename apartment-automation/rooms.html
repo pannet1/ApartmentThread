@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>HA Automations &mdash; Apartment Automation</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><div class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Automation<small>Build Wiki · v2.0</small></div></div><details class="nav-toggle" open>
+    <summary>Contents</summary>
+    <div class="nav-group">
+      <h4>Start here</h4>
+      <a href="index.html"><span>The design</span></a>
+      <a href="bom.html"><span>Buy list</span><span class="badge badge-accent">5 components</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Components</h4>
+      <a href="sensor.html"><span>Presence sensor</span><span class="badge badge-warn">PS</span></a>
+      <a href="aziot.html"><span>Aziot switch</span><span class="badge badge-warn">SW</span></a><a href="server.html"><span>Server</span><span class="badge badge-warn">SRV</span></a>
+      <a href="thread-router.html"><span>Thread router</span><span class="badge badge-warn">BR</span></a>
+      <a href="bathroom.html"><span>Bathroom input</span><span class="badge badge-warn">BATH</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Set up</h4>
+      <a href="install.html"><span>Install order</span></a>
+      <a href="rooms.html" aria-current="page"><span>HA automations</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Checks</h4>
+      <a href="open.html"><span>Open items</span><span class="badge badge-warn">12</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Reference</h4>
+      <a href="mounting.html"><span>Radar placement</span></a>
+      <a href="sensing.html"><span>Why radar</span></a>
+    </div>
+  </details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>HA automations</span></nav><h1>Apartment Automation Patterns</h1><p class="lede">Three rooms, three distinct automation patterns. We are identifying reusable architectural patterns for Indian apartments: timer-driven hall lighting without sensors, mmWave presence-driven study light and fan, and door-triggered bathroom lighting.</p>
+
+<h2 id="entities">Entities &amp; Pattern Mapping</h2>
+<p class="lede">Each room pattern is equipped with its own dedicated in-wall <strong>Aziot 3+1 Fan Smart Switch</strong> controlling local lights and fan, paired with that pattern's specific trigger mechanism:</p>
+<div class="scroll"><table><thead><tr><th>Room Pattern</th><th>Entity ID</th><th>Load Controlled</th><th>Switch Plate &amp; Trigger</th></tr></thead><tbody>
+<tr><td rowspan="2"><strong>1. Hall Pattern</strong><br><a href="#hallway">Timer-Driven</a></td><td><code>switch.hall_light</code></td><td>Hallway lights</td><td rowspan="2"><strong>Hall Aziot 3+1 Switch Plate</strong><br>Trigger: HA Timers / Sun schedule (0 sensors &middot; ₹0)</td></tr>
+<tr><td><code>fan.hall_fan</code></td><td>Hall ceiling fan</td></tr>
+
+<tr><td rowspan="3"><strong>2. Study Pattern</strong><br><a href="#study">Presence-Driven</a></td><td><code>binary_sensor.study_presence</code></td><td>Desk &amp; room occupancy</td><td rowspan="3"><strong>Study Aziot 3+1 Switch Plate</strong><br>Trigger: Sentinel mmWave Radar (Matter/Thread)</td></tr>
+<tr><td><code>switch.study_light</code></td><td>Study task/room light</td></tr>
+<tr><td><code>fan.study_fan</code></td><td>Study ceiling fan</td></tr>
+
+<tr><td rowspan="3"><strong>3. Bathroom Pattern</strong><br><a href="#bathroom">Door-Triggered</a></td><td><code>binary_sensor.bathroom_door_contact</code></td><td>Door physical state</td><td rowspan="3"><strong>Bathroom Aziot 3+1 Switch Plate</strong><br>Trigger: Door contact sensor (reed switch)</td></tr>
+<tr><td><code>switch.bathroom_light</code></td><td>Bathroom vanity/light</td></tr>
+<tr><td><code>fan.bathroom_exhaust_fan</code></td><td>Exhaust / ventilation fan</td></tr>
+
+<tr><td><strong>System Clock</strong></td><td>HA local time</td><td>Debian system time</td><td><code>Asia/Kolkata</code> on Radxa Zero 3E</td></tr>
+</tbody></table></div>
+<p>Confirm each entity flips when the physical device or wall switch changes before enabling any automation (<a href="open.html#o14">O-14</a>). Physical wall switches connected to each Aziot 3+1 module operate instantly 24/7 independently of software.</p>
+
+<h2 id="hallway">1. The Hall Pattern &mdash; Timer-Driven Lighting (No Sensor)</h2>
+<div class="box verdict"><span class="label">Pattern Philosophy &mdash; Zero Sensor Cost</span><p>Hallways and living rooms have high transient foot traffic, wide open sightlines, and roaming pets where radar sensors often create nuisance triggers and drain batteries. <strong>No presence sensor is required.</strong> Instead, deterministic time/schedule automations trigger the Aziot switch to turn the light on and off, with the physical wall switch always ready for manual use.</p></div>
+
+<h3>Home Assistant YAML</h3>
+<pre><code>alias: "Hall Light: Evening ON"
+trigger:
+  - platform: sun
+    event: sunset
+    offset: "-00:15:00"
+  - platform: time
+    at: "18:30:00"
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.hall_light
+mode: single
+
+alias: "Hall Light: Night OFF"
+trigger:
+  - platform: time
+    at: "23:00:00"
+action:
+  - service: switch.turn_off
+    target:
+      entity_id: switch.hall_light
+mode: single</code></pre>
+
+<p>Timers handle routine evening illumination predictably without sensor latency or false positives. Outside scheduled hours, the occupant simply taps the physical wall switch on the Aziot plate.</p>
+
+<h3>Test Cases</h3>
+<div class="scroll"><table><thead><tr><th>ID</th><th>Condition / Event</th><th>Expected Behaviour</th></tr></thead><tbody>
+<tr><td class="num">H-01</td><td>Clock reaches sunset trigger (18:30)</td><td>Hall light turns ON automatically</td></tr>
+<tr><td class="num">H-02</td><td>Clock reaches bedtime trigger (23:00)</td><td>Hall light turns OFF automatically</td></tr>
+<tr><td class="num">H-03</td><td>Occupant walks through at 14:00 (midday)</td><td>Light remains off; zero nuisance triggers from motion</td></tr>
+<tr><td class="num">H-04</td><td>Manual toggle via wall switch at 01:00</td><td>Light turns ON manually; automation does not interfere</td></tr>
+<tr><td class="num">H-05</td><td>Host reboot with WAN disconnected</td><td>Clock retained; scheduled triggers fire reliably on local time</td></tr>
+</tbody></table></div>
+
+<h2 id="study">2. The Study Room Pattern &mdash; Presence-Driven Light &amp; Fan</h2><a id="bedroom"></a>
+<div class="box verdict"><span class="label">Pattern Philosophy &mdash; Stationary Occupant Detection</span><p>In a study room or home office, people sit stationary for long hours reading, typing, or on video calls. Traditional PIR sensors fail here because they only detect bulk motion, plunging the occupant into darkness. The <strong>Sentinel mmWave presence sensor</strong> (HLK-LD2410S) detects micro-movements (breathing, typing). Presence turns <strong>both the light and the fan ON</strong>; vacating the room turns both OFF.</p></div>
+
+<h3>Home Assistant YAML</h3>
+<pre><code>alias: "Study Room: Occupied -> Light & Fan ON"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.study_presence
+    to: "on"
+action:
+  - service: switch.turn_on
+    target:
+      entity_id:
+        - switch.study_light
+        - switch.study_fan
+mode: single
+
+alias: "Study Room: Vacated -> Light & Fan OFF"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.study_presence
+    to: "off"
+    for: "00:02:00"
+action:
+  - service: switch.turn_off
+    target:
+      entity_id:
+        - switch.study_light
+        - switch.study_fan
+mode: single</code></pre>
+
+<p>The 2-minute <code>for: "00:02:00"</code> vacancy buffer ensures that brief micro-shadows or momentary step-outs do not prematurely turn off the light and fan.</p>
+
+<h3>Test Cases</h3>
+<div class="scroll"><table><thead><tr><th>ID</th><th>Condition / Event</th><th>Expected Behaviour</th></tr></thead><tbody>
+<tr><td class="num">S-01</td><td>Occupant enters study room</td><td>Presence detected &rarr; light and fan turn ON within 1 s</td></tr>
+<tr><td class="num">S-02</td><td>Occupant sits completely still at desk for 15 min reading</td><td>Presence held &rarr; light and fan stay ON continuously</td></tr>
+<tr><td class="num">S-03</td><td>Occupant steps out of room</td><td>Presence drops &rarr; 2-minute timer begins</td></tr>
+<tr><td class="num">S-04</td><td>Occupant re-enters within 90 seconds</td><td>Timer aborts &rarr; light and fan stay ON uninterrupted</td></tr>
+<tr><td class="num">S-05</td><td>Room remains empty for 120 seconds</td><td>Timer expires &rarr; both light and fan turn OFF</td></tr>
+<tr><td class="num">S-06</td><td>Manual wall switch toggle</td><td>Manual switch overrides; automation respects manual state</td></tr>
+</tbody></table></div>
+
+<h2 id="bathroom">3. The Bathroom Pattern &mdash; Door Contact-Driven Light &amp; Exhaust Fan</h2>
+<div class="box verdict"><span class="label">Pattern Philosophy &mdash; Physical Boundary Determinism</span><p>Bathrooms possess a distinct physical boundary: the door. When an occupant enters and closes the door, occupancy is certain. When the door is opened, the occupant is either entering (light turns on immediately so they never step into darkness) or exiting (grace timer begins). The <strong>low-latency door contact sensor triggers the bathroom's Aziot 3+1 switch directly to turn the light and exhaust fan on and off</strong>.</p></div>
+
+<h3>Home Assistant YAML</h3>
+<pre><code># 1. Door Opens -> Light ON Immediately (Illuminate before entering)
+alias: "Bathroom: Door Opened -> Light ON Immediately"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.bathroom_door_contact
+    to: "on"                       # "on" represents physically open
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.bathroom_light
+mode: single
+
+# 2. Door Closes -> Occupancy Latched (Light & Exhaust Fan ON continuously)
+alias: "Bathroom: Door Closed -> Occupancy Latched ON"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.bathroom_door_contact
+    to: "off"                      # "off" represents physically closed/latched
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.bathroom_light
+  - service: fan.turn_on
+    target:
+      entity_id: fan.bathroom_exhaust_fan
+mode: single
+
+# 3. Door Left Open / Exit -> Vacancy Grace Countdown -> Turn OFF
+alias: "Bathroom: Door Opened / Vacated -> Turn OFF After Grace Period"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.bathroom_door_contact
+    to: "on"
+    for: "00:01:00"                # 60-second grace period for exit / ventilation
+action:
+  - service: switch.turn_off
+    target:
+      entity_id: switch.bathroom_light
+  - service: fan.turn_off
+    target:
+      entity_id: fan.bathroom_exhaust_fan
+mode: single</code></pre>
+
+<p>Opening the door turns the light ON in &lt;80ms before the occupant takes a step inside. Closing the door locks both lighting and exhaust ventilation ON indefinitely (occupant showering or seated). When the door is reopened to exit, a 60-second grace period allows exiting or air ventilation before powering off.</p>
+
+<h3>Test Cases</h3>
+<div class="scroll"><table><thead><tr><th>ID</th><th>Condition / Event</th><th>Expected Behaviour</th></tr></thead><tbody>
+<tr><td class="num">B-01</td><td>Door is opened from outside</td><td>Door contact reports open &rarr; Light turns ON immediately (&lt;80ms); room illuminated before stepping in</td></tr>
+<tr><td class="num">B-02</td><td>Door is closed behind occupant</td><td>Door contact reports closed &rarr; Exhaust fan turns ON, light stays ON, occupancy locked</td></tr>
+<tr><td class="num">B-03</td><td>Occupant remains stationary in shower/bath</td><td>Door remains closed &rarr; Light and exhaust fan stay locked ON indefinitely (no sensor sleep timeout)</td></tr>
+<tr><td class="num">B-04</td><td>Door is opened upon exit</td><td>Door contact reports open &rarr; 60-second vacancy countdown begins</td></tr>
+<tr><td class="num">B-05</td><td>Door left open for ventilation (&gt; 60 s)</td><td>Grace period expires &rarr; Light and exhaust fan turn OFF automatically</td></tr>
+<tr><td class="num">B-06</td><td>Wall switch toggled manually</td><td>Manual wall switch press overrides automation immediately (100% offline mechanical safety)</td></tr>
+</tbody></table></div>
+
+<h2 id="manual">Manual Control &mdash; All Patterns</h2>
+<div class="box danger"><span class="label">The Wall Switch Always Wins</span><p>If Home Assistant, Wi-Fi, Thread, or the Radxa SBC is offline, every light and fan must still operate instantaneously from the physical wall switches. The <strong>Aziot 3+1 Fan Smart Switch plate</strong> preserves full physical switch mechanical/relay control independently of microcontroller logic (<a href="open.html#o18">O-18</a>).</p></div>
+
+<nav class="pagenav"><a href="install.html"><span class="dir">Previous Page</span>&larr; Install order</a><a class="next" href="open.html"><span class="dir">Next Page</span>Open items &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Automation · Local-first build guide</div><div>Entity IDs are placeholders &mdash; verify against your HA instance</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script></body></html>

@@ -1,0 +1,119 @@
+[
+ {
+  "file": "assets/a-dual-blade-ceiling-fan-in-india.jpg",
+  "media": "image",
+  "ref": "openverse:1f7ca4b3-d050-4fba-9f17-48d6a5855af7",
+  "title": "A Dual blade Ceiling fan in India",
+  "creator": "Adityamadhav83",
+  "creatorUrl": "https://commons.wikimedia.org/wiki/User:Adityamadhav83",
+  "date": null,
+  "license": "CC BY-SA 3.0",
+  "licenseCode": "by-sa",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+  "creditRequired": true,
+  "page": "https://commons.wikimedia.org/w/index.php?curid=25978631",
+  "via": "Wikimedia Commons",
+  "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/99/A_Dual_blade_Ceiling_fan_in_India.JPG/1920px-A_Dual_blade_Ceiling_fan_in_India.JPG",
+  "width": 1920,
+  "height": 1440,
+  "bytes": 279230,
+  "credit": "\"A Dual blade Ceiling fan in India\" by Adityamadhav83, CC BY-SA 3.0, via Wikimedia Commons",
+  "notes": [
+   "Share-alike: an altered version (recoloured, combined with other pictures) must be shared under the same licence."
+  ],
+  "saved": "2026-10-23T21:04:03.432Z"
+ },
+ {
+  "file": "assets/fema-33796-electricians-hook-up-at-mobile.jpg",
+  "media": "image",
+  "ref": "commons:8072813",
+  "title": "FEMA - 33796 - Electricians hook up at mobile home in California",
+  "creator": "Amanda Bicknell",
+  "creatorUrl": null,
+  "date": "2007-12-05",
+  "license": "public domain",
+  "licenseCode": "pd",
+  "licenseUrl": "https://creativecommons.org/publicdomain/mark/1.0/",
+  "creditRequired": false,
+  "page": "https://commons.wikimedia.org/wiki/File:FEMA_-_33796_-_Electricians_hook_up_at_mobile_home_in_California.jpg",
+  "via": "Wikimedia Commons",
+  "image": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/20/FEMA_-_33796_-_Electricians_hook_up_at_mobile_home_in_California.jpg/1920px-FEMA_-_33796_-_Electricians_hook_up_at_mobile_home_in_California.jpg",
+  "width": 1920,
+  "height": 1311,
+  "bytes": 769117,
+  "credit": "\"FEMA - 33796 - Electricians hook up at mobile home in California\" by Amanda Bicknell, public domain, via Wikimedia Commons",
+  "notes": [],
+  "saved": "2026-10-23T21:04:34.665Z"
+ },
+ {
+  "file": "assets/ceiling-fan-with-four-blades.webm",
+  "media": "video",
+  "poster": "assets/ceiling-fan-with-four-blades-poster.jpg",
+  "ref": "commons:76421424",
+  "title": "Ceiling fan with four blades",
+  "creator": "Adoscam",
+  "creatorUrl": null,
+  "date": "2019-02-08",
+  "license": "CC BY-SA 4.0",
+  "licenseCode": "by-sa",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+  "creditRequired": true,
+  "page": "https://commons.wikimedia.org/wiki/File:Ceiling_fan_with_four_blades.ogv",
+  "via": "Wikimedia Commons",
+  "video": "https://upload.wikimedia.org/wikipedia/commons/transcoded/2/28/Ceiling_fan_with_four_blades.ogv/Ceiling_fan_with_four_blades.ogv.480p.vp9.webm",
+  "width": 854,
+  "height": 480,
+  "duration": 13.5,
+  "bytes": 1635885,
+  "credit": "\"Ceiling fan with four blades\" by Adoscam, CC BY-SA 4.0, via Wikimedia Commons",
+  "notes": [
+   "Share-alike: an altered version (recoloured, combined with other pictures) must be shared under the same licence."
+  ],
+  "saved": "2026-10-23T21:05:00.313Z"
+ },
+ {
+  "file": "assets/images/sentinel-pcb.png",
+  "media": "image",
+  "title": "Sentinel PCB Layout",
+  "creator": "Localized Tech",
+  "creatorUrl": "https://github.com/LocalizedTech/sentinel-electronics",
+  "license": "CERN-OHL-S v2.0",
+  "credit": "Sentinel Electronics by Localized Tech under CERN-OHL-S v2.0"
+ },
+ {
+  "file": "assets/images/radxa-zero-3e.webp",
+  "media": "image",
+  "title": "Radxa Zero 3E Single Board Computer",
+  "creator": "Radxa",
+  "creatorUrl": "https://docs.radxa.com",
+  "license": "Documentation License",
+  "credit": "Radxa Zero 3E documentation photo"
+ },
+ {
+  "file": "assets/images/esp32-h2-devkit.png",
+  "media": "image",
+  "title": "ESP32-H2-DevKitM-1 Development Board",
+  "creator": "Espressif Systems",
+  "creatorUrl": "https://github.com/espressif/esp-dev-kits",
+  "license": "Apache 2.0",
+  "credit": "Espressif Systems esp-dev-kits documentation"
+ },
+ {
+  "file": "assets/images/seeed-xiao-nrf52840.jpg",
+  "media": "image",
+  "title": "Seeed Studio XIAO BLE nRF52840",
+  "creator": "Seeed Studio",
+  "creatorUrl": "https://www.seeedstudio.com",
+  "license": "Product Documentation",
+  "credit": "Seeed Studio XIAO product photo"
+ },
+ {
+  "file": "assets/images/m5stack-esp32-h2.webp",
+  "media": "image",
+  "title": "M5Stack ESP32-H2 Thread/Zigbee Gateway Module",
+  "creator": "M5Stack",
+  "creatorUrl": "https://docs.m5stack.com",
+  "license": "Product Documentation",
+  "credit": "M5Stack documentation photo"
+ }
+]

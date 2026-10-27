@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Open Items &mdash; Apartment Automation</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><div class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Automation<small>Build Wiki · v2.0</small></div></div><details class="nav-toggle" open>
+    <summary>Contents</summary>
+    <div class="nav-group">
+      <h4>Start here</h4>
+      <a href="index.html"><span>The design</span></a>
+      <a href="bom.html"><span>Buy list</span><span class="badge badge-accent">5 components</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Components</h4>
+      <a href="sensor.html"><span>Presence sensor</span><span class="badge badge-warn">PS</span></a>
+      <a href="aziot.html"><span>Aziot switch</span><span class="badge badge-warn">SW</span></a><a href="server.html"><span>Server</span><span class="badge badge-warn">SRV</span></a>
+      <a href="thread-router.html"><span>Thread router</span><span class="badge badge-warn">BR</span></a>
+      <a href="bathroom.html"><span>Bathroom input</span><span class="badge badge-warn">BATH</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Set up</h4>
+      <a href="install.html"><span>Install order</span></a>
+      <a href="rooms.html"><span>HA automations</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Checks</h4>
+      <a href="open.html" aria-current="page"><span>Open items</span><span class="badge badge-warn">12</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Reference</h4>
+      <a href="mounting.html"><span>Radar placement</span></a>
+      <a href="sensing.html"><span>Why radar</span></a>
+    </div>
+  </details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Open items</span></nav><h1>Open Items</h1><p class="lede">Everything in this wiki that is <strong>claimed but not yet proven</strong>. Each one names the exact evidence that closes it. Work down the list; buy nothing that sits behind an open item marked <span class="badge badge-warn">BLOCKS PURCHASE</span>.</p>
+
+<div class="box info"><span class="label">How an item closes</span><p>Run the check, keep the evidence &mdash; a serial log, a screenshot, a current trace, a photo of the nameplate &mdash; then flip the status here. An intention does not close an item; a result does.</p></div>
+
+<h2 id="thread">SRV-1 &amp; BR-1 &mdash; Server and Thread router <span class="badge badge-warn">3 open</span></h2>
+<div class="scroll"><table><thead><tr><th>ID</th><th>What is doubtful</th><th>Evidence that closes it</th><th>Blocks</th></tr></thead><tbody>
+<tr id="o07"><td class="num"><strong>O-07</strong></td><td><strong>The border router does not exist yet.</strong> Three separate pieces: RCP firmware on the ESP32-H2, <code>otbr-agent</code> on the Radxa, and a Thread dataset. None selected or run.</td><td>A known-good Thread device commissions and reports state after a host reboot, WAN unplugged.</td><td>Any sensor reporting</td></tr>
+<tr id="o08"><td class="num"><strong>O-08</strong></td><td>Who generates the dataset and whether HA's Thread integration adopts this network &mdash; currently undecided.</td><td>Screenshot of the dataset in HA and the node attached to it.</td><td>Node onboarding</td></tr>
+<tr id="o09"><td class="num"><strong>O-09</strong></td><td>Radxa Zero 3E running Home Assistant <em>and</em> border-router service simultaneously. <strong>Baseline memory proven:</strong> Debian 13 Minimal + HA Container uses ~564 MiB total (<a href="server.html#srv-metrics">metrics</a>), leaving ~460 MiB on 1 GB (~1.4 GiB on 2 GB). Host/container USB serial contention untested.</td><td>24 h load, memory and USB serial log with both services and ESP32-H2 active.</td><td>Long-term stability</td></tr>
+</tbody></table></div>
+
+<h2 id="devices">SW-1 &mdash; Aziot switch plates and bathroom input <span class="badge badge-warn">4 open</span></h2>
+<div class="scroll"><table><thead><tr><th>ID</th><th>What is doubtful</th><th>Evidence that closes it</th><th>Blocks</th></tr></thead><tbody>
+<tr id="o10"><td class="num"><strong>O-10</strong></td><td><strong>Aziot 3+1 local control path</strong> &mdash; Wi-Fi + Bluetooth with Tuya Local / Home Assistant local integration.</td><td>Each relay toggles from HA with the WAN cable out, state matching the physical contact.</td><td><span class="badge badge-warn">BLOCKS PURCHASE</span> switch plates</td></tr>
+<tr id="o11"><td class="num"><strong>O-11</strong></td><td><strong>Neutral at each room's switchboard</strong> &mdash; required for in-wall smart switch operation.</td><td>Electrician's confirmation at each room box (Hall, Study, Bathroom).</td><td><span class="badge badge-warn">BLOCKS PURCHASE</span> switch plates</td></tr>
+<tr id="o12"><td class="num"><strong>O-12</strong></td><td><strong>DIY Matter-over-Thread door sensor verification</strong> &mdash; Option 1 (XIAO ESP32-C6 + MC-38 reed switch). Verify sub-80ms response over Thread to prevent stepping into darkness, and map entity state (<code>off</code> = closed, <code>on</code> = open).</td><td>Entity flips instantaneously (&lt;80ms) on physical open/close in Home Assistant.</td><td>Bathroom pattern</td></tr>
+<tr id="o13"><td class="num"><strong>O-13</strong></td><td><strong>Mains isolation and bathroom moisture protection</strong> &mdash; Confirm door sensor operates 100% isolated from 230V mains (never connect reed switch to Aziot switchboard). Mount sensor body on exterior door jamb away from shower spray.</td><td>Sensor installed on exterior frame with safe low-voltage / wireless isolation.</td><td>Bathroom pattern</td></tr>
+</tbody></table></div>
+
+<h2 id="behaviour">Cross-cutting &mdash; behaviour and data <span class="badge badge-warn">5 open</span></h2>
+<div class="scroll"><table><thead><tr><th>ID</th><th>What is doubtful</th><th>Evidence that closes it</th><th>Blocks</th></tr></thead><tbody>
+<tr id="o14"><td class="num"><strong>O-14</strong></td><td>Every entity ID in <a href="rooms.html#entities">the register</a> is a placeholder until HA creates the devices.</td><td>Real entity IDs pasted into the automations, verified to change on physical action.</td><td>Enabling rules</td></tr>
+<tr id="o15"><td class="num"><strong>O-15</strong></td><td>Hardware pricing verified on Indian suppliers; in-cart inventory checks needed prior to checkout.</td><td>Cart showing current prices and stock at <a href="https://robu.in" target="_blank" rel="noopener">robu.in</a> and <a href="https://robocraze.com" target="_blank" rel="noopener">robocraze.com</a>.</td><td>Procurement</td></tr>
+<tr id="o16"><td class="num"><strong>O-16</strong></td><td>Enclosure material and mounting shift RF behaviour; distance gates tuned on the bench may not hold on the wall.</td><td>Re-run the <a href="mounting.html#field-test">10-minute field test</a> after the enclosure is fitted.</td><td>Final placement</td></tr>
+<tr id="o17"><td class="num"><strong>O-17</strong></td><td>The hall timer rule depends on the clock. Correct time after a restart with the WAN down is untested.</td><td>Test H-05 with the WAN disconnected.</td><td>Hall pattern</td></tr>
+<tr id="o18"><td class="num"><strong>O-18</strong></td><td>Manual override is asserted, not demonstrated &mdash; including whether automation fights a hand press.</td><td>Every load operated from its wall switch with Home Assistant stopped.</td><td>Enabling rules</td></tr>
+</tbody></table></div>
+
+<h2 id="order">Suggested order</h2>
+<ol>
+<li><strong>O-07, O-08</strong> &mdash; set up Radxa Zero 3E server and commission Thread border router with ESP32-H2.</li>
+<li><strong>O-10, O-11</strong> &mdash; settle Aziot switchboard local control and neutral/inrush checks before buying the mains plate.</li>
+<li><strong>O-13 to O-18</strong> &mdash; close these as rooms and automations are commissioned.</li>
+</ol>
+
+<nav class="pagenav"><a href="rooms.html"><span class="dir">Previous Page</span>&larr; HA automations</a><a class="next" href="mounting.html"><span class="dir">Next Page</span>Radar placement &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Automation · Local-first build guide</div><div>Status changes require recorded evidence</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script></body></html>

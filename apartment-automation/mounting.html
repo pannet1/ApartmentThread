@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mounting &amp; False Positives — Presence Sensor</title>
+<title>Radar Placement &mdash; Apartment Automation</title>
 <link rel="stylesheet" href="assets/style.css">
 <script>(function(){try{var t=null;var m=window.location.search.match(/[?&]theme=(dark|light)/);if(m){t=m[1];}if(!t&&window.name){try{var wn=JSON.parse(window.name);if(wn&&wn.psTheme)t=wn.psTheme;}catch(e){}}if(!t){try{t=localStorage.getItem('ps-theme');}catch(e){}}if(!t){try{t=sessionStorage.getItem('ps-theme');}catch(e){}}if(!t&&document.cookie){var cm=document.cookie.match(/(?:^|;\s*)ps-theme=(dark|light)/);if(cm)t=cm[1];}if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
 </head>
@@ -11,45 +11,50 @@
 <div id="reading-progress"></div>
 <div class="wrap">
 
-<aside class="sidebar">
+<aside class="sidebar" data-ui>
   <div class="brand">
     <div class="brand-icon">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
         <path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/>
       </svg>
     </div>
-    <div>Presence Sensor<small>Design Wiki · v1.5</small></div>
+    <div>Apartment Automation<small>Build Wiki · v2.0</small></div>
   </div>
 
   <details class="nav-toggle" open>
     <summary>Contents</summary>
     <div class="nav-group">
-      <h4>Decided</h4>
+      <h4>Start here</h4>
       <a href="index.html"><span>The design</span></a>
-      <a href="control.html"><span>Control logic</span></a>
+      <a href="bom.html"><span>Buy list</span><span class="badge badge-accent">5 components</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Components</h4>
+      <a href="sensor.html"><span>Presence sensor</span><span class="badge badge-warn">PS</span></a>
+      <a href="aziot.html"><span>Aziot switch</span><span class="badge badge-warn">SW</span></a><a href="server.html"><span>Server</span><span class="badge badge-warn">SRV</span></a>
+      <a href="thread-router.html"><span>Thread router</span><span class="badge badge-warn">BR</span></a>
+      <a href="bathroom.html"><span>Bathroom input</span><span class="badge badge-warn">BATH</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Set up</h4>
+      <a href="install.html"><span>Install order</span></a>
+      <a href="rooms.html"><span>HA automations</span></a>
+    </div>
+    <div class="nav-group">
+      <h4>Checks</h4>
+      <a href="open.html"><span>Open items</span><span class="badge badge-warn">12</span></a>
     </div>
     <div class="nav-group">
       <h4>Reference</h4>
-      <a href="mounting.html" aria-current="page">
-        <span>Mounting &amp; fan physics</span>
-        <span class="badge badge-warn">Critical</span>
-      </a>
-    </div>
-    <div class="nav-group">
-      <h4>Technical choices</h4>
-      <a href="sensing.html"><span>Sensing modalities</span></a>
-      <a href="radio.html"><span>Local transport</span></a>
-      <a href="hardware.html"><span>Hardware &amp; buying guide</span></a>
+      <a href="mounting.html" aria-current="page"><span>Radar placement</span></a>
+      <a href="sensing.html"><span>Why radar</span></a>
     </div>
   </details>
 
   <div class="sidebar-footer">
-    <div><b>Non-Commercial DIY Guide</b></div>
+    <div><b>Local-first · India build</b></div>
     <div class="license-pill">
-      <span>CC BY-NC-SA 4.0</span> · <span>MIT</span>
-    </div>
-    <div style="margin-top:.45rem;">
-      <a href="https://robu.in" target="_blank" rel="noopener">Priority store: <b>robu.in</b></a>
+      <span>Home Assistant</span>
     </div>
   </div>
 </aside>
@@ -60,19 +65,18 @@
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="index.html">Wiki</a> &rsaquo;
     <span>Reference</span> &rsaquo;
-    <span>Mounting &amp; Fan Physics</span>
+    <span>Radar placement</span>
   </nav>
 
-  <h1>Mounting &amp; False Positives</h1>
-  <p class="lede">Why a ceiling fan sitting directly under your presence radar is the single worst-case mounting, and how split architecture completely eliminates the problem.</p>
+  <h1>Radar Placement</h1>
+  <p class="lede">A ceiling fan sitting directly under the radar is the single worst-case mounting. Here is why, and the placement that removes it.</p>
 
   <div class="quick-nav">
     <span class="quick-nav-title">Jump to:</span>
-    <a href="#geometry">The Ceiling Fan Geometry</a>
-    <a href="#physics">Why Fans Trigger Radar</a>
-    <a href="#mitigations">Mitigations Ranked</a>
-    <a href="#split">Split Architecture Solution</a>
-    <a href="#field-test">Field Verification Protocol</a>
+    <a href="#geometry">The ceiling fan geometry</a>
+    <a href="#physics">Why fans trigger radar</a>
+    <a href="#split">Where to put it instead</a>
+    <a href="#field-test">10-minute field test</a>
   </div>
 
   <div class="box danger">
@@ -133,12 +137,12 @@
     </g>
 
     <g font-size="11.5" class="t-fg" font-weight="600">
-      <text x="564" y="69">radar (HLK-LD2410)</text>
+      <text x="564" y="69">radar (HLK-LD2410S)</text>
       <text x="564" y="105">fan ceiling point (rose)</text>
       <text x="564" y="141">fan motor casing</text>
-      <text x="564" y="177">blades — spinning &amp; pitched</text>
+      <text x="564" y="177">blades &mdash; spinning &amp; pitched</text>
       <text x="564" y="249" style="fill:var(--c-bad)">near-field blind spot</text>
-      <text x="564" y="285" style="fill:var(--c-person)">person — seated 1.2 m below</text>
+      <text x="564" y="285" style="fill:var(--c-person)">person &mdash; seated 1.2 m below</text>
     </g>
     <g font-size="10" class="t-soft">
       <text x="564" y="83">looking straight down</text>
@@ -147,13 +151,20 @@
     </g>
   </svg>
   <figcaption>
-    <b>Direct Overhead Alignment:</b> The spinning fan blades sit on-axis between the radar and the person. Because they are collinear, optical hoods and horn antennas cannot shield the fan without simultaneously shielding the human below.
-  </figcaption>
+    <b>Direct Overhead Alignment:</b> The spinning fan blades sit on-axis between the radar and the person. Because they are collinear, optical hoods and horn antennas cannot shield the fan without simultaneously shielding the human below.  </figcaption>
   </figure>
 
   <h2 id="physics">Why Fans Trigger mmWave Radar</h2>
 
+  <div class="photo-card">
+    <div class="photo-card-media">
+      <video src="assets/ceiling-fan-with-four-blades.webm" poster="assets/ceiling-fan-with-four-blades-poster.jpg" autoplay muted loop playsinline></video>
+      <div class="photo-tag">The false positive, spinning</div>
+    </div>
+    <div class="photo-card-desc"><b>What the radar sees when nobody is in the room.</b> Blades, wobble and the metal canopy all move radially for a few millimetres at a time. That is the same speed range as a breathing chest, which is why a fan overhead reads as a person sitting still.</div>
+  </div>
   <p>First-order Doppler theory suggests that because fan blades rotate perpendicular to the line of sight, radial velocity should be zero. In reality, four physical factors cause intense Doppler return:</p>
+  <p>A dual-blade or four-blade Indian ceiling fan at 300&nbsp;RPM puts every one of these effects in front of the sensor:</p>
 
   <ul>
     <li><strong>Aerodynamic Blade Pitch:</strong> Real fan blades are aerofoils angled at 10° to 14°. As each blade sweeps past the sensor, its leading and trailing edges approach and recede at <code>10–20 Hz</code>, creating periodic modulation.</li>
@@ -213,9 +224,9 @@
   </figcaption>
   </figure>
 
-  <h2 id="split">The Solution: Split Architecture</h2>
+  <h2 id="split">Where to put it instead</h2>
 
-  <p>The definitive engineering solution is to separate the radar sensor from the mains actuator. The radar sits in a clean ABS enclosure at <strong>2.2 m on a side wall</strong>, looking across the room at an oblique downward angle. The purchased fan/light controller stays in the switchboard where the mains wiring already terminates.</p>
+  <p>Separate the radar from the fan. Put it in a small ABS enclosure at <strong>2.2 m on a side wall</strong>, looking across the room at an oblique downward angle. The Aziot plate stays in the switchboard where the mains wiring already terminates &mdash; the sensor never goes near mains.</p>
 
   <div class="photo-card">
     <div class="photo-card-media">
@@ -242,7 +253,7 @@
     <!-- tilted wide cone into room -->
     <path d="M96 140 L400 60 L470 276 L96 168 Z" style="fill:var(--c-radar);opacity:.07"/>
     <path d="M96 140 L400 60 M96 140 L470 276" class="k-radar" stroke-width="1.4" opacity=".6"/>
-    <text x="300" y="120" font-size="10.5" style="fill:var(--c-radar)" opacity=".9">wide oblique coverage — fan is far off-axis</text>
+    <text x="300" y="120" font-size="10.5" style="fill:var(--c-radar)" opacity=".9">wide oblique coverage &mdash; fan is far off-axis</text>
 
     <!-- person -->
     <circle cx="390" cy="180" r="14" class="k-person" stroke-width="2" fill="var(--bg-code)"/>
@@ -253,7 +264,7 @@
     <!-- wireless link -->
     <path d="M230 148 q60 -34 120 -4" class="s-mut s-dash" stroke-width="1.6"/>
     <path d="M240 166 q60 26 112 8" class="s-mut s-dash" stroke-width="1.6"/>
-    <text x="252" y="212" class="t-mut" font-size="10.5">Local Wi-Fi → Home Assistant</text>
+    <text x="252" y="212" class="t-mut" font-size="10.5">Thread &rarr; Home Assistant</text>
 
     <!-- certified actuator in switchboard -->
     <rect x="450" y="62" width="120" height="40" rx="4" class="s-in" stroke-width="1.8" fill="var(--bg-code)"/>
@@ -271,27 +282,19 @@
   <h2 id="field-test">Field Verification Protocol (10-Minute Test)</h2>
 
   <ol>
-    <li><strong>Bench Setup:</strong> Connect the HLK-LD2410 to an FTDI / USB-UART adapter (5 V, GND, TX, RX). Open the official HLKRadarTool app or ESPHome serial logger.</li>
+    <li><strong>Bench Setup:</strong> Connect the HLK-LD2410S to a USB-UART adapter (3.3 V, GND, TX, RX). Open the official HLKRadarTool app or a serial terminal (115,200 baud).</li>
     <li><strong>Mount Temporarily:</strong> Use double-sided tape to attach the radar to the proposed wall position at 2.2 m.</li>
     <li><strong>Run Fan at Maximum:</strong> Turn the ceiling fan to its highest speed setting with no people in the room. Observe the raw energy readings across Gates 0 through 8.</li>
     <li><strong>Set Gate Cutoffs:</strong> Increase the <code>radar_min_range</code> gate until the fan energy drops below threshold (typically Gate 1 or 2 at 1.4 m).</li>
     <li><strong>Verify Seated Presence:</strong> Sit still on the sofa or chair for 3 minutes. Confirm that the static detection flag remains solidly active.</li>
+    <li><strong>Verify the Vacancy Window:</strong> Leave the room and confirm the sensor drops out within the configured no-one duration before the fan is allowed to switch off.</li>
   </ol>
 
-  <nav class="pagenav">
-    <a href="sensing.html">
-      <span class="dir">Previous Page</span>
-      &larr; Sensing Modalities
-    </a>
-    <a class="next" href="control.html">
-      <span class="dir">Next Page</span>
-      Control logic &amp; FSM &rarr;
-    </a>
-  </nav>
+  <nav class="pagenav"><a href="open.html"><span class="dir">Previous Page</span>&larr; Open items</a><a class="next" href="sensing.html"><span class="dir">Next Page</span>Why radar &rarr;</a></nav>
 
   <footer class="page-footer">
-    <div>&copy; 2026 Local-First Presence Sensor Project · Educational &amp; DIY Maker Guide</div>
-    <div>Dual-Licensed: <a href="LICENSE.md">CC BY-NC-SA 4.0</a> (Docs &amp; Hardware) · <a href="LICENSE.md">MIT</a> (Firmware)</div>
+    <div>&copy; 2026 Apartment Automation · Local-first build guide</div>
+    <div>Placement must be validated in the actual room</div>
   </footer>
 
 </div>
@@ -299,6 +302,6 @@
 </div>
 
 <button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button>
-<script src="assets/theme.js"></script>
+<script src="assets/theme.js"></script><script src="assets/motion.js"></script>
 </body>
 </html>
