@@ -35,13 +35,142 @@
 </ol>
 
 <h2 id="automations">3. Room Automation State Machine Activation</h2>
-<p>Enable the YAML automations in Home Assistant corresponding to each approved pattern in <a href="rooms.html">Room Patterns</a>:</p>
+<p>Deploy the production automations corresponding to each room pattern defined in <a href="rooms.html">Room Automation Patterns</a>. Copy the validated YAML blocks below directly into Home Assistant (via <code>config/automations.yaml</code> or <strong>Settings &rarr; Automations &amp; Scenes</strong>):</p>
 
-<div class="scroll"><table><thead><tr><th>Pattern ID</th><th>Room</th><th>Trigger Input</th><th>Controlled Loads</th><th>Logic &amp; Behavior</th></tr></thead><tbody>
-<tr><td><strong>HL-01</strong></td><td>Hall</td><td>Time of day (Clock)</td><td><code>light.hall_light</code> &middot; <code>fan.hall_ceiling_fan</code></td><td>No sensors needed. Time-based evening/night modes with wall toggle override.</td></tr>
-<tr><td><strong>ST-01</strong></td><td>Study</td><td>Radar Presence (PS-1)</td><td><code>light.study_light</code> &middot; <code>fan.study_ceiling_fan</code></td><td>Sub-1s light &amp; fan activation on occupancy; 90s timeout after exit.</td></tr>
-<tr><td><strong>BA-01</strong></td><td>Bathroom</td><td>Door Contact (DS-1)</td><td><code>light.bathroom_light</code> &middot; <code>fan.bathroom_exhaust_fan</code></td><td>Door open/close state machine. Light triggers immediately; fan runs timed humidity cycle.</td></tr>
+<div class="scroll"><table><thead><tr><th>Pattern ID</th><th>Room</th><th>Trigger Input</th><th>Controlled Loads</th><th>Logic &amp; Behavior</th><th>YAML Config</th></tr></thead><tbody>
+<tr><td><strong>HL-01</strong></td><td>Hall</td><td>Time of day (Clock)</td><td><code>switch.hall_light</code></td><td>No sensors needed. Time-based evening/night modes with wall toggle override.</td><td><a href="#yaml-hall">View YAML &darr;</a></td></tr>
+<tr><td><strong>ST-01</strong></td><td>Study</td><td>Radar Presence (PS-1)</td><td><code>switch.study_light</code> &middot; <code>switch.study_fan</code></td><td>Sub-1s light &amp; fan activation on occupancy; 2-minute timeout after exit.</td><td><a href="#yaml-study">View YAML &darr;</a></td></tr>
+<tr><td><strong>BA-01</strong></td><td>Bathroom</td><td>Door Contact (DS-1)</td><td><code>switch.bathroom_light</code> &middot; <code>fan.bathroom_exhaust_fan</code></td><td>Door open/close state machine. Light triggers immediately; fan latches continuously.</td><td><a href="#yaml-bathroom">View YAML &darr;</a></td></tr>
 </tbody></table></div>
+
+<details class="code-fold" id="yaml-hall" open>
+  <summary>
+    <div class="fold-title"><span>Pattern 1: Hall Lighting Automations (HL-01)</span> <span class="badge badge-ok">Timer-Driven</span></div>
+    <button class="btn-copy-code" type="button">Copy YAML</button>
+  </summary>
+  <div class="fold-body">
+    <div class="fold-meta">
+      <span>Destination: <code>config/automations.yaml</code></span>
+      <span>Entity: <code>switch.hall_light</code> &middot; Zero Sensors (₹0)</span>
+    </div>
+    <pre><code>alias: "Hall Light: Evening ON"
+trigger:
+  - platform: sun
+    event: sunset
+    offset: "-00:15:00"
+  - platform: time
+    at: "18:30:00"
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.hall_light
+mode: single
+
+alias: "Hall Light: Night OFF"
+trigger:
+  - platform: time
+    at: "23:00:00"
+action:
+  - service: switch.turn_off
+    target:
+      entity_id: switch.hall_light
+mode: single</code></pre>
+  </div>
+</details>
+
+<details class="code-fold" id="yaml-study">
+  <summary>
+    <div class="fold-title"><span>Pattern 2: Study Presence Light &amp; Fan (ST-01)</span> <span class="badge badge-accent">Sentinel mmWave</span></div>
+    <button class="btn-copy-code" type="button">Copy YAML</button>
+  </summary>
+  <div class="fold-body">
+    <div class="fold-meta">
+      <span>Destination: <code>config/automations.yaml</code></span>
+      <span>Entities: <code>binary_sensor.study_presence</code>, <code>switch.study_light</code>, <code>switch.study_fan</code></span>
+    </div>
+    <pre><code>alias: "Study Room: Occupied -> Light & Fan ON"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.study_presence
+    to: "on"
+action:
+  - service: switch.turn_on
+    target:
+      entity_id:
+        - switch.study_light
+        - switch.study_fan
+mode: single
+
+alias: "Study Room: Vacated -> Light & Fan OFF"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.study_presence
+    to: "off"
+    for: "00:02:00"
+action:
+  - service: switch.turn_off
+    target:
+      entity_id:
+        - switch.study_light
+        - switch.study_fan
+mode: single</code></pre>
+  </div>
+</details>
+
+<details class="code-fold" id="yaml-bathroom">
+  <summary>
+    <div class="fold-title"><span>Pattern 3: Bathroom Door Contact State Machine (BA-01)</span> <span class="badge badge-warn">Door Contact</span></div>
+    <button class="btn-copy-code" type="button">Copy YAML</button>
+  </summary>
+  <div class="fold-body">
+    <div class="fold-meta">
+      <span>Destination: <code>config/automations.yaml</code></span>
+      <span>Entities: <code>binary_sensor.bathroom_door_contact</code>, <code>switch.bathroom_light</code>, <code>fan.bathroom_exhaust_fan</code></span>
+    </div>
+    <pre><code># 1. Door Opens -> Light ON Immediately (Illuminate before entering)
+alias: "Bathroom: Door Opened -> Light ON Immediately"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.bathroom_door_contact
+    to: "on"                       # "on" represents physically open
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.bathroom_light
+mode: single
+
+# 2. Door Closes -> Occupancy Latched (Light & Exhaust Fan ON continuously)
+alias: "Bathroom: Door Closed -> Occupancy Latched ON"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.bathroom_door_contact
+    to: "off"                      # "off" represents physically closed/latched
+action:
+  - service: switch.turn_on
+    target:
+      entity_id: switch.bathroom_light
+  - service: fan.turn_on
+    target:
+      entity_id: fan.bathroom_exhaust_fan
+mode: single
+
+# 3. Door Left Open / Exit -> Vacancy Grace Countdown -> Turn OFF
+alias: "Bathroom: Door Opened / Vacated -> Turn OFF After Grace Period"
+trigger:
+  - platform: state
+    entity_id: binary_sensor.bathroom_door_contact
+    to: "on"
+    for: "00:01:00"                # 60-second grace period for exit / ventilation
+action:
+  - service: switch.turn_off
+    target:
+      entity_id: switch.bathroom_light
+  - service: fan.turn_off
+    target:
+      entity_id: fan.bathroom_exhaust_fan
+mode: single</code></pre>
+  </div>
+</details>
 
 <h2 id="cold-boot">4. Power Outage Cold-Boot Resilience Test</h2>
 <p>In Indian power grids, power cuts and inverter transfers occur frequently. Test cold-boot recovery:</p>

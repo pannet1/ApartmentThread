@@ -76,12 +76,12 @@
 <li>Server up and reachable with the WAN cable out.</li>
 <li>Radio on RCP firmware; server detects it.</li>
 <li>Border-router service running; Thread network appears and survives a reboot.</li>
-<li><strong>Commission a store-bought Thread device</strong> &mdash; any off-the-shelf sensor. This is the whole test: if a known-good device can't join and report, a custom sensor never will. <span class="badge badge-warn">closes O-07</span></li>
+<li><strong>Commission a store-bought Thread device</strong> &mdash; any off-the-shelf Matter-over-Thread sensor. This is the whole test: if a known-good device can't join and report, a custom sensor never will. <span class="badge badge-warn">closes O-07</span></li>
 <li>Remove and re-add it; confirm it works after a server reboot with the WAN out.</li>
-<li>Only then start the second presence sensor.</li>
+<li>Only then start the custom presence sensor.</li>
 </ol>
 <p>Full sequence with pass/fail gates: <a href="install-thread.html">Stage 2 &middot; Thread Border Router</a>. Host hardware metrics are documented in <a href="server.html">Server Specifications</a>.</p>
 
-<div class="box info"><span class="label">Why this comes before the sensors</span><p>A store-bought Thread device costs less than one PS-1 kit and tests exactly the same risk. Buying the router parts and a cheap test sensor together &mdash; before any presence sensor &mdash; moves the biggest unknown to the front of the queue. Both lines are on the <a href="bom.html">buy list</a>.</p></div>
+<div class="box info"><span class="label">Why this comes before the sensors</span><p>Proving the radio stack with a cheap, off-the-shelf Thread device costs far less than committing to the full custom PS-1 presence-sensor kit, and it tests the exact same failure mode: whether the border router actually works end-to-end. A failed test on a low-cost store-bought sensor is cheap to debug; a failed test after sinking the entire PS-1 bill of materials is not. Buy the router parts and one cheap test sensor together &mdash; before any presence sensor &mdash; and move the biggest unknown to the front of the queue. Authoritative prices for every line are maintained in the <a href="bom.html">Bill of Materials</a>; this page intentionally duplicates none of them.</p></div>
 
 <nav class="pagenav"><a href="server.html"><span class="dir">Previous Page</span>&larr; Server (SRV)</a><a class="next" href="sensor.html"><span class="dir">Next Page</span>Presence Sensor (PS) &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Component BR-1 · change the approach, assign a new ID</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>

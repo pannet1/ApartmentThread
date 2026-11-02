@@ -840,3 +840,90 @@ figure { margin: 1.5rem 0; }
   gap: 0.75rem;
 }
 
+/* Collapsible YAML Deployment Snippets */
+details.code-fold {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  margin: 1.25rem 0;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+details.code-fold summary {
+  padding: 0.9rem 1.25rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+  background: var(--surface-2);
+  user-select: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  transition: background 0.15s var(--ease);
+}
+details.code-fold summary:hover {
+  background: var(--bg-soft);
+}
+details.code-fold summary::-webkit-details-marker {
+  display: none;
+}
+details.code-fold summary .fold-title {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+details.code-fold summary .fold-title::before {
+  content: "▶";
+  font-size: 0.75rem;
+  display: inline-block;
+  transition: transform 0.2s var(--ease);
+  color: var(--accent);
+}
+details.code-fold[open] summary .fold-title::before {
+  transform: rotate(90deg);
+}
+details.code-fold[open] summary {
+  border-bottom: 1px solid var(--border-strong);
+}
+details.code-fold .fold-body {
+  padding: 0;
+  position: relative;
+}
+details.code-fold .fold-meta {
+  padding: 0.6rem 1.25rem;
+  background: var(--bg-soft);
+  font-size: 0.82rem;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border-strong);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+details.code-fold pre {
+  margin: 0;
+  border-radius: 0;
+  padding: 1.25rem;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+.btn-copy-code {
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--ink);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s var(--ease);
+}
+.btn-copy-code:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--accent);
+}
+

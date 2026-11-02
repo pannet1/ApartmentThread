@@ -30,29 +30,13 @@
 <h2 id="hallway">1. The Hall Pattern &mdash; Timer-Driven Lighting (No Sensor)</h2>
 <div class="box verdict"><span class="label">Pattern Philosophy &mdash; Zero Sensor Cost</span><p>Hallways and living rooms have high transient foot traffic, wide open sightlines, and roaming pets where radar sensors often create nuisance triggers and drain batteries. <strong>No presence sensor is required.</strong> Instead, deterministic time/schedule automations trigger the Tinxy switch to turn the light on and off, with the physical wall switch always ready for manual use.</p></div>
 
-<h3>Home Assistant YAML</h3>
-<pre><code>alias: "Hall Light: Evening ON"
-trigger:
-  - platform: sun
-    event: sunset
-    offset: "-00:15:00"
-  - platform: time
-    at: "18:30:00"
-action:
-  - service: switch.turn_on
-    target:
-      entity_id: switch.hall_light
-mode: single
-
-alias: "Hall Light: Night OFF"
-trigger:
-  - platform: time
-    at: "23:00:00"
-action:
-  - service: switch.turn_off
-    target:
-      entity_id: switch.hall_light
-mode: single</code></pre>
+<h3>Automation Rules &amp; Schedule</h3>
+<ul>
+  <li><strong>Evening Schedule:</strong> 15 minutes before sunset or at 18:30 &rarr; Turn ON <code>switch.hall_light</code> automatically.</li>
+  <li><strong>Bedtime Schedule:</strong> At 23:00 &rarr; Turn OFF <code>switch.hall_light</code> automatically.</li>
+  <li><strong>Manual Override:</strong> Outside scheduled hours, the occupant simply taps the physical wall switch on the Tinxy plate.</li>
+</ul>
+<p><a href="install-commissioning.html#yaml-hall" class="badge badge-accent">Copy Deployment YAML in Stage 5 (HL-01) &rarr;</a></p>
 
 <p>Timers handle routine evening illumination predictably without sensor latency or false positives. Outside scheduled hours, the occupant simply taps the physical wall switch on the Tinxy plate.</p>
 
@@ -68,33 +52,13 @@ mode: single</code></pre>
 <h2 id="study">2. The Study Room Pattern &mdash; Presence-Driven Light &amp; Fan</h2><a id="bedroom"></a>
 <div class="box verdict"><span class="label">Pattern Philosophy &mdash; Stationary Occupant Detection</span><p>In a study room or home office, people sit stationary for long hours reading, typing, or on video calls. Traditional PIR sensors fail here because they only detect bulk motion, plunging the occupant into darkness. The <strong>Sentinel mmWave presence sensor</strong> (<a href="sensor.html">PS-1</a>) detects micro-movements (breathing, typing). Presence turns <strong>both the light and the fan ON</strong>; vacating the room turns both OFF.</p></div>
 
-<h3>Home Assistant YAML</h3>
-<pre><code>alias: "Study Room: Occupied -> Light & Fan ON"
-trigger:
-  - platform: state
-    entity_id: binary_sensor.study_presence
-    to: "on"
-action:
-  - service: switch.turn_on
-    target:
-      entity_id:
-        - switch.study_light
-        - switch.study_fan
-mode: single
-
-alias: "Study Room: Vacated -> Light & Fan OFF"
-trigger:
-  - platform: state
-    entity_id: binary_sensor.study_presence
-    to: "off"
-    for: "00:02:00"
-action:
-  - service: switch.turn_off
-    target:
-      entity_id:
-        - switch.study_light
-        - switch.study_fan
-mode: single</code></pre>
+<h3>Automation Rules &amp; Hold Logic</h3>
+<ul>
+  <li><strong>Occupancy Trigger:</strong> Sentinel mmWave radar (<a href="sensor.html">PS-1</a>) detects micro-movement (breathing/typing) &rarr; turns ON both <code>switch.study_light</code> and <code>switch.study_fan</code> within 1 second.</li>
+  <li><strong>Vacancy Delay:</strong> When the occupant leaves, the radar clears (<code>off</code>) and a <strong>2-minute vacancy buffer</strong> (<code>00:02:00</code>) begins. Brief micro-shadows or momentary step-outs do not prematurely kill light and fan.</li>
+  <li><strong>Hold Expiration:</strong> Once 120 seconds of continuous zero-occupancy elapse, both light and fan turn OFF automatically.</li>
+</ul>
+<p><a href="install-commissioning.html#yaml-study" class="badge badge-accent">Copy Deployment YAML in Stage 5 (ST-01) &rarr;</a></p>
 
 <p>The 2-minute <code>for: "00:02:00"</code> vacancy buffer ensures that brief micro-shadows or momentary step-outs do not prematurely turn off the light and fan.</p>
 
@@ -129,49 +93,9 @@ mode: single</code></pre>
 <li><strong>Steam &amp; Condensation:</strong> In Indian bathrooms with geysers, steam rises. Mounting the sensor at mid-height on the exterior door jamb avoids condensation pools.</li>
 </ol>
 
-<h3>Home Assistant YAML</h3>
-<pre><code># 1. Door Opens -> Light ON Immediately (Illuminate before entering)
-alias: "Bathroom: Door Opened -> Light ON Immediately"
-trigger:
-  - platform: state
-    entity_id: binary_sensor.bathroom_door_contact
-    to: "on"                       # "on" represents physically open
-action:
-  - service: switch.turn_on
-    target:
-      entity_id: switch.bathroom_light
-mode: single
-
-# 2. Door Closes -> Occupancy Latched (Light & Exhaust Fan ON continuously)
-alias: "Bathroom: Door Closed -> Occupancy Latched ON"
-trigger:
-  - platform: state
-    entity_id: binary_sensor.bathroom_door_contact
-    to: "off"                      # "off" represents physically closed/latched
-action:
-  - service: switch.turn_on
-    target:
-      entity_id: switch.bathroom_light
-  - service: fan.turn_on
-    target:
-      entity_id: fan.bathroom_exhaust_fan
-mode: single
-
-# 3. Door Left Open / Exit -> Vacancy Grace Countdown -> Turn OFF
-alias: "Bathroom: Door Opened / Vacated -> Turn OFF After Grace Period"
-trigger:
-  - platform: state
-    entity_id: binary_sensor.bathroom_door_contact
-    to: "on"
-    for: "00:01:00"                # 60-second grace period for exit / ventilation
-action:
-  - service: switch.turn_off
-    target:
-      entity_id: switch.bathroom_light
-  - service: fan.turn_off
-    target:
-      entity_id: fan.bathroom_exhaust_fan
-mode: single</code></pre>
+<h3>Automation Deployment Link</h3>
+<p>The state machine transitions are latched by the door contact sensor (<a href="door-sensor.html">DS-1</a>) and executed via Home Assistant automation blocks:</p>
+<p><a href="install-commissioning.html#yaml-bathroom" class="badge badge-accent">Copy Deployment YAML in Stage 5 (BA-01) &rarr;</a></p>
 
 <h3>Test Cases</h3>
 <div class="scroll"><table><thead><tr><th>ID</th><th>Condition / Event</th><th>Expected Behaviour</th></tr></thead><tbody>

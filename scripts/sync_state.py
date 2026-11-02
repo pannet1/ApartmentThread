@@ -81,32 +81,34 @@ def get_status_badge_class(status):
 
 def build_dashboard_html(stats):
     return (
-        f'<div id="state-dashboard" class="state-dashboard">'
-        f'<div class="state-metrics">'
-        f'<div class="state-metric"><span class="state-metric-val">{stats["total"]}</span><span class="state-metric-lbl">Total Gates</span></div>'
-        f'<div class="state-metric"><span class="state-metric-val" style="color:var(--ok);">{stats["resolved"]}</span><span class="state-metric-lbl">Resolved / Proven</span></div>'
-        f'<div class="state-metric"><span class="state-metric-val" style="color:var(--accent);">{stats["in_verification"]}</span><span class="state-metric-lbl">In Verification</span></div>'
-        f'<div class="state-metric"><span class="state-metric-val" style="color:var(--danger);">{stats["open"]}</span><span class="state-metric-lbl">Open Items</span></div>'
-        f'<div class="state-metric"><span class="state-metric-val" style="color:#ef4444;">{stats["blocks_purchase"]}</span><span class="state-metric-lbl">Blocks Purchase</span></div>'
-        f'</div>'
-        f'<div class="state-progress-wrap">'
-        f'<div class="state-progress-meta"><span>Gate Resolution Progress</span><span>{stats["resolved"]} of {stats["total"]} ({stats["percentage"]}%)</span></div>'
-        f'<div class="state-progress-bar"><div class="state-progress-fill" style="width:{stats["percentage"]}%;"></div></div>'
-        f'</div>'
-        f'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;margin-top:0.25rem;">'
-        f'<div class="state-filters" id="state-filters">'
-        f'<button class="filter-btn active" data-filter="all">All ({stats["total"]})</button>'
-        f'<button class="filter-btn" data-filter="open">Open ({stats["open"]})</button>'
-        f'<button class="filter-btn" data-filter="in_verification">In Verification ({stats["in_verification"]})</button>'
-        f'<button class="filter-btn" data-filter="resolved">Resolved ({stats["resolved"]})</button>'
-        f'<button class="filter-btn" data-filter="blocks">Blocks Purchase ({stats["blocks_purchase"]})</button>'
-        f'</div>'
-        f'<div class="state-toolbar">'
-        f'<button class="btn-quiet" id="btn-reset-state" style="font-size:0.8rem;padding:0.25rem 0.6rem;">Reset to Default</button>'
-        f'<button class="btn-quiet" id="btn-export-state" style="font-size:0.8rem;padding:0.25rem 0.6rem;">Copy State JSON</button>'
-        f'</div>'
-        f'</div>'
-        f'</div>'
+        f'<!-- STATE_DASHBOARD_START -->\n'
+        f'<div id="state-dashboard" class="state-dashboard">\n'
+        f'<div class="state-metrics">\n'
+        f'<div class="state-metric"><span class="state-metric-val">{stats["total"]}</span><span class="state-metric-lbl">Total Gates</span></div>\n'
+        f'<div class="state-metric"><span class="state-metric-val" style="color:var(--ok);">{stats["resolved"]}</span><span class="state-metric-lbl">Resolved / Proven</span></div>\n'
+        f'<div class="state-metric"><span class="state-metric-val" style="color:var(--accent);">{stats["in_verification"]}</span><span class="state-metric-lbl">In Verification</span></div>\n'
+        f'<div class="state-metric"><span class="state-metric-val" style="color:var(--danger);">{stats["open"]}</span><span class="state-metric-lbl">Open Items</span></div>\n'
+        f'<div class="state-metric"><span class="state-metric-val" style="color:#ef4444;">{stats["blocks_purchase"]}</span><span class="state-metric-lbl">Blocks Purchase</span></div>\n'
+        f'</div>\n'
+        f'<div class="state-progress-wrap">\n'
+        f'<div class="state-progress-meta"><span>Gate Resolution Progress</span><span>{stats["resolved"]} of {stats["total"]} ({stats["percentage"]}%)</span></div>\n'
+        f'<div class="state-progress-bar"><div class="state-progress-fill" style="width:{stats["percentage"]}%;"></div></div>\n'
+        f'</div>\n'
+        f'<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;margin-top:0.25rem;">\n'
+        f'<div class="state-filters" id="state-filters">\n'
+        f'<button class="filter-btn active" data-filter="all">All ({stats["total"]})</button>\n'
+        f'<button class="filter-btn" data-filter="open">Open ({stats["open"]})</button>\n'
+        f'<button class="filter-btn" data-filter="in_verification">In Verification ({stats["in_verification"]})</button>\n'
+        f'<button class="filter-btn" data-filter="resolved">Resolved ({stats["resolved"]})</button>\n'
+        f'<button class="filter-btn" data-filter="blocks">Blocks Purchase ({stats["blocks_purchase"]})</button>\n'
+        f'</div>\n'
+        f'<div class="state-toolbar">\n'
+        f'<button class="btn-quiet" id="btn-reset-state" style="font-size:0.8rem;padding:0.25rem 0.6rem;">Reset to Default</button>\n'
+        f'<button class="btn-quiet" id="btn-export-state" style="font-size:0.8rem;padding:0.25rem 0.6rem;">Copy State JSON</button>\n'
+        f'</div>\n'
+        f'</div>\n'
+        f'</div>\n'
+        f'<!-- STATE_DASHBOARD_END -->'
     )
 
 def sync_wiki():
@@ -121,10 +123,6 @@ def sync_wiki():
     open_badge_text = f"{stats['open']} open" if stats['open'] > 0 else "All verified"
 
     for file_path in html_files:
-        fname = os.path.basename(file_path)
-        if fname == "aziot.html":
-            continue
-
         with open(file_path, "r", encoding="utf-8") as f:
             content = f.read()
 
@@ -168,8 +166,20 @@ def sync_wiki():
 
     # Ensure Dashboard is inserted right after box info
     dash_html = build_dashboard_html(stats)
-    if 'id="state-dashboard"' in open_content:
-        open_content = re.sub(r'<div id="state-dashboard".*?</div>\s*</div>\s*</div>', dash_html, open_content, flags=re.DOTALL)
+    if '<!-- STATE_DASHBOARD_START -->' in open_content:
+        open_content = re.sub(
+            r'<!-- STATE_DASHBOARD_START -->.*?<!-- STATE_DASHBOARD_END -->',
+            dash_html,
+            open_content,
+            flags=re.DOTALL
+        )
+    elif 'id="state-dashboard"' in open_content:
+        open_content = re.sub(
+            r'<div id="state-dashboard".*?(?=\s*<h2\s+id="thread")',
+            dash_html + '\n\n',
+            open_content,
+            flags=re.DOTALL
+        )
     else:
         info_box_pattern = r'(<div class="box info">.*?</div>)'
         open_content = re.sub(info_box_pattern, rf'\1\n\n{dash_html}', open_content, flags=re.DOTALL)

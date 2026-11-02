@@ -66,7 +66,8 @@ To eliminate conflicting documentation and prevent maintenance churn, every type
 | **BOM, Pricing & Sourcing** | `wiki/bom.html` & `wiki/assets/state.json` | **DO NOT** maintain price tables in component pages (`sensor.html`, `server.html`, etc.). Link to `bom.html` instead. |
 | **Project & Gate State** | `wiki/assets/state.json` (synced via `scripts/sync_state.py`) | **DO NOT** hardcode status numbers (e.g. "9 open", "12 items") into body paragraphs or headings. |
 | **Hardware Pinouts & Wiring** | Component specs (`server.html`, `thread-router.html`, `sensor.html`) | **DO NOT** duplicate 30-pin header tables inside `install-*.html`. Link to the component spec anchor. |
-| **Automation Rules & Entities** | `wiki/rooms.html` | **DO NOT** redefine YAML triggers or duplicate state machines in installation guides. |
+| **Automation Logic & State Machines** | `wiki/rooms.html` | **DO NOT** clutter requirements pages with raw YAML code blocks or redefine state machines in installation guides. Link to `install-commissioning.html` for deployment YAML. |
+| **Deployment Automations (YAML)** | `wiki/install-commissioning.html` | **DO NOT** duplicate YAML configuration snippets across wiki pages. Maintain collapsible, copy-paste ready blocks in Stage 5. |
 | **Lab Inventory** | `wiki/inventory.html` & `wiki/assets/inventory.json` | **DO NOT** hardcode uncommitted spare parts outside inventory. |
 
 ---

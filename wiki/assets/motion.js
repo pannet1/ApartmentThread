@@ -110,4 +110,30 @@
     }, { threshold: 0.4 });
     roll.observe(fig);
   }
+
+  /* ---- copy code button handler ---- */
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.btn-copy-code');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var container = btn.closest('details.code-fold') || btn.closest('.code-wrap') || btn.parentElement;
+    var codeEl = container ? container.querySelector('pre code') : null;
+    if (!codeEl) return;
+
+    var text = codeEl.innerText || codeEl.textContent;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function () {
+        var orig = btn.innerText;
+        btn.innerText = 'Copied!';
+        btn.style.background = 'var(--ok)';
+        btn.style.color = '#1c150d';
+        setTimeout(function () {
+          btn.innerText = orig;
+          btn.style.background = '';
+          btn.style.color = '';
+        }, 2000);
+      });
+    }
+  });
 })();
