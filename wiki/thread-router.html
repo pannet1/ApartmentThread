@@ -71,17 +71,11 @@
 <tr><td colspan="3"><strong>BR-1 total</strong></td><td class="num"><strong>₹889</strong></td><td><span class="badge badge-ok">On Bench &middot; Active</span> &mdash; proven live on hardware with active Thread dataset</td></tr>
 </tbody></table></div>
 
-<h2 id="proof">Proof sequence &mdash; cheapest failure first</h2>
-<ol>
-<li>Server up and reachable with the WAN cable out.</li>
-<li>Radio on RCP firmware; server detects it.</li>
-<li>Border-router service running; Thread network appears and survives a reboot.</li>
-<li><strong>Commission a store-bought Thread device</strong> &mdash; any off-the-shelf Matter-over-Thread sensor. This is the whole test: if a known-good device can't join and report, a custom sensor never will. <span class="badge badge-warn">closes O-07</span></li>
-<li>Remove and re-add it; confirm it works after a server reboot with the WAN out.</li>
-<li>Only then start the custom presence sensor.</li>
-</ol>
-<p>Full sequence with pass/fail gates: <a href="install-thread.html">Stage 2 &middot; Thread Border Router</a>. Host hardware metrics are documented in <a href="server.html">Server Specifications</a>.</p>
+<h2 id="proof">Hardware Verification &amp; Next Steps</h2>
+<p>The M5Stack ESP32-H2 (BR-1) functions strictly as a physical Layer 1/2 IEEE 802.15.4 transceiver. Full software stack execution, container deployment, and commissioning verification are performed in the installation phase.</p>
 
-<div class="box info"><span class="label">Why this comes before the sensors</span><p>Proving the radio stack with a cheap, off-the-shelf Thread device costs far less than committing to the full custom PS-1 presence-sensor kit, and it tests the exact same failure mode: whether the border router actually works end-to-end. A failed test on a low-cost store-bought sensor is cheap to debug; a failed test after sinking the entire PS-1 bill of materials is not. Buy the router parts and one cheap test sensor together &mdash; before any presence sensor &mdash; and move the biggest unknown to the front of the queue. Authoritative prices for every line are maintained in the <a href="bom.html">Bill of Materials</a>; this page intentionally duplicates none of them.</p></div>
+<div class="box info"><span class="label">Single Source of Truth &middot; Stage 2 Build &amp; Proof Guide</span>
+<p>For physical underside jumper pin connections, Linux serial configuration, <code>otbr-agent</code> Docker container setup, and the step-by-step <strong>Matter Reference Node Proof Sequence</strong>, see <a href="install-thread.html">Stage 2 &middot; Thread Border Router Build Guide &rarr;</a>.</p>
+</div>
 
 <nav class="pagenav"><a href="server.html"><span class="dir">Previous Page</span>&larr; Server (SRV)</a><a class="next" href="sensor.html"><span class="dir">Next Page</span>Presence Sensor (PS) &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Component BR-1 · change the approach, assign a new ID</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>

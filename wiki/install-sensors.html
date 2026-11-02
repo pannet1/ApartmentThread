@@ -15,13 +15,253 @@
 <p>The Seeed Studio XIAO nRF52840 ships with a factory UF2 USB mass storage bootloader &mdash; no JTAG/SWD programmer is required:</p>
 <ol>
   <li>Download the precompiled Sentinel firmware UF2 binary from the <a href="https://github.com/LocalizedTech/sentinel-firmware/releases" target="_blank" rel="noopener">Sentinel GitHub Repository &rarr;</a>.</li>
-  <li>Connect the XIAO nRF52840 to your computer via USB-C.</li>
+  <li>Connect the XIAO nRF52840 to your computer via a standard USB-C cable.</li>
   <li>Double-tap the tiny physical <strong>Reset button</strong> on the board. A virtual USB drive named <code>XIAO-SENSE</code> or <code>XIAO-NRF</code> will appear in your file manager.</li>
   <li>Drag and drop <code>zephyr.uf2</code> directly onto the virtual USB drive. The board will automatically flash the firmware and reboot.</li>
 </ol>
 
-<h2 id="ps1-soldering">2. Assemble and Solder the Sentinel Reference PCB</h2>
-<p>If assembling on the Sentinel custom PCB (<a href="https://github.com/LocalizedTech/sentinel-electronics" target="_blank" rel="noopener">CERN-OHL-S-2.0</a>), follow the milled-window soldering sequence:</p>
+<figure style="margin:1.5rem 0;">
+  <img src="assets/images/seeed-xiao-reset-button.webp" alt="Seeed Studio XIAO nRF52840 Physical Reset Button Location and UF2 Bootloader Double-Tap Activation" style="display:block;width:100%;height:auto;border-radius:10px;border:1px solid #3b2b1d;" loading="lazy">
+  <figcaption style="font-size:0.82rem;color:#a89a85;margin-top:0.5rem;text-align:center;">Physical Reset Button location (tiny 1.5mm switch immediately left of the USB-C shield) and rapid double-tap bootloader sequence.</figcaption>
+</figure>
+
+<div class="box ok"><span class="label">Pro-Tip: How to Reliably Trigger UF2 Bootloader Mode</span>
+<ul>
+  <li><strong>What It Looks Like:</strong> The board does not have a traditional plastic rocker or plunger button. To fit inside the ultra-compact 21&times;17.5mm form factor, Seeed uses a micro metal-dome tactile switch that <strong>resembles a tiny silver solder bead or metallic blister</strong> (~1.5mm) directly beside the USB-C shield.</li>
+  <li><strong>Use a Pointed Tool:</strong> Pressing with a flat thumb pad often fails to actuate the micro switch. Use a fingernail, toothpick, tweezers, or the blunt tip of a ballpoint pen. You will feel a subtle, crisp mechanical click.</li>
+  <li><strong>Double-Click Timing (&lt;500ms):</strong> Tap the button twice quickly, exactly like double-clicking a computer mouse. A single click only executes a standard MCU reboot; a rapid double-tap triggers bootloader mode.</li>
+  <li><strong>Visual Confirmation:</strong> When bootloader mode activates, the onboard RGB LED (located to the right of the USB-C port) begins pulsing a gentle green light.</li>
+  <li><strong>Virtual Drive Appears:</strong> A virtual mass-storage drive titled <code>XIAO-SENSE</code>, <code>XIAO-NRF</code>, or <code>XIAO-BOOT</code> will immediately mount on your operating system (macOS Finder, Windows Explorer, or Linux File Manager).</li>
+</ul>
+</div>
+
+<h2 id="ps1-bench">2. Direct Bench Interconnect &amp; Verification (No Breakout Board Needed)</h2>
+<p>You do <strong>not need the custom Sentinel PCB</strong> to bench-test the presence sensor. While the custom PCB is required for permanent wall-mounting inside the 3D ball enclosure and multi-month battery power-gating, all sensing, UART communication, and Matter-over-Thread pairing can be 100% verified right now on a solderless breadboard (<a href="inventory.html">INV-03</a>) or using 4 DuPont jumper wires (<a href="inventory.html">INV-06</a>).</p>
+
+<div class="box info"><span class="label">Why an External Charging Module is NOT Needed</span>
+<p>The Seeed Studio XIAO nRF52840 <strong>already integrates a Texas Instruments BQ25100 LiPo battery charger IC directly on the module</strong>. When you plug a standard USB-C cable into the XIAO, it automatically powers the MCU, outputs 3.3V to the radar, and charges any attached LiPo battery. Do not connect an external TP4056 charging board in parallel with the XIAO battery pins, as competing charge controllers will cause power conflicts and overcharging risks.</p>
+</div>
+
+<!-- SVG Bench Interconnect Diagram -->
+<svg viewBox="0 0 940 520" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;max-width:940px;margin:1.5rem auto;background:#17120c;border-radius:12px;border:1px solid #4a3b29;font-family:Archivo,ui-sans-serif,system-ui,sans-serif;">
+  <defs>
+    <filter id="wire-glow-ps" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect width="940" height="520" fill="#17120c" rx="12"/>
+
+  <!-- Top Title Banner -->
+  <rect x="25" y="15" width="890" height="42" rx="8" fill="#201811" stroke="#3b2b1d" stroke-width="1"/>
+  <text x="45" y="41" fill="#f59e0b" font-size="13.5" font-weight="700" letter-spacing="0.04em">PS-1 DIRECT BENCH INTERCONNECT &#8212; SOLDERLESS BREADBOARD / JUMPER HOOKUP</text>
+  <text x="895" y="41" fill="#10b981" font-size="11" font-weight="600" text-anchor="end">&#10003; ZERO PCB REQUIRED &#183; POWERED VIA USB-C</text>
+
+  <!-- ==================== LEFT CARD: SEEED STUDIO XIAO nRF52840 ==================== -->
+  <rect x="25" y="70" width="370" height="430" rx="10" fill="#201811" stroke="#3b2b1d" stroke-width="1.5"/>
+  <text x="40" y="96" fill="#f59e0b" font-size="13" font-weight="700" letter-spacing="0.04em">SEEED STUDIO XIAO nRF52840</text>
+  <text x="40" y="112" fill="#a89a85" font-size="10.5">Top-down pinout &#8212; Powered via 5V USB-C cable</text>
+
+  <!-- Reset Button (Left of USB-C) -->
+  <rect x="68" y="125" width="70" height="22" rx="4" fill="#7f1d1d" fill-opacity="0.35" stroke="#ef4444" stroke-width="1.2"/>
+  <circle cx="78" cy="136" r="3.5" fill="#ef4444"/>
+  <text x="86" y="140" fill="#fca5a5" font-size="8.5" font-weight="700">RST (2x)</text>
+
+  <!-- USB-C Port -->
+  <rect x="146" y="125" width="128" height="22" rx="5" fill="#332a1e" stroke="#55452c" stroke-width="1.2"/>
+  <text x="210" y="140" fill="#c9c3b6" font-size="9.5" font-weight="600" text-anchor="middle">USB-C POWER IN</text>
+
+  <!-- RGB Status LED (Right of USB-C) -->
+  <rect x="282" y="125" width="75" height="22" rx="4" fill="#064e3b" fill-opacity="0.35" stroke="#10b981" stroke-width="1.2"/>
+  <circle cx="292" cy="136" r="3.5" fill="#10b981"/>
+  <text x="300" y="140" fill="#6ee7b7" font-size="8.5" font-weight="700">RGB LED</text>
+
+  <!-- XIAO Body -->
+  <rect x="50" y="155" width="320" height="325" rx="8" fill="#13100b" stroke="#42351f" stroke-width="1"/>
+  
+  <!-- Internal chip label -->
+  <rect x="130" y="175" width="160" height="42" rx="6" fill="#1c1610" stroke="#3b2b1d" stroke-width="1"/>
+  <text x="210" y="194" fill="#bda38b" font-size="10.5" font-weight="700" text-anchor="middle">Nordic nRF52840</text>
+  <text x="210" y="208" fill="#a89a85" font-size="8.5" text-anchor="middle">Thread 802.15.4 + BLE 5.0</text>
+
+  <!-- Underside Charger note -->
+  <rect x="100" y="228" width="220" height="34" rx="4" fill="#241c12" stroke="#55452c" stroke-width="0.8"/>
+  <text x="210" y="243" fill="#a9b58c" font-size="8.5" font-weight="600" text-anchor="middle">Onboard TI BQ25100 LiPo Charger</text>
+  <text x="210" y="255" fill="#78716c" font-size="7.5" text-anchor="middle">(Charges via USB-C &#183; External module not needed)</text>
+
+  <!-- Left Pins: Pins 1..7 (D0 to D6) -->
+  <rect x="55" y="280" width="95" height="22" rx="3" fill="#1c1610" stroke="#3b2b1d" stroke-width="0.8"/>
+  <circle cx="65" cy="291" r="3.5" fill="#57534e"/>
+  <text x="75" y="295" fill="#78716c" font-size="9">Pin 1 (D0)</text>
+
+  <rect x="55" y="307" width="95" height="22" rx="3" fill="#1c1610" stroke="#3b2b1d" stroke-width="0.8"/>
+  <circle cx="65" cy="318" r="3.5" fill="#57534e"/>
+  <text x="75" y="322" fill="#78716c" font-size="9">Pin 2 (D1)</text>
+
+  <rect x="55" y="334" width="95" height="22" rx="3" fill="#1c1610" stroke="#3b2b1d" stroke-width="0.8"/>
+  <circle cx="65" cy="345" r="3.5" fill="#57534e"/>
+  <text x="75" y="349" fill="#78716c" font-size="9">Pin 3 (D2)</text>
+
+  <!-- Pin 4: D3 (IRQ Wake - Yellow) -->
+  <rect x="55" y="361" width="115" height="24" rx="4" fill="#78350f" fill-opacity="0.35" stroke="#f59e0b" stroke-width="1.2"/>
+  <circle cx="65" cy="373" r="4.5" fill="#f59e0b"/>
+  <text x="75" y="377" fill="#fde68a" font-size="9.5" font-weight="700">Pin 4 (D3 IRQ)</text>
+
+  <rect x="55" y="390" width="95" height="22" rx="3" fill="#1c1610" stroke="#3b2b1d" stroke-width="0.8"/>
+  <circle cx="65" cy="401" r="3.5" fill="#57534e"/>
+  <text x="75" y="405" fill="#78716c" font-size="9">Pin 5 (D4)</text>
+
+  <rect x="55" y="417" width="95" height="22" rx="3" fill="#1c1610" stroke="#3b2b1d" stroke-width="0.8"/>
+  <circle cx="65" cy="428" r="3.5" fill="#57534e"/>
+  <text x="75" y="432" fill="#78716c" font-size="9">Pin 6 (D5)</text>
+
+  <!-- Pin 7: D6 (Blue UART TX) -->
+  <rect x="55" y="444" width="125" height="26" rx="4" fill="#1e3a8a" fill-opacity="0.35" stroke="#3b82f6" stroke-width="1.5"/>
+  <circle cx="65" cy="457" r="5" fill="#3b82f6"/>
+  <text x="75" y="461" fill="#93c5fd" font-size="10" font-weight="700">Pin 7 (D6 TX)</text>
+
+  <!-- Right Pins: Pins 14..8 (5V down to D7) -->
+  <rect x="270" y="280" width="95" height="22" rx="3" fill="#1c1610" stroke="#3b2b1d" stroke-width="0.8"/>
+  <circle cx="355" cy="291" r="3.5" fill="#ef4444"/>
+  <text x="345" y="295" fill="#78716c" font-size="9" text-anchor="end">Pin 14 (5V)</text>
+
+  <!-- Pin 13: GND (Black Ground) -->
+  <rect x="250" y="307" width="115" height="25" rx="4" fill="#0f172a" stroke="#94a3b8" stroke-width="1.5"/>
+  <circle cx="355" cy="319" r="5" fill="#94a3b8"/>
+  <text x="345" y="323" fill="#f1f5f9" font-size="10" font-weight="700" text-anchor="end">Pin 13 (GND)</text>
+
+  <!-- Pin 12: 3V3 (Red +3.3V Out) -->
+  <rect x="245" y="337" width="120" height="25" rx="4" fill="#7f1d1d" fill-opacity="0.35" stroke="#ef4444" stroke-width="1.5"/>
+  <circle cx="355" cy="349" r="5" fill="#ef4444"/>
+  <text x="345" y="353" fill="#fca5a5" font-size="10" font-weight="700" text-anchor="end">Pin 12 (3V3 Out)</text>
+
+  <rect x="270" y="367" width="95" height="22" rx="3" fill="#1c1610" stroke="#3b2b1d" stroke-width="0.8"/>
+  <circle cx="355" cy="378" r="3.5" fill="#57534e"/>
+  <text x="345" y="382" fill="#78716c" font-size="9" text-anchor="end">Pin 11 (D10)</text>
+
+  <rect x="270" y="394" width="95" height="22" rx="3" fill="#1c1610" stroke="#3b2b1d" stroke-width="0.8"/>
+  <circle cx="355" cy="405" r="3.5" fill="#57534e"/>
+  <text x="345" y="414" fill="#78716c" font-size="9" text-anchor="end">Pin 10 (D9)</text>
+
+  <rect x="270" y="421" width="95" height="22" rx="3" fill="#1c1610" stroke="#3b2b1d" stroke-width="0.8"/>
+  <circle cx="355" cy="432" r="3.5" fill="#57534e"/>
+  <text x="345" y="436" fill="#78716c" font-size="9" text-anchor="end">Pin 9 (D8)</text>
+
+  <!-- Pin 8: D7 (Green UART RX) -->
+  <rect x="245" y="448" width="120" height="26" rx="4" fill="#064e3b" fill-opacity="0.35" stroke="#10b981" stroke-width="1.5"/>
+  <circle cx="355" cy="461" r="5" fill="#10b981"/>
+  <text x="345" y="465" fill="#6ee7b7" font-size="10" font-weight="700" text-anchor="end">Pin 8 (D7 RX)</text>
+
+
+  <!-- ==================== RIGHT CARD: HLK-LD2410S RADAR ==================== -->
+  <rect x="555" y="70" width="375" height="430" rx="10" fill="#201811" stroke="#3b2b1d" stroke-width="1.5"/>
+  <text x="575" y="96" fill="#f59e0b" font-size="13" font-weight="700" letter-spacing="0.04em">HI-LINK HLK-LD2410S RADAR</text>
+  <text x="575" y="112" fill="#a89a85" font-size="10.5">Silkscreen: JVJ, GND, OT1, RX, OT2 &#183; 2.54mm Pitch</text>
+
+  <!-- Antenna graphic area -->
+  <rect x="575" y="125" width="335" height="120" rx="6" fill="#13100b" stroke="#3b2b1d" stroke-width="1"/>
+  <text x="742" y="146" fill="#e4e2da" font-size="10.5" font-weight="700" text-anchor="middle">24 GHz Planar Microstrip Antenna</text>
+  
+  <!-- Wave graphics -->
+  <path d="M 697,165 A 45,45 0 0,1 787,165" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,3" opacity="0.6"/>
+  <path d="M 682,180 A 65,65 0 0,1 802,180" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="4,4" opacity="0.8"/>
+  <path d="M 667,195 A 85,85 0 0,1 817,195" fill="none" stroke="#f59e0b" stroke-width="2" opacity="0.9"/>
+  <text x="742" y="218" fill="#10b981" font-size="9" font-weight="600" text-anchor="middle">&#128246; Bluetooth BLE Active &#183; App: HLKRadarTool</text>
+  <text x="742" y="233" fill="#a89a85" font-size="8" text-anchor="middle">Detects Micro-Motion (Breathing / Desk Typing)</text>
+
+  <!-- Radar Module Lower Section: 5 Pin Header -->
+  <rect x="575" y="260" width="335" height="220" rx="6" fill="#13100b" stroke="#3b2b1d" stroke-width="1"/>
+  <text x="590" y="280" fill="#a89a85" font-size="9.5" font-weight="600">5-PIN SOCKET (Silkscreen: JVJ, GND, OT1, RX, OT2):</text>
+
+  <!-- Pin 1: JVJ (3V3 DC In) -->
+  <rect x="590" y="295" width="305" height="30" rx="5" fill="#7f1d1d" fill-opacity="0.3" stroke="#ef4444" stroke-width="1.5"/>
+  <circle cx="607" cy="310" r="5" fill="#ef4444"/>
+  <text x="620" y="308" fill="#fca5a5" font-size="10.5" font-weight="700">Pin 1: JVJ &#8594; 3V3 (+3.3V DC In)</text>
+  <text x="620" y="321" fill="#f87171" font-size="8.5">"JVJ" is font for 3V3 &#183; Draws ~0.6mA active</text>
+
+  <!-- Pin 2: GND (Ground) -->
+  <rect x="590" y="332" width="305" height="30" rx="5" fill="#0f172a" stroke="#94a3b8" stroke-width="1.5"/>
+  <circle cx="607" cy="347" r="5" fill="#94a3b8"/>
+  <text x="620" y="345" fill="#f1f5f9" font-size="10.5" font-weight="700">Pin 2: GND (Common Ground)</text>
+  <text x="620" y="358" fill="#94a3b8" font-size="8.5">System ground reference 0V</text>
+
+  <!-- Pin 3: OT1 (Radar TX Out) -->
+  <rect x="590" y="369" width="305" height="30" rx="5" fill="#064e3b" fill-opacity="0.3" stroke="#10b981" stroke-width="1.5"/>
+  <circle cx="607" cy="384" r="5" fill="#10b981"/>
+  <text x="620" y="382" fill="#6ee7b7" font-size="10.5" font-weight="700">Pin 3: OT1 &#8594; UART_TX (Radar Out)</text>
+  <text x="620" y="395" fill="#34d399" font-size="8.5">115,200 baud &#8594; Connects to XIAO RX (D7)</text>
+
+  <!-- Pin 4: RX (Radar RX In) -->
+  <rect x="590" y="406" width="305" height="30" rx="5" fill="#1e3a8a" fill-opacity="0.3" stroke="#3b82f6" stroke-width="1.5"/>
+  <circle cx="607" cy="421" r="5" fill="#3b82f6"/>
+  <text x="620" y="419" fill="#93c5fd" font-size="10.5" font-weight="700">Pin 4: RX &#8594; UART_RX (Radar In)</text>
+  <text x="620" y="432" fill="#60a5fa" font-size="8.5">115,200 baud &#8592; Connects from XIAO TX (D6)</text>
+
+  <!-- Pin 5: OT2 (Presence Digital Out / IRQ) -->
+  <rect x="590" y="443" width="305" height="30" rx="5" fill="#78350f" fill-opacity="0.25" stroke="#f59e0b" stroke-width="1.2"/>
+  <circle cx="607" cy="458" r="4.5" fill="#f59e0b"/>
+  <text x="620" y="456" fill="#fde68a" font-size="10" font-weight="700">Pin 5: OT2 &#8594; OUT (Presence Interrupt)</text>
+  <text x="620" y="468" fill="#fbbf24" font-size="8.5">HIGH upon target motion &#8594; Connects to D3</text>
+
+
+  <!-- ==================== CENTER WIRES (CURVED PATHS) ==================== -->
+  
+  <!-- 1. RED WIRE (+3.3V): XIAO Pin 12 (cx=355, cy=349) -> Radar Pin 1 (cx=590, cy=310) -->
+  <path d="M 365,349 C 440,349 500,310 590,310" fill="none" stroke="#ef4444" stroke-width="3" filter="url(#wire-glow-ps)"/>
+
+  <!-- 2. BLACK WIRE (GND): XIAO Pin 13 (cx=355, cy=319) -> Radar Pin 2 (cx=590, cy=347) -->
+  <path d="M 365,319 C 430,319 510,347 590,347" fill="none" stroke="#64748b" stroke-width="3" stroke-dasharray="6,2"/>
+  <path d="M 365,319 C 430,319 510,347 590,347" fill="none" stroke="#000000" stroke-width="1.8"/>
+
+  <!-- 3. GREEN WIRE (Radar OT1/TX -> XIAO Pin 8 D7/RX): Radar Pin 3 (cx=590, cy=384) -> XIAO Pin 8 (cx=365, cy=461) -->
+  <path d="M 590,384 C 490,384 450,461 365,461" fill="none" stroke="#10b981" stroke-width="3" filter="url(#wire-glow-ps)"/>
+
+  <!-- 4. BLUE WIRE (XIAO Pin 7 D6/TX -> Radar Pin 4 RX): XIAO Pin 7 (cx=180, cy=457) -> Radar Pin 4 (cx=590, cy=421) -->
+  <path d="M 180,457 C 280,457 480,421 590,421" fill="none" stroke="#3b82f6" stroke-width="3" filter="url(#wire-glow-ps)"/>
+
+  <!-- 5. YELLOW WIRE (Radar OT2/OUT -> XIAO Pin 4 D3/IRQ): Radar Pin 5 (cx=590, cy=458) -> XIAO Pin 4 (cx=170, cy=373) -->
+  <path d="M 170,373 C 260,373 480,458 590,458" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,3" filter="url(#wire-glow-ps)"/>
+
+</svg>
+
+<div class="box ok"><span class="label">Silkscreen Decoded: JVJ &middot; GND &middot; OT1 &middot; RX &middot; OT2</span>
+<p>If your radar module has the factory silkscreen <code>JVJ, GND, OT1, RX, OT2</code>, here is the exact hardware mapping:</p>
+<ul>
+  <li><strong><code>JVJ</code> is <code>3V3</code>:</strong> In Hi-Link's factory PCB font, the numeral <code>3</code> is rendered with hooked top and bottom strokes, making <code>3V3</code> appear visually as <code>JVJ</code>. This is the +3.3V DC power input (3.0V&ndash;3.6V, draws ~0.6mA during active radar scans). <em>Never connect 5V to this pin.</em></li>
+  <li><strong><code>GND</code> is Ground:</strong> System 0V return reference.</li>
+  <li><strong><code>OT1</code> is UART_TX (Radar Output 1):</strong> Serial data transmit from the radar at 115,200 baud. It streams real-time target distance and energy curves. Connects to the microcontroller's <strong>RX pin (XIAO Pin 8 / D7)</strong>.</li>
+  <li><strong><code>RX</code> is UART_RX (Radar Input):</strong> Serial data receive to the radar at 115,200 baud. It receives sensitivity thresholds and gate parameters. Connects from the microcontroller's <strong>TX pin (XIAO Pin 7 / D6)</strong>.</li>
+  <li><strong><code>OT2</code> is OUT (Radar Output 2 / Interrupt):</strong> Hardware presence trigger pin. Driven HIGH (3.3V) within &lt;50ms when a target enters the radar gates, and returns LOW when vacant. Connects to <strong>XIAO Pin 4 (D3 / IRQ)</strong>.</li>
+</ul>
+</div>
+
+<h3>Bench Pinout &amp; Jumper Connection Table</h3>
+<div class="scroll"><table><thead><tr><th>Signal Function</th><th>Seeed Studio XIAO nRF52840</th><th>Wire Colour</th><th>Hi-Link Radar Silkscreen &amp; Pin</th><th>Electrical Role &amp; Operation</th></tr></thead><tbody>
+<tr><td><strong>3.3V DC Power</strong></td><td><strong>Pin 12 (3V3 Out)</strong></td><td><span style="color:#ef4444;font-weight:700;">Red</span></td><td><strong>Pin 1: JVJ (3V3)</strong></td><td>Supplies clean 3.3V from the XIAO onboard regulator. (Silkscreen "JVJ" is stylized font for 3V3). Draws ~0.6mA during active radar scans.</td></tr>
+<tr><td><strong>System Ground</strong></td><td><strong>Pin 13 (GND)</strong></td><td><span style="color:#94a3b8;font-weight:700;">Black</span></td><td><strong>Pin 2: GND</strong></td><td>Common 0V digital and RF return path.</td></tr>
+<tr><td><strong>UART Data In (RX &larr; TX)</strong></td><td><strong>Pin 8 (D7 / RX)</strong></td><td><span style="color:#10b981;font-weight:700;">Green</span></td><td><strong>Pin 3: OT1 (TX)</strong></td><td>Real-time radar output stream at 115,200 baud (Out 1). Streams target distance, moving &amp; static energy to microcontroller.</td></tr>
+<tr><td><strong>UART Data Out (TX &rarr; RX)</strong></td><td><strong>Pin 7 (D6 / TX)</strong></td><td><span style="color:#3b82f6;font-weight:700;">Blue</span></td><td><strong>Pin 4: RX</strong></td><td>Serial command input to radar at 115,200 baud. Sends sensitivity and gate thresholds from microcontroller.</td></tr>
+<tr><td><strong>Presence Interrupt</strong> <em>(Optional)</em></td><td><strong>Pin 4 (D3 / IRQ)</strong></td><td><span style="color:#f59e0b;font-weight:700;">Yellow (Dashed)</span></td><td><strong>Pin 5: OT2 (OUT)</strong></td><td>Hardware interrupt line (Out 2) driven HIGH (&lt;50ms) upon human motion. Optional on bench.</td></tr>
+</tbody></table></div>
+
+<h3>Two Ways to Verify on the Bench</h3>
+<div class="box ok"><span class="label">Method A: Instant Radar Bluetooth Test (Zero Code &middot; 2 Wires)</span>
+<p>The HLK-LD2410S has an onboard Bluetooth LE transceiver. You can verify physical radar detection before flashing any firmware:</p>
+<ol>
+  <li>Connect only <strong>3.3V (Red)</strong> and <strong>GND (Black)</strong> from the powered XIAO board to the radar.</li>
+  <li>Install the free <strong>HLKRadarTool</strong> app on your smartphone (Android / iOS) or open <code>radar.esphome.io</code> in Chrome.</li>
+  <li>Connect over Bluetooth (default password: <code>HiLink</code>).</li>
+  <li>Observe real-time radar curves: moving energy, stationary (breathing) energy, and detected target distance in centimeters across Gates 0&ndash;8. Wave your hand or sit still to confirm detection.</li>
+</ol>
+</div>
+
+<div class="box ok"><span class="label">Method B: Full Matter-over-Thread Test into Home Assistant</span>
+<p>With all 4 DuPont wires connected, plug the XIAO into your computer via USB-C. Follow Step 1 above to flash <code>zephyr.uf2</code>, and commission the sensor directly into Home Assistant over Thread &mdash; proving the entire stack on your desk before soldering.</p>
+</div>
+
+<h2 id="ps1-soldering">3. Assemble and Solder the Sentinel Reference PCB</h2>
+<p>If assembling on the Sentinel custom PCB (<a href="https://github.com/LocalizedTech/sentinel-electronics" target="_blank" rel="noopener">CERN-OHL-S-2.0</a>) for permanent wall-mounting inside the 3D ball enclosure, follow the milled-window soldering sequence:</p>
 <div class="box ok"><span class="label">Step-by-Step Soldering Technique for Seeed Studio XIAO</span>
   <ol>
     <li><strong>Solder Surface Edge Castellations:</strong> Align the Seeed Studio XIAO nRF52840 squarely over footprint pads 1&ndash;14 on the top side of the PCB. Tack down opposite corners (Pin 1 and Pin 14) with flux and lead-free solder, then solder the remaining castellated edge pads.</li>
@@ -32,20 +272,20 @@
   </ol>
 </div>
 
-<h2 id="ps1-wiring">3. Wire the Presence Sensor (PS-1) Circuit</h2>
-<p>Complete the low-voltage hookup as specified in the <a href="sensor.html#pcb-pinout">PS-1 Hardware Pinout</a>:</p>
+<h2 id="ps1-wiring">4. Permanent Enclosure &amp; LDO Power Gating Hookup</h2>
+<p>When completing the permanent custom PCB build, verify the low-noise power-gated interconnect matrix as specified in the <a href="sensor.html#pcb-pinout">PS-1 Hardware Pinout</a>:</p>
 
 <div class="scroll"><table><thead><tr><th>XIAO nRF52840 Pin</th><th>Signal Role</th><th>Target Device &amp; Pin</th><th>Note</th></tr></thead><tbody>
-<tr><td><strong>Pin D6 (TX)</strong></td><td>UART Transmit</td><td>LD2410C Pin 3 (RX)</td><td>Configuration &amp; threshold commands</td></tr>
-<tr><td><strong>Pin D7 (RX)</strong></td><td>UART Receive</td><td>LD2410C Pin 4 (TX)</td><td>Real-time target distance &amp; energy data</td></tr>
-<tr><td><strong>Pin D3</strong></td><td>Interrupt Input</td><td>LD2410C Pin 2 (OUT)</td><td>Fast waking on initial motion (~50 ms)</td></tr>
-<tr><td><strong>Pin D2</strong></td><td>LDO Enable Gate</td><td>TPS62840 Pin EN</td><td>Powers off radar completely during sleep</td></tr>
-<tr><td><strong>3.3V Out (LDO)</strong></td><td>Regulated Radar Power</td><td>LD2410C Pin 5 (VCC)</td><td>Clean 3.3V power (bypasses battery sag)</td></tr>
-<tr><td><strong>GND</strong></td><td>Common Ground</td><td>LD2410C Pin 1 &amp; TPS62840 GND</td><td>Common 0V reference</td></tr>
+<tr><td><strong>Pin D6 (TX)</strong></td><td>UART Transmit</td><td>LD2410S Pin 4 (RX)</td><td>Configuration &amp; threshold commands (MCU TX &rarr; Radar RX)</td></tr>
+<tr><td><strong>Pin D7 (RX)</strong></td><td>UART Receive</td><td>LD2410S Pin 3 (OT1 / TX)</td><td>Real-time target distance &amp; energy data (Radar OT1 &rarr; MCU RX)</td></tr>
+<tr><td><strong>Pin D3</strong></td><td>Interrupt Input</td><td>LD2410S Pin 5 (OT2 / OUT)</td><td>Fast waking on initial motion (~50 ms)</td></tr>
+<tr><td><strong>Pin D2</strong></td><td>LDO Enable Gate</td><td>ST LDLN030G33R Pin EN</td><td>Powers off radar completely during sleep</td></tr>
+<tr><td><strong>3.3V Out (LDO)</strong></td><td>Regulated Radar Power</td><td>LD2410S Pin 1 (JVJ / 3V3)</td><td>Clean 3.3V power (&lt;7.5&micro;V ripple, bypasses battery sag)</td></tr>
+<tr><td><strong>GND</strong></td><td>Common Ground</td><td>LD2410S Pin 2 (GND) &amp; LDLN030 GND</td><td>Common 0V reference</td></tr>
 <tr><td><strong>BAT+ / BAT-</strong></td><td>LiPo Power Rail</td><td>LiPo Battery Cell (<a href="bom.html#stage-3">Stage 3 BOM</a>)</td><td>3.7V nominal chemistry</td></tr>
 </tbody></table></div>
 
-<h2 id="ps1-pair">4. Matter-over-Thread Commissioning into Home Assistant</h2>
+<h2 id="ps1-pair">5. Matter-over-Thread Commissioning into Home Assistant</h2>
 <ol>
   <li>Power the assembled PS-1 sensor via its LiPo cell. The onboard status LED will blink slowly, indicating Matter commissioning mode.</li>
   <li>Open the Home Assistant Companion App on your mobile device (must be on the same local Wi-Fi subnet as the Radxa server).</li>
@@ -55,7 +295,7 @@
   <li>Within 15–30 seconds, the sensor joins the Thread mesh, and two new entities appear: <code>binary_sensor.study_occupancy</code> and <code>sensor.study_target_distance</code>.</li>
 </ol>
 
-<h2 id="ps1-cal">5. Run 2-Minute Auto-Threshold Noise Mapping</h2>
+<h2 id="ps1-cal">6. Run 2-Minute Auto-Threshold Noise Mapping</h2>
 <p>To eliminate phantom false triggers from room reflections:</p>
 <ol>
   <li>Place the assembled bench sensor at its intended operating height (1.8m) pointing into the empty room.</li>
@@ -64,16 +304,16 @@
   <li>The sensor enters a 120-second learning cycle, recording ambient baseline RF noise across all 8 distance gates (0.75m to 6.0m) and setting stationary energy thresholds +20% above background noise.</li>
 </ol>
 
-<h2 id="ps1-enc">6. Enclosure Fit &amp; Housing Assembly</h2>
+<h2 id="ps1-enc">7. Enclosure Fit &amp; Housing Assembly</h2>
 <p>Snap the electronics into the 3D-printed enclosure (<a href="https://github.com/LocalizedTech/sentinel-enclosure" target="_blank" rel="noopener">Sentinel 3D Models</a>):</p>
 <ul>
-  <li>Slide the LD2410C radar into the front cavity with its antenna face pointing outward through the thin front wall.</li>
+  <li>Slide the LD2410S radar into the front cavity with its antenna face pointing outward through the thin front wall.</li>
   <li>Seat the XIAO nRF52840 into the tray with its USB-C port aligned with the service cutout.</li>
   <li>Tuck the LiPo cell into the rear cavity behind the insulation barrier.</li>
   <li>Snap the ball-and-socket baseplate onto the back.</li>
 </ul>
 
-<h2 id="ds1">7. Door Contact Sensor (DS-1) Assembly &amp; Pairing</h2>
+<h2 id="ds1">8. Door Contact Sensor (DS-1) Assembly &amp; Pairing</h2>
 <p>As documented in the <a href="door-sensor.html">DS-1 Component Guide</a>, assemble the bathroom door sensor:</p>
 <ol>
   <li>Solder the MC-38 magnetic reed switch wires to <strong>GPIO 2</strong> and <strong>GND</strong> on the XIAO ESP32-C6.</li>

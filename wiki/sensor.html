@@ -78,11 +78,11 @@
 <p>The table below provides the full pin mapping for all headers, traces, and footprints visible on the reference PCB layout:</p>
 
 <div class="scroll"><table><thead><tr><th>Section / Footprint</th><th>Pin #</th><th>PCB Silkscreen / Label</th><th>Signal Name</th><th>Target Connection</th><th>Direction</th><th>Electrical Function &amp; Notes</th></tr></thead><tbody>
-<tr><td rowspan="5"><strong>Radar Socket</strong><br><small>HLK-LD2410S 5-pin 2.54mm header (Left)</small></td><td>1</td><td><code>+3V3</code></td><td><code>VDD_RADAR</code></td><td>LDO U2 VOUT (Pin 5)</td><td>Power In</td><td>Switched 3.3V supply rail. Powered down during deep sleep; draws 0.04&ndash;0.6&nbsp;mA during active radar scans.</td></tr>
+<tr><td rowspan="5"><strong>Radar Socket</strong><br><small>HLK-LD2410S 5-pin 2.54mm header (Left)</small></td><td>1</td><td><code>JVJ (3V3)</code></td><td><code>VDD_RADAR</code></td><td>LDO U2 VOUT (Pin 5)</td><td>Power In</td><td>Switched 3.3V supply rail (silkscreen "JVJ" is font for 3V3). Powered down during deep sleep; draws 0.04&ndash;0.6&nbsp;mA during active radar scans.</td></tr>
 <tr><td>2</td><td><code>GND</code></td><td><code>GND</code></td><td>System Ground Plane</td><td>Power In</td><td>Common digital and RF return ground.</td></tr>
-<tr><td>3</td><td><code>UART_RX</code></td><td><code>RADAR_RX</code></td><td>XIAO Pin D6 (Pad 7)</td><td>Input</td><td>115,200 baud serial input to radar. Receives sensitivity thresholds, gate limits, and engineering mode commands.</td></tr>
-<tr><td>4</td><td><code>UART_TX</code></td><td><code>RADAR_TX</code></td><td>XIAO Pin D7 (Pad 8)</td><td>Output</td><td>115,200 baud serial output from radar. Streams target distance, movement energy, and still presence data.</td></tr>
-<tr><td>5</td><td><code>SENSOR_IRQ</code></td><td><code>RADAR_OUT</code></td><td>XIAO Pin D3 (Pad 4)</td><td>Output</td><td>High-speed hardware interrupt line. Driven HIGH upon human presence detection; wakes nRF52840 from deep sleep.</td></tr>
+<tr><td>3</td><td><code>OT1 (TX)</code></td><td><code>RADAR_TX</code></td><td>XIAO Pin D7 (Pad 8)</td><td>Output</td><td>115,200 baud serial output from radar (Out 1). Streams target distance, movement energy, and still presence data to MCU RX.</td></tr>
+<tr><td>4</td><td><code>RX</code></td><td><code>RADAR_RX</code></td><td>XIAO Pin D6 (Pad 7)</td><td>Input</td><td>115,200 baud serial input to radar. Receives sensitivity thresholds, gate limits, and engineering mode commands from MCU TX.</td></tr>
+<tr><td>5</td><td><code>OT2 (OUT)</code></td><td><code>RADAR_OUT</code></td><td>XIAO Pin D3 (Pad 4)</td><td>Output</td><td>High-speed hardware interrupt line (Out 2). Driven HIGH upon human presence detection; wakes nRF52840 from deep sleep.</td></tr>
 
 <tr><td rowspan="7"><strong>XIAO Right Bank</strong><br><small>Seeed XIAO nRF52840 (Right Edge Pads 1&ndash;7)</small></td><td>1</td><td><code>X</code></td><td><code>NC (D0)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D0 / A0 (left floating / unused).</td></tr>
 <tr><td>2</td><td><code>X</code></td><td><code>NC (D1)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D1 / A1 (left floating / unused).</td></tr>
@@ -90,9 +90,9 @@
 <tr><td>4</td><td><code>SENSOR_IRQ</code></td><td><code>SENSOR_WAKE</code></td><td>Radar OUT (Pin 5)</td><td>Input</td><td><strong>GPIO Pin D3.</strong> Configured in Zephyr RTOS as an asynchronous low-power edge-triggered wake interrupt.</td></tr>
 <tr><td>5</td><td><code>X</code></td><td><code>NC (D4)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D4 (left floating / unused).</td></tr>
 <tr><td>6</td><td><code>X</code></td><td><code>NC (D5)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D5 (left floating / unused).</td></tr>
-<tr><td>7</td><td><code>UART_TX</code></td><td><code>MCU_TX</code></td><td>Radar RX (Pin 3)</td><td>Output</td><td><strong>GPIO Pin D6 / UART0 TX.</strong> Serial data transmit from nRF52840 to LD2410S configuration port.</td></tr>
+<tr><td>7</td><td><code>UART_TX</code></td><td><code>MCU_TX</code></td><td>Radar RX (Pin 4)</td><td>Output</td><td><strong>GPIO Pin D6 / UART0 TX.</strong> Serial data transmit from nRF52840 to LD2410S configuration port.</td></tr>
 
-<tr><td rowspan="7"><strong>XIAO Left Bank</strong><br><small>Seeed XIAO nRF52840 (Center Edge Pads 8&ndash;14)</small></td><td>8</td><td><code>UART_RX</code></td><td><code>MCU_RX</code></td><td>Radar TX (Pin 4)</td><td>Input</td><td><strong>GPIO Pin D7 / UART0 RX.</strong> Serial data receive to nRF52840 driver parser.</td></tr>
+<tr><td rowspan="7"><strong>XIAO Left Bank</strong><br><small>Seeed XIAO nRF52840 (Center Edge Pads 8&ndash;14)</small></td><td>8</td><td><code>UART_RX</code></td><td><code>MCU_RX</code></td><td>Radar OT1 / TX (Pin 3)</td><td>Input</td><td><strong>GPIO Pin D7 / UART0 RX.</strong> Serial data receive to nRF52840 driver parser.</td></tr>
 <tr><td>9</td><td><code>X</code></td><td><code>NC (D8)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D8 / SCK (left floating / unused).</td></tr>
 <tr><td>10</td><td><code>X</code></td><td><code>NC (D9)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D9 / MISO (left floating / unused).</td></tr>
 <tr><td>11</td><td><code>X</code></td><td><code>NC (D10)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D10 / MOSI (left floating / unused).</td></tr>

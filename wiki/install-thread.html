@@ -9,7 +9,7 @@
 </details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
 <main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Installation</span> &rsaquo; <span>2 · Thread Border Router</span></nav><h1>Stage 2 &mdash; Thread Border Router (BR-1)</h1><p class="lede">Transforming the M5Stack Module Gateway H2 into a working OpenThread Border Router (OTBR). This connects your 802.15.4 mesh network to Home Assistant, enabling all Matter-over-Thread sensors.</p>
 
-<div class="box verdict"><span class="label">Stage 2 Objective</span><p>Interconnect the <strong>M5Stack Module Gateway H2 (BR-1)</strong> to the Radxa Zero 3E via 3.3V UART, deploy the official <strong>OpenThread Border Router (<code>otbr-agent</code>)</strong> Docker container, form the <code>ApartmentThread</code> network mesh, and integrate with Home Assistant. Verify that a store-bought Matter-over-Thread sensor commissions cleanly and that routing auto-recovers after a host reboot with WAN disconnected.</p></div>
+<div class="box verdict"><span class="label">Stage 2 Objective</span><p>Interconnect the <strong>M5Stack Module Gateway H2 (BR-1)</strong> to the Radxa Zero 3E via 3.3V UART, deploy the official <strong>OpenThread Border Router (<code>otbr-agent</code>)</strong> Docker container, form the <code>ApartmentThread</code> network mesh, and integrate with Home Assistant. Verify that a bench reference Matter-over-Thread node commissions cleanly and that routing auto-recovers after a host reboot with WAN disconnected.</p></div>
 
 <h2 id="prereqs">Prerequisites &amp; Parts</h2>
 <div class="scroll"><table><thead><tr><th>Requirement</th><th>Specification</th><th>Notes</th></tr></thead><tbody>
@@ -417,15 +417,17 @@ docker exec -it otbr ot-ctl thread start</code></pre>
 </ol>
 
 <h2 id="proof">6. Commissioning Proof Sequence &amp; Verification</h2>
-<p>Follow the proof sequence &mdash; cheapest failure first &mdash; before building custom sensors:</p>
+<p>Follow the proof sequence &mdash; cheapest failure first &mdash; before assembling custom sensors:</p>
 <ol>
-  <li><b>Commission a store-bought Thread device:</b> Pair any off-the-shelf Matter-over-Thread sensor (e.g. Eve Door/Window or Aqara sensor) into Home Assistant via Matter QR scan. <strong>This single test proves the entire radio, host daemon, and dataset stack. <span class="badge badge-ok">closes O-07</span></strong></li>
-  <li><b>Local-first WAN isolation test:</b> Disconnect the router's internet/WAN cable. Verify that opening/closing the test sensor triggers state changes in HA with sub-100ms latency.</li>
-  <li><b>Power cycle resilience:</b> Reboot the Radxa Zero 3E (<code>sudo reboot</code>). Confirm that both <code>homeassistant</code> and <code>otbr</code> containers auto-start and the test sensor automatically re-establishes connectivity within 60 seconds without intervention.</li>
+  <li><b>Commission a bench reference Matter-over-Thread node:</b> Rather than buying an expensive imported retail sensor (e.g. Eve or Aqara at ₹5,000–₹7,000+), flash the bare <strong>Seeed XIAO ESP32-C6 (₹672, from <a href="door-sensor.html">DS-1</a>)</strong> with Espressif's pre-compiled reference Matter example on the bench. Pair it into Home Assistant via Matter QR scan over Thread. <strong>This single test proves the entire radio, host daemon, and dataset stack with ₹0 incremental spend and zero custom PCB risk. <span class="badge badge-ok">closes O-07</span></strong></li>
+  <li><b>Local-first WAN isolation test:</b> Disconnect the router's internet/WAN cable. Verify that toggling the reference node triggers state changes in HA with sub-100ms latency.</li>
+  <li><b>Power cycle resilience:</b> Reboot the Radxa Zero 3E (<code>sudo reboot</code>). Confirm that both <code>homeassistant</code> and <code>otbr</code> containers auto-start and the reference node automatically re-establishes connectivity within 60 seconds without intervention.</li>
   <li><b>24-Hour stability burn-in (<a href="open.html#o09">O-09</a>):</b> Monitor memory and UART bus stability over 24 hours. The <code>otbr</code> container should consume only ~50–80 MiB of RAM, keeping total system footprint well within SRV-1/SRV-2 capacity.</li>
 </ol>
 
-<div class="box ok"><span class="label">Pass &mdash; Stage 2 Thread Gate</span><p>A known-good Thread device commissions cleanly into Home Assistant, reports state locally, and resumes operation after a host reboot with the WAN cable disconnected. <a href="open.html#o07">O-07</a> is closed.</p></div>
+<div class="box info"><span class="label">Why this comes before custom radar fabrication</span><p>Proving the border router stack with a bare microcontroller running certified factory reference firmware costs ₹0 incremental cash (the ₹672 XIAO C6 is already budgeted for DS-1), whereas custom PS-1 presence sensor fabrication involves radar calibration, custom PCBs, and battery circuitry. If the reference node joins, the border router stack is 100% proven. If it fails, debugging is isolated to the server and radio without questioning custom sensor hardware.</p></div>
+
+<div class="box ok"><span class="label">Pass &mdash; Stage 2 Thread Gate</span><p>A reference Matter-over-Thread node commissions cleanly into Home Assistant, reports state locally, and resumes operation after a host reboot with the WAN cable disconnected. <a href="open.html#o07">O-07</a> is closed.</p></div>
 
 <hr style="margin:3.5rem 0 2.5rem;border:none;border-top:1px solid #3b2b1d;">
 

@@ -13,14 +13,20 @@
 
 ---
 
-## 2. Strict Chronological Sequence of Navigation
+## 2. Information Architecture Paradigm: Architectural Blueprint (Requirements First)
 
-The wiki navigation structure follows the **chronological engineering lifecycle** of the build. Never alter the order of pages or sections into random or arbitrary groupings.
+The wiki navigation structure follows an **Architectural Blueprint Sequence** (Requirements &rarr; Components &rarr; Procurement &rarr; Build &rarr; Reference).
 
-### The Five Sequential Sections:
+Never confuse the top-level wiki navigation with a physical build timeline:
+* In a *physical build timeline*, a builder starts with hardware in the lab and writes room automations last.
+* In an *Architectural Blueprint*, the wiki deliberately starts with **Room Requirements & Behaviors** so that every hardware selection, BOM line item, and pinout is justified by what the rooms actually require.
+* The **internal sub-chains** within Hardware Components (`SRV` &rarr; `BR` &rarr; `PS` &rarr; `DS` &rarr; `SW`) and Installation (`Stage 1` &rarr; `Stage 5`) strictly follow the physical build order.
+
+### The Five Sequential Sections & Content Boundaries:
 1. **Room Patterns (`wiki/rooms.html`, `wiki/pattern-hardware.html`)**
    * *Phase: Requirements & Architecture.*
    * Defines what automations are needed per room (Hallway timers, Study mmWave presence, Bathroom door contact) and how room requirements translate to hardware layers.
+   * **STRICT BOUNDARY:** Keep this section focused on human problems, state machine transitions, and acceptance test tables (H-01..05, S-01..06, B-01..06). **PROHIBITED:** Never dump raw Home Assistant YAML configurations here. Link forward to Stage 5 Commissioning (`install-commissioning.html#automations`) for deployment YAML.
 2. **Hardware Components (`server.html` &rarr; `thread-router.html` &rarr; `sensor.html` &rarr; `door-sensor.html` &rarr; `switch.html`)**
    * *Phase: Hardware Specifications & Pinouts.*
    * **Must strictly follow the physical build order:**
@@ -29,23 +35,24 @@ The wiki navigation structure follows the **chronological engineering lifecycle*
      * `sensor.html` (`PS-1`): Sentinel mmWave radar (LD2410S + XIAO nRF52840).
      * `door-sensor.html` (`DS-1`): Matter-over-Thread door contact sensor (XIAO ESP32-C6).
      * `switch.html` (`SW-1`): Tinxy 4+1 modular switch plates with fan regulators.
+   * **STRICT BOUNDARY:** **PROHIBITED:** Never put multi-step testing sequences, installation checklists, or commissioning procedures on component pages. Link to the corresponding `install-*.html` stage instead.
 3. **Planning & Procurement (`bom.html` &rarr; `inventory.html` &rarr; `open.html`)**
    * *Phase: Budget, Sourcing & Verification Gates.*
    * Must precede physical installation! A builder reviews on-hand lab stock (`inventory.html`), verifies procurement budgets and vendor links (`bom.html`), and checks open safety gates (`open.html`) *before* cutting wires or modifying mains boxes.
 4. **Installation (`install.html` &rarr; `install-server.html` &rarr; `install-thread.html` &rarr; `install-sensors.html` &rarr; `install-plates.html` &rarr; `install-commissioning.html`)**
    * *Phase: Step-by-Step Physical Build & Flashing.*
    * Five non-negotiable sequential stages:
-     * Stage 1: Server Setup (SRV-1)
-     * Stage 2: Thread Border Router (BR-1)
-     * Stage 3: Sensor Bench Build (PS-1 & DS-1)
-     * Stage 4: Switch Plates (SW-1)
-     * Stage 5: Mounting & Tuning (Field calibration)
+     * Stage 1: Server Setup (SRV-1) &mdash; Armbian, Docker, Home Assistant container.
+     * Stage 2: Thread Border Router (BR-1) &mdash; UART wiring, OTBR container. *Note:* Proves the Thread stack with a bench reference node (Seeed XIAO ESP32-C6 from DS-1), NOT expensive imported retail sensors.
+     * Stage 3: Sensor Bench Build (PS-1 & DS-1) &mdash; Firmware flashing, radar UART, reed switch.
+     * Stage 4: Switch Plates (SW-1) &mdash; Electrician mains check, Tinxy 4+1 wiring, mechanical rocker test.
+     * Stage 5: Mounting & Tuning &mdash; **Holds the executable deployment YAML** in collapsible, copy-paste ready blocks with one-click copy buttons (`#yaml-hall`, `#yaml-study`, `#yaml-bathroom`).
 5. **Reference (`mounting.html` &rarr; `sensing.html`)**
    * *Phase: Deep Technical & Physical Reference.*
    * Radar wave propagation, enclosure material shifts, gate tuning, and Radar vs. PIR sensor physics.
 
 ### Linear Reading Flow (`.pagenav` Chain)
-Every page must have clean `<nav class="pagenav">` links preserving the exact unbroken chronological loop:
+Every page must have clean `<nav class="pagenav">` links preserving the exact unbroken architectural loop:
 ```
 index.html ──► rooms.html ──► pattern-hardware.html
            ──► server.html ──► thread-router.html ──► sensor.html ──► door-sensor.html ──► switch.html
@@ -68,6 +75,7 @@ To eliminate conflicting documentation and prevent maintenance churn, every type
 | **Hardware Pinouts & Wiring** | Component specs (`server.html`, `thread-router.html`, `sensor.html`) | **DO NOT** duplicate 30-pin header tables inside `install-*.html`. Link to the component spec anchor. |
 | **Automation Logic & State Machines** | `wiki/rooms.html` | **DO NOT** clutter requirements pages with raw YAML code blocks or redefine state machines in installation guides. Link to `install-commissioning.html` for deployment YAML. |
 | **Deployment Automations (YAML)** | `wiki/install-commissioning.html` | **DO NOT** duplicate YAML configuration snippets across wiki pages. Maintain collapsible, copy-paste ready blocks in Stage 5. |
+| **Testing & Commissioning Steps** | `wiki/install-*.html` (Installation stages) | **DO NOT** put multi-step testing sequences or commissioning procedures in component spec pages (`thread-router.html`, etc.). |
 | **Lab Inventory** | `wiki/inventory.html` & `wiki/assets/inventory.json` | **DO NOT** hardcode uncommitted spare parts outside inventory. |
 
 ---

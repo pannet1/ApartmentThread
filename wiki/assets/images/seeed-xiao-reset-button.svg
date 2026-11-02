@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540" style="font-family:Archivo,system-ui,-apple-system,sans-serif;">
+  <defs>
+    <filter id="btn-glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur1"/>
+      <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur2"/>
+      <feMerge>
+        <feMergeNode in="blur1"/>
+        <feMergeNode in="blur2"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <linearGradient id="card-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#241a12"/>
+      <stop offset="100%" stop-color="#1a130c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="960" height="540" fill="#17120c"/>
+  <rect x="15" y="15" width="930" height="510" rx="12" fill="none" stroke="#3b2b1d" stroke-width="1.5"/>
+
+  <!-- Top Title Banner -->
+  <text x="40" y="42" fill="#f59e0b" font-size="14" font-weight="700" letter-spacing="0.05em">SEEED STUDIO XIAO nRF52840 &#183; RESET BUTTON &amp; BOOTLOADER ACTIVATION</text>
+
+  <!-- Left: Board Photo Container -->
+  <rect x="30" y="50" width="350" height="440" rx="10" fill="#110d08" stroke="#3b2b1d" stroke-width="1"/>
+  <image href="/home/pannet1/ApartmentThread/wiki/assets/images/seeed-xiao-nrf52840-board.png" x="40" y="55" width="330" height="430" preserveAspectRatio="xMidYMid meet"/>
+
+  <!-- Highlight Box around Reset Button -->
+  <circle cx="103.9375" cy="132.4742268041237" r="32" fill="#ef4444" fill-opacity="0.25" stroke="#ef4444" stroke-width="2.5" filter="url(#btn-glow)"/>
+  <circle cx="103.9375" cy="132.4742268041237" r="22" fill="none" stroke="#fca5a5" stroke-width="2" stroke-dasharray="4,3"/>
+  <circle cx="103.9375" cy="132.4742268041237" r="4" fill="#ef4444"/>
+
+  <!-- Pointer line from button to callout -->
+  <path d="M 103.9375, 98.4742268041237 L 103.9375, 65 L 410, 65" fill="none" stroke="#ef4444" stroke-width="2"/>
+
+  <!-- Status LED Highlight -->
+  <circle cx="306.0625" cy="132.4742268041237" r="14" fill="#10b981" fill-opacity="0.3" stroke="#10b981" stroke-width="1.8"/>
+  <circle cx="306.0625" cy="132.4742268041237" r="3" fill="#6ee7b7"/>
+
+  <!-- Right: Instructions & Callout Cards -->
+  
+  <!-- Card 1: Reset Button Details (Red / Amber accent) -->
+  <rect x="420" y="60" width="500" height="105" rx="8" fill="url(#card-grad)" stroke="#ef4444" stroke-width="1.5"/>
+  <rect x="435" y="75" width="28" height="28" rx="14" fill="#ef4444" fill-opacity="0.2"/>
+  <text x="449" y="94" fill="#ef4444" font-size="14" font-weight="700" text-anchor="middle">&#9679;</text>
+  <text x="475" y="86" fill="#fca5a5" font-size="13" font-weight="700" letter-spacing="0.03em">1. PHYSICAL RESET BUTTON (TINY 1.5mm SWITCH)</text>
+  <text x="475" y="105" fill="#e4e2da" font-size="11.5">Located immediately to the <tspan fill="#ef4444" font-weight="700">LEFT</tspan> of the USB-C metal shield.</text>
+  <text x="475" y="125" fill="#a89a85" font-size="11">Do NOT press with a flat thumb pad. Use a <tspan fill="#fde68a" font-weight="700">fingernail, pen tip, or tweezers</tspan>.</text>
+  <text x="475" y="145" fill="#f59e0b" font-size="10.5" font-weight="600">&#9888; Double-tap rapidly (2 clicks within 500ms) like double-clicking a mouse.</text>
+
+  <!-- Card 2: LED Confirmation -->
+  <rect x="420" y="178" width="500" height="90" rx="8" fill="url(#card-grad)" stroke="#10b981" stroke-width="1.2"/>
+  <rect x="435" y="193" width="28" height="28" rx="14" fill="#10b981" fill-opacity="0.2"/>
+  <text x="449" y="212" fill="#10b981" font-size="14" font-weight="700" text-anchor="middle">&#10003;</text>
+  <text x="475" y="204" fill="#6ee7b7" font-size="13" font-weight="700" letter-spacing="0.03em">2. VISUAL CONFIRMATION &#183; RGB LED PULSES GREEN</text>
+  <text x="475" y="224" fill="#e4e2da" font-size="11.5">The user RGB LED (to the <tspan fill="#10b981" font-weight="700">RIGHT</tspan> of the USB-C port) starts pulsing soft green.</text>
+  <text x="475" y="244" fill="#a89a85" font-size="11">If the LED does not pulse green, double-tap again slightly faster.</text>
+
+  <!-- Card 3: Virtual USB Drive Appears -->
+  <rect x="420" y="280" width="500" height="90" rx="8" fill="url(#card-grad)" stroke="#3b82f6" stroke-width="1.2"/>
+  <rect x="435" y="295" width="28" height="28" rx="14" fill="#3b82f6" fill-opacity="0.2"/>
+  <text x="449" y="314" fill="#3b82f6" font-size="14" font-weight="700" text-anchor="middle">&#128190;</text>
+  <text x="475" y="306" fill="#93c5fd" font-size="13" font-weight="700" letter-spacing="0.03em">3. VIRTUAL USB MASS STORAGE DRIVE MOUNTS</text>
+  <text x="475" y="326" fill="#e4e2da" font-size="11.5">Your computer file manager automatically mounts a USB drive named:</text>
+  <text x="475" y="348" fill="#60a5fa" font-size="12" font-weight="700" font-family="ui-monospace,Menlo,Consolas,monospace;">XIAO-SENSE   or   XIAO-NRF   (or XIAO-BOOT)</text>
+
+  <!-- Card 4: Drag & Drop zephyr.uf2 -->
+  <rect x="420" y="382" width="500" height="95" rx="8" fill="url(#card-grad)" stroke="#d97706" stroke-width="1.2"/>
+  <rect x="435" y="397" width="28" height="28" rx="14" fill="#d97706" fill-opacity="0.2"/>
+  <text x="449" y="416" fill="#d97706" font-size="14" font-weight="700" text-anchor="middle">&#8681;</text>
+  <text x="475" y="408" fill="#fde68a" font-size="13" font-weight="700" letter-spacing="0.03em">4. DRAG &amp; DROP ZEPHYR.UF2 TO FLASH</text>
+  <text x="475" y="428" fill="#e4e2da" font-size="11.5">Copy <tspan fill="#fde68a" font-family="ui-monospace,Menlo,Consolas,monospace;">zephyr.uf2</tspan> directly into the virtual drive root.</text>
+  <text x="475" y="448" fill="#a89a85" font-size="11">The drive will disconnect automatically and reboot into Sentinel Matter mode in ~3s.</text>
+
+  <!-- Bottom Tip -->
+  <text x="420" y="505" fill="#78716c" font-size="10.5">&#128161; Single-click = Normal Reboot &#183; Fast Double-Click = UF2 Bootloader Mode</text>
+</svg>

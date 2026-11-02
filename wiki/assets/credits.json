@@ -108,6 +108,15 @@
   "credit": "Seeed Studio XIAO product photo"
  },
  {
+  "file": "assets/images/seeed-xiao-reset-button.webp",
+  "media": "image",
+  "title": "Seeed Studio XIAO nRF52840 Reset Button & Bootloader Mode",
+  "creator": "Apartment Thread / Seeed Studio",
+  "creatorUrl": "https://wiki.seeedstudio.com/XIAO_BLE/",
+  "license": "CC-BY-4.0",
+  "credit": "Annotated photographic diagram of Seeed Studio XIAO nRF52840 reset switch"
+ },
+ {
   "file": "assets/images/m5stack-esp32-h2.webp",
   "media": "image",
   "title": "M5Stack ESP32-H2 Thread/Zigbee Gateway Module",
