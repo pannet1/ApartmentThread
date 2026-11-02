@@ -33,6 +33,7 @@
     <a href="#comparison">Modality comparison</a>
     <a href="#motion-vs-presence">Motion vs. presence</a>
     <a href="#fmcw">How FMCW detects stillness</a>
+    <a href="#radar-ble-tool">Radar BLE Tool</a>
   </div>
 
   <div class="box verdict" id="locked">
@@ -125,6 +126,26 @@
     <li><strong>Distance gating:</strong> The LD2410S reports configurable distance gates and target energy over its rated range. Gate numbering and resolution vary by firmware/manual revision, so configure and verify the actual module rather than assuming “Gate 8” is always valid.</li>
     <li><strong>Micro-Motion Thresholding:</strong> The sensor firmware applies a specialized static energy threshold tuned to 1&ndash;3 mm thoracic excursions caused by human breathing.</li>
   </ol>
+
+  <h2 id="radar-ble-tool">Standalone Radar Diagnostics via Bluetooth (HLKRadarTool)</h2>
+  <p class="lede">For bench diagnosis, threshold tuning, and raw radar RF visualization before MCU integration, the HLK-LD2410S features an onboard Bluetooth Low Energy transceiver that connects directly to smartphone tools.</p>
+
+  <div class="box ok"><span class="label">Zero-Code Standalone Bench Verification</span>
+  <p>You can test physical radar sensitivity and observe live energy curves across Gates 0&ndash;8 without compiling or flashing microcontroller firmware:</p>
+  <ol>
+    <li>Power the radar module with clean +3.3V DC: connect <strong>Pin 1: JVJ (3V3)</strong> to +3.3V and <strong>Pin 2: GND</strong> to 0V (e.g. from a powered XIAO or breadboard power supply).</li>
+    <li>Install the free <strong>HLKRadarTool</strong> app on your smartphone (Android / iOS) or open <code>radar.esphome.io</code> in Google Chrome (Web Bluetooth).</li>
+    <li>Search for Bluetooth devices and select your radar (default factory Bluetooth password: <code>HiLink</code>).</li>
+    <li>View real-time radar energy graphs:
+      <ul>
+        <li><strong>Moving Energy:</strong> Walking, waving, and gross limb movement across distance gates.</li>
+        <li><strong>Stationary Energy:</strong> Breathing, chest wall excursions (1&ndash;3 mm), and desk typing.</li>
+        <li><strong>Distance Gates (0&ndash;8):</strong> Visualizes detected target range in 0.75 m intervals (up to 6.0 m).</li>
+      </ul>
+    </li>
+    <li>Adjust per-gate motion/stationary sensitivity thresholds or set unattended trigger delay if fine-tuning raw hardware before MCU integration.</li>
+  </ol>
+  </div>
 
   <div class="box info">
     <span class="label">Where to buy</span>

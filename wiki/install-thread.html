@@ -381,9 +381,10 @@ sudo reboot</code></pre>
 <p>Initialize a fresh Thread operational dataset and start the network:</p>
 <pre><code># Generate new random network key, PAN ID, and credentials
 docker exec -it otbr ot-ctl dataset init new
-docker exec -it otbr ot-ctl dataset networkname "ApartmentThread"
+docker exec -it otbr ot-ctl dataset networkname "ha-thread-1562"
 docker exec -it otbr ot-ctl dataset channel 15
-docker exec -it otbr ot-ctl dataset panid 0x1234
+docker exec -it otbr ot-ctl dataset channelmask 0x00008000
+docker exec -it otbr ot-ctl dataset panid 0x1562
 docker exec -it otbr ot-ctl dataset commit active
 
 # Bring up network interface and begin routing
@@ -397,11 +398,11 @@ docker exec -it otbr ot-ctl thread start</code></pre>
 <div class="box ok"><span class="label">Verified Active Thread Dataset</span>
 <p>BR-1 is active as the network Leader with the following operational dataset:</p>
 <ul>
-  <li><strong>Network Name:</strong> <code>ApartmentThread</code></li>
-  <li><strong>Channel:</strong> <code>15</code> (2.4 GHz IEEE 802.15.4)</li>
-  <li><strong>PAN ID:</strong> <code>0x1234</code> &middot; <strong>Ext PAN ID:</strong> <code>154e2c8bb2c4f31a</code></li>
-  <li><strong>Mesh-Local Prefix:</strong> <code>fd38:6364:6699:d939::/64</code></li>
-  <li><strong>Active Dataset Hex TLVs:</strong> <code>0e08000000000001000035060004001fffe00208154e2c8bb2c4f31a0708fd3863646699d93905101c4ac2194ea9323424a971ebb9f5df4d04107c3fa88c37cd0876d8ae72d6f3f8415a0c0402a0f7f8030f41706172746d656e74546872656164000300000f01021234</code></li>
+  <li><strong>Network Name:</strong> <code>ha-thread-1562</code></li>
+  <li><strong>Channel:</strong> <code>15</code> (2.4 GHz IEEE 802.15.4) &middot; <strong>Channel Mask:</strong> <code>0x00008000</code> (locked to Channel 15)</li>
+  <li><strong>PAN ID:</strong> <code>0x1562</code> &middot; <strong>Ext PAN ID:</strong> <code>2bc64207e0c062ec</code></li>
+  <li><strong>Mesh-Local Prefix:</strong> <code>fde1:7f9e:bb52:3b0f::/64</code></li>
+  <li><strong>Active Dataset Hex TLVs:</strong> <code>0e080000000000010000000300000f350600040001000002082bc64207e0c062ec0708fde17f9ebb523b0f051036ff1d1ecd13f5dd564227863f48de03030e68612d7468726561642d313536320102156204102dff2d3085ca273f1f7d3c87b4ba1f570c0402a0f7f8</code></li>
 </ul>
 </div>
 
@@ -413,21 +414,69 @@ docker exec -it otbr ot-ctl thread start</code></pre>
     <pre><code>http://127.0.0.1:8081</code></pre>
     <p><i>Using <code>127.0.0.1</code> keeps communication strictly on the local host loopback interface, ensuring integration resilience even if the server's LAN IP address changes.</i> <span class="badge badge-ok">closes O-08</span></p>
   </li>
-  <li>Navigate to <strong>Settings &rarr; Devices &amp; Services &rarr; Thread</strong>. Confirm <code>ApartmentThread</code> is listed and set as the <strong>Preferred Network</strong>.</li>
+  <li>Navigate to <strong>Settings &rarr; Devices &amp; Services &rarr; Thread</strong>. Confirm <code>ha-thread-1562</code> is listed and set as the <strong>Preferred Network</strong>.</li>
 </ol>
 
 <h2 id="proof">6. Commissioning Proof Sequence &amp; Verification</h2>
 <p>Follow the proof sequence &mdash; cheapest failure first &mdash; before assembling custom sensors:</p>
 <ol>
-  <li><b>Commission a bench reference Matter-over-Thread node:</b> Rather than buying an expensive imported retail sensor (e.g. Eve or Aqara at ₹5,000–₹7,000+), flash the bare <strong>Seeed XIAO ESP32-C6 (₹672, from <a href="door-sensor.html">DS-1</a>)</strong> with Espressif's pre-compiled reference Matter example on the bench. Pair it into Home Assistant via Matter QR scan over Thread. <strong>This single test proves the entire radio, host daemon, and dataset stack with ₹0 incremental spend and zero custom PCB risk. <span class="badge badge-ok">closes O-07</span></strong></li>
-  <li><b>Local-first WAN isolation test:</b> Disconnect the router's internet/WAN cable. Verify that toggling the reference node triggers state changes in HA with sub-100ms latency.</li>
-  <li><b>Power cycle resilience:</b> Reboot the Radxa Zero 3E (<code>sudo reboot</code>). Confirm that both <code>homeassistant</code> and <code>otbr</code> containers auto-start and the reference node automatically re-establishes connectivity within 60 seconds without intervention.</li>
+  <li><b>Commission a bench reference Matter-over-Thread node:</b> Pair a Matter-over-Thread sensor (e.g. Sentinel presence sensor from <a href="install-sensors.html">Stage 3</a>) into Home Assistant via Matter QR/manual pairing over Thread. <strong>This single test proves the entire radio, host daemon, Matter server, and dataset stack with zero guesswork. <span class="badge badge-ok">closes O-07</span></strong></li>
+  <li><b>Local-first WAN isolation test:</b> Disconnect the router's internet/WAN cable. Verify that sensor state changes register in HA with sub-100ms latency.</li>
+  <li><b>Power cycle resilience:</b> Reboot the Radxa Zero 3E (<code>sudo reboot</code>). Confirm that <code>homeassistant</code>, <code>matter-server</code>, and <code>otbr</code> containers auto-start and the reference node automatically re-establishes connectivity within 60 seconds without intervention.</li>
   <li><b>24-Hour stability burn-in (<a href="open.html#o09">O-09</a>):</b> Monitor memory and UART bus stability over 24 hours. The <code>otbr</code> container should consume only ~50–80 MiB of RAM, keeping total system footprint well within SRV-1/SRV-2 capacity.</li>
 </ol>
 
-<div class="box info"><span class="label">Why this comes before custom radar fabrication</span><p>Proving the border router stack with a bare microcontroller running certified factory reference firmware costs ₹0 incremental cash (the ₹672 XIAO C6 is already budgeted for DS-1), whereas custom PS-1 presence sensor fabrication involves radar calibration, custom PCBs, and battery circuitry. If the reference node joins, the border router stack is 100% proven. If it fails, debugging is isolated to the server and radio without questioning custom sensor hardware.</p></div>
+<div class="box info"><span class="label">Why this comes before custom radar fabrication</span><p>Proving the border router stack with a bench sensor running certified Matter firmware validates the host service and Thread mesh without questioning custom sensor hardware. If the reference node joins, the border router stack is 100% proven.</p></div>
 
-<div class="box ok"><span class="label">Pass &mdash; Stage 2 Thread Gate</span><p>A reference Matter-over-Thread node commissions cleanly into Home Assistant, reports state locally, and resumes operation after a host reboot with the WAN cable disconnected. <a href="open.html#o07">O-07</a> is closed.</p></div>
+<div class="box ok"><span class="label">Pass &mdash; Stage 2 Thread Gate</span><p>Sentinel Matter-over-Thread sensor commissions cleanly into Home Assistant, reports occupancy locally, and resumes operation after a host reboot with the WAN cable disconnected. <a href="open.html#o07">O-07</a> is closed.</p></div>
+
+<h2 id="troubleshooting">7. Field Troubleshooting &amp; Remote Stack Diagnostics</h2>
+<p class="lede">During physical bench testing and mobile device commissioning, several critical integration gotchas emerge between the ESP32-H2 RCP radio, the Docker daemon, Home Assistant, and mobile phone Thread keychains. Use these field-tested diagnostics to resolve them quickly.</p>
+
+<div class="box danger"><span class="label">Issue 1 &middot; Companion App Reports "Cannot connect to thread network &lt;name&gt;"</span>
+<p><strong>Symptom:</strong> When pairing a Matter-over-Thread sensor, the mobile app connects over Bluetooth, begins setup, but abruptly fails with: <em>"cannot connect to thread network ha-thread-xxxx"</em>.</p>
+<p><strong>Root Cause:</strong> Home Assistant stores Thread datasets in <code>/config/.storage/thread.datasets</code>. If the Border Router generates a new network or restarts with a new dataset, but Home Assistant retains an older dataset marked as <code>preferred_dataset</code>, HA advertises the dead network credentials to your phone.</p>
+<p><strong>Fix &amp; Verification:</strong></p>
+<ol>
+  <li>Inspect active OTBR dataset on the server:
+    <pre><code>docker exec -it otbr ot-ctl dataset active</code></pre>
+  </li>
+  <li>Ensure Home Assistant's preferred dataset in <code>/config/.storage/thread.datasets</code> exactly matches the active OTBR network name, PAN ID, and Network Key.</li>
+  <li>On your smartphone, open the <strong>Home Assistant Companion App</strong> &rarr; <strong>Settings</strong> &rarr; <strong>Companion App</strong> &rarr; <strong>Troubleshooting</strong> &rarr; tap <strong>Sync Thread credentials</strong> to overwrite stale keychain entries in Google Play Services / Apple Keychain.</li>
+</ol>
+</div>
+
+<div class="box danger"><span class="label">Issue 2 &middot; OTBR Daemon Crashes: RadioSpinelNoResponse / HandleRcpTimeout()</span>
+<p><strong>Symptom:</strong> The <code>otbr</code> container terminates unexpectedly or <code>ot-ctl</code> reports <code>connect session failed: Connection refused</code>. Container logs show:</p>
+<pre><code>[I] Mle-----------: Send Announce on channel 16
+[W] P-RadioSpinel-: radio tx timeout
+[C] Platform------: HandleRcpTimeout() at radio_spinel.cpp:2102: RadioSpinelNoResponse</code></pre>
+<p><strong>Root Cause:</strong> By default, OpenThread enables a wide channel mask (<code>0x07fff800</code>, Channels 11&ndash;26). Periodically, the daemon attempts to broadcast MLE Announce frames on other channels. When the ESP32-H2 RCP radio attempts to transmit on channel 16, a radio TX timeout occurs, causing the host daemon to crash.</p>
+<p><strong>Fix:</strong> Lock the operational channel mask strictly to your operating channel (Channel 15 only, bit 15 = <code>0x00008000</code>):</p>
+<pre><code>docker exec -it otbr ot-ctl dataset init active
+docker exec -it otbr ot-ctl dataset channelmask 0x00008000
+docker exec -it otbr ot-ctl dataset commit active</code></pre>
+<p>This completely eliminates multi-channel announce switching and prevents the crash.</p>
+</div>
+
+<div class="box info"><span class="label">Issue 3 &middot; "Add Matter Device" Missing in Companion App</span>
+<p><strong>Symptom:</strong> Tapping "+ Add Device" in the mobile app shows standard integrations, but the native "Matter Device" option is absent.</p>
+<p><strong>Root Cause:</strong> The official Matter controller server container is not running on the host network, or Home Assistant's Matter integration has not connected to it.</p>
+<p><strong>Fix:</strong> Deploy the <code>python-matter-server</code> container on the Radxa (documented in <a href="install-server.html#ha-deploy">Stage 1</a>), and add the <strong>Matter</strong> integration in Home Assistant pointing to <code>ws://localhost:5580/ws</code>. <em>(Note: Displaying "Online 0 devices" is normal until your first sensor completes pairing).</em></p>
+</div>
+
+<div class="box warn"><span class="label">Issue 4 &middot; Sensor Stays in "Device Role: DETACHED" (Timeout during Commissioning)</span>
+<p><strong>Symptom:</strong> Bluetooth PASE handshake succeeds, but after 30 seconds the mobile phone commissioner sends an abort signal (<code>ArmFailSafe 1s</code>) and reports a connection timeout.</p>
+<p><strong>Root Cause:</strong> The sensor's 802.15.4 radio cannot reach the M5Stack Border Router. Both devices use compact ceramic / PCB trace antennas. Attempting initial pairing through apartment concrete walls or while the sensor is plugged into a shielded metal PC chassis causes total RF packet loss.</p>
+<p><strong>Fix:</strong> Bring the sensor into the <strong>same room within 1&ndash;2 meters (direct line-of-sight)</strong> of the Radxa Zero 3E during initial commissioning. Once paired and keys are saved to flash, the sensor operates reliably across standard room distances.</p>
+</div>
+
+<h3>3 Ways to Verify Border Router Health</h3>
+<div class="scroll"><table><thead><tr><th>Verification Method</th><th>Endpoint / Action</th><th>Expected Healthy Output</th></tr></thead><tbody>
+<tr><td><strong>1. Web GUI Dashboard</strong></td><td>Open browser to <code>http://&lt;RADXA_IP&gt;/</code></td><td>OpenThread Web Console displays Role: <code>leader</code>, Network Name: <code>ha-thread-1562</code>, Channel: <code>15</code>, PAN ID: <code>0x1562</code>.</td></tr>
+<tr><td><strong>2. Native REST API</strong></td><td>Open browser or run <code>curl -s http://&lt;RADXA_IP&gt;:8081/node</code></td><td>JSON payload containing <code>"state": "leader"</code>, <code>"routerCount": 1</code>, and active <code>extAddress</code>.</td></tr>
+<tr><td><strong>3. Home Assistant UI</strong></td><td><strong>Settings &rarr; Devices &amp; Services &rarr; Thread</strong></td><td>Network card displayed with green border router icon and marked as <strong>Preferred network</strong>.</td></tr>
+</tbody></table></div>
 
 <hr style="margin:3.5rem 0 2.5rem;border:none;border-top:1px solid #3b2b1d;">
 

@@ -46,26 +46,36 @@
 <pre><code>ssh root@&lt;RADXA_IP&gt;</code></pre>
 <p>Default credentials: <strong>password <code>1234</code></strong>. Follow the on-screen prompt to configure a strong root password and set your shell.</p>
 
-<h2 id="user-setup">4. User Configuration &amp; Sudo Hardening</h2>
-<p>Create a dedicated standard user and configure sudo privileges without root dependency:</p>
-<pre><code># Create operator account and add to sudo group
+<h2 id="user-setup">4. User Configuration, Sudo &amp; Timezone Setup</h2>
+<p>Create a dedicated standard user, configure sudo privileges, and synchronize the operating system timezone to Indian Standard Time (IST):</p>
+<pre><code># 1. Create operator account and add to sudo group
 adduser pannet1
 usermod -aG sudo pannet1
 
-# Ensure sudo is installed and configure sudoers rule
+# 2. Ensure sudo is installed and configure sudoers rule
 apt update &amp;&amp; apt install -y sudo
 echo "pannet1 ALL=(ALL:ALL) ALL" &gt; /etc/sudoers.d/pannet1
 chmod 0440 /etc/sudoers.d/pannet1
 
-# Exit root session
+# 3. Synchronize host system timezone to Indian Standard Time (IST / Asia/Kolkata)
+timedatectl set-timezone Asia/Kolkata
+timedatectl
+
+# 4. Exit root session
 exit</code></pre>
+
+<div class="box ok"><span class="label">Why Host Timezone Sync Matters</span>
+<p>Setting the Armbian host timezone to <code>Asia/Kolkata</code> ensures that system logs (<code>journalctl</code>, <code>dmesg</code>), container daemons, cron jobs, and database timestamps match your local clock. This prevents discrepancies between host events and Home Assistant automations.</p>
+</div>
 
 <h2 id="docker">5. Base System Update &amp; Docker Engine</h2>
 <p>Log back into the SBC as the new standard operator user:</p>
 <pre><code>ssh pannet1@&lt;RADXA_IP&gt;</code></pre>
 
-<p>Update package repositories and installed packages:</p>
-<pre><code>sudo apt update &amp;&amp; sudo apt upgrade -y</code></pre>
+<p>Update package repositories and verify the system clock reports IST:</p>
+<pre><code>sudo apt update &amp;&amp; sudo apt upgrade -y
+date</code></pre>
+<p>Expected output: <code>... IST 2026</code></p>
 
 <p>Install upstream Docker Engine using the official convenience script:</p>
 <pre><code>curl -fsSL https://get.docker.com -o get-docker.sh
@@ -74,11 +84,21 @@ sudo usermod -aG docker $USER
 sudo usermod -aG dialout $USER
 newgrp docker</code></pre>
 
-<h2 id="ha-deploy">6. Deploy Home Assistant Container</h2>
-<p>Create the host directory for persistent Home Assistant configuration and SQLite database storage:</p>
-<pre><code>mkdir -p ~/homeassistant/config</code></pre>
+<h2 id="ha-deploy">6. Deploy Home Assistant &amp; Matter Server Containers</h2>
+<p>Create the host directories for persistent Home Assistant configuration and Matter Server controller data:</p>
+<pre><code>mkdir -p ~/homeassistant/config
+mkdir -p ~/matter-server/data</code></pre>
 
-<p>Deploy the production container with host networking and privileged hardware access:</p>
+<p>Deploy the official Python Matter Server container (provides the local Matter controller hub on WebSocket port <code>5580</code>):</p>
+<pre><code>docker run -d \
+  --name matter-server \
+  --restart=unless-stopped \
+  --network=host \
+  --security-opt seccomp=unconfined \
+  -v ~/matter-server/data:/data \
+  ghcr.io/home-assistant-libs/python-matter-server:stable</code></pre>
+
+<p>Deploy the production Home Assistant container with host networking and privileged hardware access:</p>
 <pre><code>docker run -d \
   --name homeassistant \
   --privileged \
@@ -88,7 +108,8 @@ newgrp docker</code></pre>
   --network=host \
   ghcr.io/home-assistant/home-assistant:stable</code></pre>
 
-<div class="scroll"><table><thead><tr><th>Parameter</th><th>Purpose in this build</th></tr></thead><tbody>
+<div class="scroll"><table><thead><tr><th>Parameter / Service</th><th>Purpose in this build</th></tr></thead><tbody>
+<tr><td><code>matter-server</code></td><td>Dedicated local Matter controller container (Python Matter Server). Exposes WebSocket endpoint <code>ws://localhost:5580/ws</code> configured in Home Assistant's Matter integration.</td></tr>
 <tr><td><code>--privileged</code></td><td>Grants the container direct access to host serial devices (GPIO UART <code>/dev/ttyS*</code> and USB) &mdash; necessary for the ESP32-H2 Thread radio in <a href="install-thread.html">Stage 2 (BR-1)</a>.</td></tr>
 <tr><td><code>--network=host</code></td><td>Required for mDNS discovery, SSDP, Matter/Thread device discovery, and zero-NAT latency to local Wi-Fi switchboards.</td></tr>
 <tr><td><code>-e TZ=Asia/Kolkata</code></td><td>Sets container clock to local Indian Standard Time &mdash; critical for bedroom time-based rules (<a href="rooms.html#bedroom">BR-01</a>).</td></tr>

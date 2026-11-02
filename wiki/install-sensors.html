@@ -11,13 +11,169 @@
 
 <div class="box verdict"><span class="label">Stage 3 Objective</span><p>Build and verify two sensors on the bench: <strong>(1) PS-1 Presence Sensor</strong> (Seeed Studio XIAO nRF52840 + LD2410C mmWave radar + TPS62840 LDO power gate) running Sentinel Matter firmware, and <strong>(2) DS-1 Door Contact Sensor</strong> (Seeed Studio XIAO ESP32-C6 + MC-38 reed switch). Pair both into Home Assistant via native Matter QR-code scan over the local Thread mesh.</p></div>
 
-<h2 id="ps1-fw">1. Flash Sentinel Zephyr Firmware on XIAO nRF52840</h2>
-<p>The Seeed Studio XIAO nRF52840 ships with a factory UF2 USB mass storage bootloader &mdash; no JTAG/SWD programmer is required:</p>
+<h2 id="ps1-fw">1. Building &amp; Flashing Sentinel Zephyr Firmware (XIAO nRF52840)</h2>
+<p class="lede">The Sentinel presence sensor runs an open-source Matter-over-Thread firmware based on Zephyr RTOS and the nRF Connect SDK. Follow this exact toolchain setup and compilation sequence to build <code>zephyr.uf2</code> cleanly from source and replicate it for every room.</p>
+
+<h3 id="fw-toolchain">A. Host Build Environment &amp; Toolchain Prerequisites</h3>
+<p>Firmware compilation requires a 64-bit Linux x86_64 host (Ubuntu / Debian / Armbian) with the Zephyr SDK, Google GN (Generate Ninja), and required Python dependencies:</p>
+<pre><code># 1. Install system utilities and Python dependencies
+sudo apt-get update && sudo apt-get install -y \
+  git cmake ninja-build gperf ccache dfu-util device-tree-compiler \
+  python3-dev python3-pip python3-setuptools python3-venv
+
+pip install --user west python-path lark bitarray cbor2 ecdsa qrcode cryptography
+
+# 2. Install Zephyr SDK 0.17.4 minimal with ARM cross-compiler
+mkdir -p ~/.local
+wget https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v0.17.4/zephyr-sdk-0.17.4_linux-x86_64_minimal.tar.xz -O /tmp/zephyr-sdk.tar.xz
+tar -xf /tmp/zephyr-sdk.tar.xz -C ~/.local/
+cd ~/.local/zephyr-sdk-0.17.4
+./setup.sh -t arm-zephyr-eabi -h
+
+# 3. Install standalone Google GN binary (Generate Ninja v2614+)
+mkdir -p ~/.local/bin
+wget https://chrome-infra-packages.appspot.com/dl/gn/gn/linux-amd64/+/latest -O /tmp/gn.zip
+unzip /tmp/gn.zip -d ~/.local/bin/
+chmod +x ~/.local/bin/gn</code></pre>
+
+<div class="box info"><span class="label">Environment Variable Verification</span>
+<p>Ensure your build session exports the Zephyr SDK and host compiler paths:</p>
+<pre><code>export ZEPHYR_SDK_INSTALL_DIR="$HOME/.local/zephyr-sdk-0.17.4"
+export PATH="$HOME/.local/bin:$ZEPHYR_SDK_INSTALL_DIR/sysroots/x86_64-pokysdk-linux/usr/bin:$PATH"
+which gn arm-zephyr-eabi-gcc dtc</code></pre>
+</div>
+
+<h3 id="fw-source">B. Source Code Cloning &amp; West Submodule Resolution</h3>
+<p>Clone the Sentinel firmware repository and initialize its nested Zephyr and Matter submodules:</p>
+<pre><code>cd ~
+git clone https://github.com/LocalizedTech/sentinel-firmware.git
+cd sentinel-firmware
+west init -l application</code></pre>
+
+<div class="box danger"><span class="label">Crucial Pitfall: Git SSH Rewriting Failure &amp; Safe Restoration</span>
+<p>Many developers configure git to automatically rewrite HTTPS URLs to SSH for their personal repos (<code>url.git@github.com:.insteadOf = https://github.com/</code>). However, <code>west update</code> fetches 52 third-party public submodules anonymously over HTTPS; rewriting them to SSH forces GitHub to demand SSH key authentication for every dependency, causing shallow clones to fail with <code>Host key verification failed</code>.</p>
+<p>Temporarily unset the rule for the clone, and restore your global SSH preference immediately afterwards:</p>
+<pre><code># 1. Temporarily unset the global SSH rewrite
+git config --global --unset url.git@github.com:.insteadof
+
+# 2. Fetch all 52 Zephyr & Matter submodules anonymously over HTTPS
+west update
+
+# 3. Immediately restore your global SSH preference
+git config --global url."git@github.com:".insteadOf "https://github.com/"</code></pre>
+<p>Confirm your global config is intact: <code>git config --global -l | grep insteadof</code>.</p>
+</div>
+
+<h3 id="fw-patches">C. Upstream GN &amp; CMake Build Fixes (Required for Zephyr 4.x / NCS 3.x)</h3>
+<p>Modern Google GN (Generate Ninja v2614+) enforces strict header checks and dependency graphs that trigger build errors in the vendored Matter submodule. Run this practical patch command inside <code>sentinel-firmware/external/modules/lib/matter</code> to apply all 5 required fixes in one shot:</p>
+
+<pre><code>cd ~/sentinel-firmware/external/modules/lib/matter
+
+cat << 'EOF' | git apply
+diff --git a/build/chip/buildconfig_header.gni b/build/chip/buildconfig_header.gni
+index e378a1e19..d5b22e336 100644
+--- a/build/chip/buildconfig_header.gni
++++ b/build/chip/buildconfig_header.gni
+@@ -155,5 +155,11 @@ template("buildconfig_header") {
+                              "testonly",
+                              "visibility",
+                            ])
++
++    if (defined(public_deps)) {
++      public_deps += [ ":${gen_target_name}" ]
++    } else {
++      public_deps = [ ":${gen_target_name}" ]
++    }
+   }
+ }
+diff --git a/config/common/cmake/chip_gn.cmake b/config/common/cmake/chip_gn.cmake
+index b94d9b47b..6196faea3 100644
+--- a/config/common/cmake/chip_gn.cmake
++++ b/config/common/cmake/chip_gn.cmake
+@@ -141,7 +141,7 @@ macro(matter_build target)
+                                     --root-target=${GN_ROOT_TARGET}
+                                     --dotfile=${GN_ROOT_TARGET}/.gn
+                                     --script-executable=${Python3_EXECUTABLE}
+-                                    gen --check --fail-on-unused-args ${CMAKE_CURRENT_BINARY_DIR}
++                                    gen --fail-on-unused-args ${CMAKE_CURRENT_BINARY_DIR}
+                                     --export-compile-commands
+         COMMAND                 ninja
+         COMMAND                 ${CMAKE_COMMAND} -E echo "Matter library build complete"
+diff --git a/src/ble/BUILD.gn b/src/ble/BUILD.gn
+index 508d420f6..6207c8d9a 100644
+--- a/src/ble/BUILD.gn
++++ b/src/ble/BUILD.gn
+@@ -48,10 +48,9 @@ source_set("ble_config_header") {
+ 
+   public_configs = [ "${chip_root}/src:includes" ]
+ 
+-  public_deps = [ "${chip_root}/src/system:system_config_header" ]
+-
+-  deps = [
++  public_deps = [
+     ":ble_buildconfig",
++    "${chip_root}/src/system:system_config_header",
+     "${chip_root}/src/platform:platform_buildconfig",
+   ]
+ }
+diff --git a/src/platform/BUILD.gn b/src/platform/BUILD.gn
+index 0ebb492b4..47eb21f8c 100644
+--- a/src/platform/BUILD.gn
++++ b/src/platform/BUILD.gn
+@@ -458,7 +458,7 @@ if (chip_device_platform != "none" && chip_device_platform != "external") {
+ source_set("platform_config_header") {
+   sources = [ "../include/platform/CHIPDeviceConfig.h" ]
+ 
+-  deps = [ ":platform_buildconfig" ]
++  public_deps = [ ":platform_buildconfig" ]
+ }
+ 
+ if (chip_device_platform != "none") {
+diff --git a/src/system/BUILD.gn b/src/system/BUILD.gn
+index 243cb9c59..86542bb8a 100644
+--- a/src/system/BUILD.gn
++++ b/src/system/BUILD.gn
+@@ -164,13 +164,11 @@ source_set("system_config_header") {
+     "${chip_root}/src:includes",
+   ]
+ 
+-  deps = [
++  public_deps = [
+     ":system_buildconfig",
+     "${chip_root}/src/platform:platform_buildconfig",
+   ]
+ 
+-  public_deps = []
+-
+   if (target_cpu != "esp32") {
+     if (chip_system_config_use_lwip) {
+       public_deps += [ "${lwip_root}:lwip" ]
+EOF</code></pre>
+
+<div class="box ok"><span class="label">What This Patch Does in Plain English</span>
+<ul>
+  <li><strong>Disables strict <code>--check</code>:</strong> Removes the <code>--check</code> flag from <code>chip_gn.cmake</code> that causes modern GN to fail on unreferenced header files.</li>
+  <li><strong>Resolves Generated Header Race:</strong> Forces GN to treat <code>buildconfig_header</code> outputs (e.g. <code>CHIPDeviceBuildConfig.h</code> and <code>SystemBuildConfig.h</code>) as <code>public_deps</code> in BLE, Platform, and System layers so they are guaranteed to generate before compilation of dependent source files begins.</li>
+</ul>
+</div>
+
+<h3 id="fw-compile">D. Compiling the Production Firmware</h3>
+<p>Build the Sentinel application targeting the <code>xiao_ble</code> board with production configuration:</p>
+<pre><code>cd ~/sentinel-firmware
+west build -b xiao_ble -s application -- -DCONF_FILE="prj.conf"</code></pre>
+<p>Upon successful compilation, Ninja outputs the final bootloader-ready UF2 image:</p>
+<pre><code>build/zephyr/zephyr.uf2 (1.5 MB)</code></pre>
+
+<h3 id="fw-flash">E. Flashing via Micro Reset Double-Tap</h3>
+<p>The Seeed Studio XIAO nRF52840 features a built-in UF2 USB mass-storage bootloader &mdash; no external hardware programmer is required:</p>
 <ol>
-  <li>Download the precompiled Sentinel firmware UF2 binary from the <a href="https://github.com/LocalizedTech/sentinel-firmware/releases" target="_blank" rel="noopener">Sentinel GitHub Repository &rarr;</a>.</li>
-  <li>Connect the XIAO nRF52840 to your computer via a standard USB-C cable.</li>
-  <li>Double-tap the tiny physical <strong>Reset button</strong> on the board. A virtual USB drive named <code>XIAO-SENSE</code> or <code>XIAO-NRF</code> will appear in your file manager.</li>
-  <li>Drag and drop <code>zephyr.uf2</code> directly onto the virtual USB drive. The board will automatically flash the firmware and reboot.</li>
+  <li>Connect the XIAO nRF52840 to your computer via USB-C.</li>
+  <li>Double-tap the physical <strong>Reset button</strong> (micro silver tactile blister directly to the left of the USB-C shield) with a pointed tool within 500 ms.</li>
+  <li>The onboard RGB LED pulses a gentle green, and the virtual USB drive <code>XIAO-SENSE</code> mounts automatically at <code>/media/&lt;user&gt;/XIAO-SENSE</code>.</li>
+  <li>Copy <code>build/zephyr/zephyr.uf2</code> directly to the drive:
+    <pre><code>cp build/zephyr/zephyr.uf2 /media/$USER/XIAO-SENSE/</code></pre>
+  </li>
+  <li>The drive auto-unmounts, flashes the firmware, and reboots into application mode within 3 seconds.</li>
 </ol>
 
 <figure style="margin:1.5rem 0;">
@@ -33,6 +189,20 @@
   <li><strong>Visual Confirmation:</strong> When bootloader mode activates, the onboard RGB LED (located to the right of the USB-C port) begins pulsing a gentle green light.</li>
   <li><strong>Virtual Drive Appears:</strong> A virtual mass-storage drive titled <code>XIAO-SENSE</code>, <code>XIAO-NRF</code>, or <code>XIAO-BOOT</code> will immediately mount on your operating system (macOS Finder, Windows Explorer, or Linux File Manager).</li>
 </ul>
+</div>
+
+<h3 id="fw-shell">F. Diagnostic Shell &amp; Onboarding Codes (Run on Local PC)</h3>
+<p>With the XIAO nRF52840 plugged directly into your <strong>local development computer</strong> via USB-C, connect a serial terminal at 115,200 baud to its virtual COM port (<code>/dev/ttyACM0</code>). <em>(This is executed locally on your PC where the sensor is attached, not on the remote Radxa server):</em></p>
+<pre><code># Run locally on development PC
+picocom -b 115200 /dev/ttyACM0</code></pre>
+<p>Press <kbd>Enter</kbd> to see the <code>uart:~$</code> shell prompt, then query the interactive Zephyr shell for device identity and Matter onboarding codes:</p>
+<pre><code>uart:~$ matter onboardingcodes none
+QRCode:            MT:Y.K90-Q000KA0648G00
+QRCodeUrl:         https://project-chip.github.io/connectedhomeip/qrcode.html?data=MT%3AY.K90-Q000KA0648G00
+ManualPairingCode: 34970112332
+Done</code></pre>
+<div class="box ok"><span class="label">Verified Device Identity</span>
+<p>Vendor: <strong>LocalizedTech</strong> (Vendor ID: <code>0xFFF1</code>) &middot; Product: <strong>Sentinel</strong> (Product ID: <code>0x8000</code>) &middot; Discriminator: <code>0xf00</code> (3840) &middot; Setup Passcode: <code>20202021</code>.</p>
 </div>
 
 <h2 id="ps1-bench">2. Direct Bench Interconnect &amp; Verification (No Breakout Board Needed)</h2>
@@ -245,19 +415,15 @@
 <tr><td><strong>Presence Interrupt</strong> <em>(Optional)</em></td><td><strong>Pin 4 (D3 / IRQ)</strong></td><td><span style="color:#f59e0b;font-weight:700;">Yellow (Dashed)</span></td><td><strong>Pin 5: OT2 (OUT)</strong></td><td>Hardware interrupt line (Out 2) driven HIGH (&lt;50ms) upon human motion. Optional on bench.</td></tr>
 </tbody></table></div>
 
-<h3>Two Ways to Verify on the Bench</h3>
-<div class="box ok"><span class="label">Method A: Instant Radar Bluetooth Test (Zero Code &middot; 2 Wires)</span>
-<p>The HLK-LD2410S has an onboard Bluetooth LE transceiver. You can verify physical radar detection before flashing any firmware:</p>
-<ol>
-  <li>Connect only <strong>3.3V (Red)</strong> and <strong>GND (Black)</strong> from the powered XIAO board to the radar.</li>
-  <li>Install the free <strong>HLKRadarTool</strong> app on your smartphone (Android / iOS) or open <code>radar.esphome.io</code> in Chrome.</li>
-  <li>Connect over Bluetooth (default password: <code>HiLink</code>).</li>
-  <li>Observe real-time radar curves: moving energy, stationary (breathing) energy, and detected target distance in centimeters across Gates 0&ndash;8. Wave your hand or sit still to confirm detection.</li>
-</ol>
+<h3>Bench Verification &amp; Matter-over-Thread Proof</h3>
+<p>With all 4 DuPont wires connected, bench verification proceeds directly through our proven end-to-end Matter-over-Thread flow into Home Assistant:</p>
+
+<div class="box ok"><span class="label">Primary Bench Proof: Native Matter Commissioning</span>
+<p>Plug the XIAO into your computer via USB-C. Follow <a href="#ps1-fw">Section 1</a> to flash <code>build/zephyr/zephyr.uf2</code>, and proceed to <a href="#ps1-pair">Section 5</a> to commission the sensor directly into Home Assistant over the local Thread mesh. This validates the MCU, radar UART stream, 802.15.4 mesh radio, and live Home Assistant occupancy entities in one definitive test before enclosure assembly.</p>
 </div>
 
-<div class="box ok"><span class="label">Method B: Full Matter-over-Thread Test into Home Assistant</span>
-<p>With all 4 DuPont wires connected, plug the XIAO into your computer via USB-C. Follow Step 1 above to flash <code>zephyr.uf2</code>, and commission the sensor directly into Home Assistant over Thread &mdash; proving the entire stack on your desk before soldering.</p>
+<div class="box info"><span class="label">Optional Diagnostic Reference: Standalone Radar BLE Testing</span>
+<p>If you need to inspect raw radar energy curves (Gates 0–8) or adjust hardware sensitivity without MCU firmware, the HLK-LD2410S has an onboard Bluetooth chip. See the <a href="sensing.html#radar-ble-tool">Standalone Radar Bluetooth Diagnostics (HLKRadarTool)</a> guide in the Reference section for standalone 2-wire testing.</p>
 </div>
 
 <h2 id="ps1-soldering">3. Assemble and Solder the Sentinel Reference PCB</h2>
@@ -286,14 +452,41 @@
 </tbody></table></div>
 
 <h2 id="ps1-pair">5. Matter-over-Thread Commissioning into Home Assistant</h2>
+<p class="lede">Once flashed, the Sentinel presence sensor commissions natively into Home Assistant via standard Matter pairing over Bluetooth LE, which securely provisions your local Thread network credentials.</p>
+
+<div class="box ok"><span class="label">Hardware Proven &middot; Live Commissioning Succeeded</span>
+<p>Sentinel presence sensor verified live on hardware: commissioned cleanly over Matter-over-Thread into Home Assistant via Android Companion App, creating a local-first <code>Occupancy</code> binary sensor without cloud dependencies or vendor bridges.</p>
+</div>
+
+<h3 id="pair-prep">Pre-Commissioning Stack Verification Checklist</h3>
+<p>Before launching the mobile commissioning wizard, verify that your local server stack is healthy:</p>
 <ol>
-  <li>Power the assembled PS-1 sensor via its LiPo cell. The onboard status LED will blink slowly, indicating Matter commissioning mode.</li>
-  <li>Open the Home Assistant Companion App on your mobile device (must be on the same local Wi-Fi subnet as the Radxa server).</li>
-  <li>Navigate to <strong>Settings &rarr; Devices &amp; Services &rarr; Add Device &rarr; Add Matter Device</strong>.</li>
-  <li>Scan the printed Matter QR-code (or enter the 11-digit setup code from your firmware build).</li>
-  <li>Home Assistant securely shares the Thread operational credentials from <a href="install-thread.html">Stage 2</a> to the sensor over Bluetooth LE.</li>
-  <li>Within 15–30 seconds, the sensor joins the Thread mesh, and two new entities appear: <code>binary_sensor.study_occupancy</code> and <code>sensor.study_target_distance</code>.</li>
+  <li><strong>Matter Server Container Running:</strong> Confirm the <code>python-matter-server</code> container is active on the Radxa (<code>docker ps | grep matter-server</code>) and integrated with Home Assistant at <code>ws://localhost:5580/ws</code>.</li>
+  <li><strong>Thread Border Router Active &amp; Matched:</strong> Verify the ESP32-H2 Border Router is running as <code>leader</code> on your target network (e.g. <code>ha-thread-1562</code>, Channel 15, PAN ID <code>0x1562</code>). In Home Assistant, confirm this network is marked as the <strong>Preferred Network</strong> in <strong>Settings &rarr; Devices &amp; Services &rarr; Thread</strong>.</li>
+  <li><strong>Direct Line-of-Sight Placement (Crucial):</strong> Because both the XIAO nRF52840 and M5Stack ESP32-H2 use tiny onboard ceramic/PCB trace antennas, place the sensor in the <strong>same room within 1–2 meters (direct line-of-sight)</strong> of the Radxa server for initial pairing. <em>Do not attempt initial commissioning through concrete walls.</em></li>
 </ol>
+
+<h3 id="pair-steps">Step-by-Step Commissioning Procedure</h3>
+<ol>
+  <li><strong>Power the Sensor:</strong> Plug the XIAO into a standard 5V USB wall adapter or connect its 3.7V LiPo battery. <em>Note: Status LEDs remain dark to conserve battery power; the MCU boots in under 1 second and actively broadcasts Bluetooth LE pairing advertisements for 60 minutes.</em></li>
+  <li><strong>Open Companion App:</strong> On your smartphone (connected to the same home LAN Wi-Fi as the Radxa server), open the Home Assistant Companion App.</li>
+  <li><strong>Initiate Matter Pairing:</strong> Navigate to <strong>Settings &rarr; Devices &amp; Services &rarr; Add Device &rarr; Add Matter Device</strong>.</li>
+  <li><strong>Enter Pairing Code:</strong> When prompted, enter the manual pairing code from firmware build:
+    <pre><code>34970112332</code></pre>
+    <p><em>(Alternatively, scan the QR code generated from <code>MT:Y.K90-Q000KA0648G00</code>).</em></p>
+  </li>
+  <li><strong>Device Identification:</strong> When configured with matching Thread credentials, the device connects cleanly and is directly identified by the Companion App as <strong>Sentinel by LocalizedTech</strong> (without uncertified device blockers).</li>
+  <li><strong>Assign Name &amp; Room:</strong> Enter the friendly entity name (e.g. <code>Bedroom Presence Sensor</code>) and assign it to its room (e.g. <code>Bedroom</code>).</li>
+  <li><strong>Completion:</strong> Tap <strong>Done</strong>. Within 5–10 seconds, Home Assistant displays the device under the Matter integration with its live <strong>Occupancy</strong> entity.</li>
+</ol>
+
+<div class="box info"><span class="label">Field Lessons Learned &middot; Troubleshooting Guide</span>
+<ul>
+  <li><strong>Phone Locked to Old Network Name:</strong> If the Companion App complains <em>"cannot connect to thread network &lt;name&gt;"</em>, your phone's OS keychain has cached an older Thread dataset. Go to <strong>Settings &rarr; Companion App &rarr; Troubleshooting &rarr; Sync Thread credentials</strong> to force Google Play Services / Apple Keychain to adopt Home Assistant's preferred dataset, or align the Border Router's active dataset with the phone's expected network name.</li>
+  <li><strong>Device Stays "DETACHED" (Timeout during Thread Handshake):</strong> If the phone authenticates via BLE but fails with a timeout during Thread handover, the 802.15.4 signal between the sensor and border router is too weak or shielded by a metal PC chassis. Bring the sensor into direct line of sight with the Radxa server.</li>
+  <li><strong>OTBR Radio TX Timeout Crash:</strong> If the OpenThread Border Router daemon crashes periodically with <code>Platform: HandleRcpTimeout() / RadioSpinelNoResponse</code>, the RCP radio is timing out while transmitting MLE Announces on unused channels. Lock the operational channel mask to Channel 15 only via <code>docker exec otbr ot-ctl dataset channelmask 0x00008000</code> followed by <code>dataset commit active</code>.</li>
+</ul>
+</div>
 
 <h2 id="ps1-cal">6. Run 2-Minute Auto-Threshold Noise Mapping</h2>
 <p>To eliminate phantom false triggers from room reflections:</p>
