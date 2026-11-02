@@ -28,7 +28,7 @@ All hardware schematics, configurations, and automation scripts are licensed und
 ```text
 MIT License
 
-Copyright (c) 2026 Local-First Presence Sensor Contributors
+Copyright (c) 2026 Apartment Thread Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

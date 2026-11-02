@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Overview & Sequence &mdash; Apartment Thread</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><a href="index.html" class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Thread<small>Build Wiki · v2.0</small></div></a><details class="nav-toggle" open><summary>Contents</summary>
+<div class="nav-group"><h4>Room Patterns</h4><a href="rooms.html"><span>All Rooms &amp; Automations</span></a><a href="pattern-hardware.html"><span>Hardware by Pattern</span></a></div>
+<div class="nav-group"><h4>Hardware Components</h4><a href="server.html"><span>Server</span><span class="badge badge-ok">SRV</span></a><a href="thread-router.html"><span>Thread Router</span><span class="badge badge-ok">BR</span></a><a href="sensor.html"><span>Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="door-sensor.html"><span>Door Contact Sensor</span><span class="badge badge-warn">DS</span></a><a href="switch.html"><span>Smart Switch</span><span class="badge badge-warn">SW</span></a></div>
+<div class="nav-group"><h4>Planning &amp; Procurement</h4><a href="bom.html"><span>Bill of Materials</span></a><a href="inventory.html"><span>Inventory</span><span class="badge badge-accent">6 pending</span></a><a href="open.html"><span>Open Items</span><span class="badge badge-warn">9 open</span></a></div>
+<div class="nav-group"><h4>Installation</h4><a href="install.html" aria-current="page"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3 · Sensor Bench Build</span><span class="badge badge-warn">PS/DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
+<div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
+</details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Installation</span> &rsaquo; <span>Overview & Sequence</span></nav><h1>Installation Overview &amp; Sequence</h1><p class="lede">Five sequential stages, aligned strictly with the real physical build path. The server and Thread radio mesh are stood up and proven on the bench first, creating the local infrastructure needed to pair Matter-over-Thread sensors before any mains switch plate is disturbed.</p>
+
+<div class="box info"><span class="label">Why this sequence is non-negotiable</span><p>You cannot commission a Matter-over-Thread sensor without a running Home Assistant instance and an active Thread mesh. Similarly, smart switch plates must be proven in software with offline manual override before cutting wall wires. <strong>The sequence itself is the safety mechanism.</strong></p></div>
+
+<h2 id="sequence">The Real Physical Progression</h2>
+<figure class="diagram-card"><svg viewBox="0 0 780 170" role="img" aria-label="Five sequential installation stages">
+  <line x1="34" y1="70" x2="746" y2="70" class="s-soft" stroke-width="2"/>
+  <g class="s-mut" stroke-width="1.2" stroke-dasharray="3 3"><path d="M178 38 L178 102"/><path d="M322 38 L322 102"/><path d="M466 38 L466 102"/><path d="M610 38 L610 102"/></g>
+
+  <rect x="34" y="44" width="110" height="52" rx="8" class="s-in" fill="var(--accent-bg)"/>
+  <text x="89" y="64" class="t-fg" font-size="10" text-anchor="middle" font-weight="700">1 · SERVER</text>
+  <text x="89" y="80" class="t-mut" font-size="8.5" text-anchor="middle">Radxa + HA</text>
+  <text x="89" y="91" class="t-mut" font-size="8.5" text-anchor="middle">LAN only</text>
+
+  <rect x="178" y="44" width="110" height="52" rx="8" class="s-in" fill="var(--bg-code)"/>
+  <text x="233" y="64" class="t-fg" font-size="10" text-anchor="middle" font-weight="700">2 · THREAD</text>
+  <text x="233" y="80" class="t-mut" font-size="8.5" text-anchor="middle">BR-1 + OTBR</text>
+  <text x="233" y="91" class="t-mut" font-size="8.5" text-anchor="middle">mesh ready</text>
+
+  <rect x="322" y="44" width="110" height="52" rx="8" class="s-in" fill="var(--bg-code)"/>
+  <text x="377" y="64" class="t-fg" font-size="10" text-anchor="middle" font-weight="700">3 · SENSORS</text>
+  <text x="377" y="80" class="t-mut" font-size="8.5" text-anchor="middle">radar + door</text>
+  <text x="377" y="91" class="t-mut" font-size="8.5" text-anchor="middle">Matter paired</text>
+
+  <rect x="466" y="44" width="110" height="52" rx="8" class="s-in" fill="var(--bg-code)"/>
+  <text x="521" y="64" class="t-fg" font-size="10" text-anchor="middle" font-weight="700">4 · PLATES</text>
+  <text x="521" y="80" class="t-mut" font-size="8.5" text-anchor="middle">Tinxy 4+1 nodes</text>
+  <text x="521" y="91" class="t-mut" font-size="8.5" text-anchor="middle">in switchboards</text>
+
+  <rect x="610" y="44" width="110" height="52" rx="8" class="s-in" fill="var(--bg-code)"/>
+  <text x="665" y="64" class="t-fg" font-size="10" text-anchor="middle" font-weight="700">5 · MOUNT</text>
+  <text x="665" y="80" class="t-mut" font-size="8.5" text-anchor="middle">fan tuning,</text>
+  <text x="665" y="91" class="t-mut" font-size="8.5" text-anchor="middle">full automate</text>
+
+  <text x="390" y="128" class="t-mut" font-size="9.5" text-anchor="middle">Stages 1 &amp; 2 establish the local hub and Thread network first &mdash; enabling Matter pairing.</text>
+  <text x="390" y="144" class="t-mut" font-size="9.5" text-anchor="middle">Sensors are verified in Stage 3, switch plates wired in Stage 4, and final tuning runs in Stage 5.</text>
+</svg><figcaption><b>Real physical progression.</b> Each stage provides the prerequisites for the next.</figcaption></figure>
+
+<h2 id="stages-index">Detailed Stage Breakdown</h2>
+<p>Browse directly to each inner guide for step-by-step terminal commands, wiring schematics, and verification checklists:</p>
+
+<div class="scroll"><table><thead><tr><th>Stage</th><th>Core Focus</th><th>Key Artifacts / Hardware</th><th>Gate Criteria</th><th>Guide Link</th></tr></thead><tbody>
+<tr><td><strong>Stage 1</strong></td><td><strong>Server Setup</strong></td><td>Radxa Zero 3E, Armbian 13 Minimal, Docker, Home Assistant Container</td><td>HA runs at ~564 MiB total RAM; 100% responsive with router WAN unplugged</td><td><a href="install-server.html">1 · Server Setup &rarr;</a></td></tr>
+<tr><td><strong>Stage 2</strong></td><td><strong>Thread Border Router</strong></td><td>Server online &amp; HA accessible; M5Stack Gateway H2 (BR-1), 3.3V UART, RCP firmware, <code>otbr-agent</code>, Thread dataset</td><td>Store-bought Thread sensor commissions locally; network auto-reforms on reboot (<a href="open.html#o07">O-07</a>)</td><td><a href="install-thread.html">2 · Thread Border Router &rarr;</a></td></tr>
+<tr><td><strong>Stage 3</strong></td><td><strong>Sensor Bench Build</strong></td><td>PS-1 Presence Sensor (XIAO nRF52840 + LD2410C), DS-1 Door Sensor (XIAO ESP32-C6)</td><td>Both sensors pair via native Matter QR-code; sub-100ms occupancy reporting; noise mapped (<a href="open.html#o12">O-12</a>)</td><td><a href="install-sensors.html">3 · Sensor Bench Build &rarr;</a></td></tr>
+<tr><td><strong>Stage 4</strong></td><td><strong>Switch Plates</strong></td><td>Tinxy 4 Node Smart Switch with Fan Regulators, ESPHome / Local API integration, modular switchboards</td><td>Neutral conductor confirmed (<a href="open.html#o11">O-11</a>); local toggle works offline (<a href="open.html#o10">O-10</a>); physical switches override (<a href="open.html#o18">O-18</a>)</td><td><a href="install-plates.html">4 · Switch Plates &rarr;</a></td></tr>
+<tr><td><strong>Stage 5</strong></td><td><strong>Mounting &amp; Tuning</strong></td><td>Physical wall brackets, LD2410 ceiling fan gate calibration, room state machines</td><td>Fan spinning produces zero false triggers; full room automations run (<a href="rooms.html">HL-01, ST-01, BA-01</a>)</td><td><a href="install-commissioning.html">5 · Mounting &amp; Tuning &rarr;</a></td></tr>
+</tbody></table></div>
+
+<h2 id="gates">The Five Pass/Fail Gate Rules</h2>
+<ol>
+  <li><strong>One gate per stage:</strong> A test failure in any stage halts progress immediately. Never move to the next stage hoping to debug an earlier component simultaneously.</li>
+  <li><strong>Offline-first verification:</strong> Every stage must pass its local survivability test with the router's WAN/internet cable disconnected.</li>
+  <li><strong>Manual override sanctity:</strong> If Home Assistant is stopped, every physical wall rocker switch must continue to turn its light or fan on and off mechanically.</li>
+  <li><strong>Cheapest failure first:</strong> Software flashing and bench integration happen before cutting wires or drilling holes.</li>
+  <li><strong>Configuration backups:</strong> Every successful stage ends with an off-device backup of configuration files and datasets.</li>
+</ol>
+
+<h2 id="maint">Maintenance Routine</h2>
+<div class="scroll"><table><thead><tr><th>Task</th><th>Frequency</th><th>Procedure</th></tr></thead><tbody>
+<tr><td><strong>OTA a sleepy sensor</strong></td><td>As needed</td><td>Set <code>poll_period: 0</code> on battery sensor &rarr; push OTA update &rarr; restore sleep interval. (OTA fails while deep sleep is active).</td></tr>
+<tr><td><strong>LiPo Cell Replacement</strong></td><td>Every 12–18 months</td><td>Check battery voltage entity in Home Assistant; swap cell when terminal voltage drops below 3.5V.</td></tr>
+<tr><td><strong>After a power outage</strong></td><td>Post-event</td><td>Verify Thread mesh reformed and Tinxy switchboards reconnected locally before relying on automated triggers.</td></tr>
+<tr><td><strong>System Database &amp; Config Backups</strong></td><td>Monthly</td><td>Create automated Home Assistant backup snapshot and copy <code>~/homeassistant/config</code> off-device.</td></tr>
+</tbody></table></div>
+
+<nav class="pagenav"><a href="open.html"><span class="dir">Previous Page</span>&larr; Open Items</a><a class="next" href="install-server.html"><span class="dir">Next Page</span>1 · Server Setup &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Five Stages · Local-First Architecture</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>

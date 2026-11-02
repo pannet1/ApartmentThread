@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Inventory &mdash; Apartment Thread</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><a href="index.html" class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Thread<small>Build Wiki · v2.0</small></div></a><details class="nav-toggle" open><summary>Contents</summary>
+<div class="nav-group"><h4>Room Patterns</h4><a href="rooms.html"><span>All Rooms &amp; Automations</span></a><a href="pattern-hardware.html"><span>Hardware by Pattern</span></a></div>
+<div class="nav-group"><h4>Hardware Components</h4><a href="server.html"><span>Server</span><span class="badge badge-ok">SRV</span></a><a href="thread-router.html"><span>Thread Router</span><span class="badge badge-ok">BR</span></a><a href="sensor.html"><span>Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="door-sensor.html"><span>Door Contact Sensor</span><span class="badge badge-warn">DS</span></a><a href="switch.html"><span>Smart Switch</span><span class="badge badge-warn">SW</span></a></div>
+<div class="nav-group"><h4>Planning &amp; Procurement</h4><a href="bom.html"><span>Bill of Materials</span></a><a href="inventory.html" aria-current="page"><span>Inventory</span><span class="badge badge-accent">6 pending</span></a><a href="open.html"><span>Open Items</span><span class="badge badge-warn">9 open</span></a></div>
+<div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3 · Sensor Bench Build</span><span class="badge badge-warn">PS/DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
+<div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
+</details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside><main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Planning & Procurement</span> &rsaquo; <span>Inventory</span></nav><h1>On Hand Inventory</h1><p class="lede">Hardware already on hand that is <strong>not yet committed</strong> to the Apartment Thread project. Review before buying anything &mdash; you may already have it. Mark items <span class="badge badge-ok">Allocated</span> when assigned to a build, or <span class="badge badge-danger">Excluded</span> when they definitely do not belong.</p>
+
+<div class="box info"><span class="label">Purchase record</span><p>All six items below were purchased together from <strong>robobazar.in</strong> on <strong>16 August 2026</strong>, total <strong>₹1,100</strong>. Keep this with your records for warranty or re-ordering.</p></div>
+
+<div class="inv-filters" style="margin:1rem 0 1.25rem;display:flex;flex-wrap:wrap;gap:.5rem;">
+  <button class="filter-btn active" data-filter="all">All</button>
+  <button class="filter-btn" data-filter="Pending">Pending</button>
+  <button class="filter-btn" data-filter="Allocated">Allocated</button>
+  <button class="filter-btn" data-filter="Excluded">Excluded</button>
+  <button class="filter-btn" data-filter="Undecided">Undecided project</button>
+  <button class="filter-btn" data-filter="Apartment">Apartment project</button>
+</div>
+
+<div class="scroll"><table id="inventory-table"><thead><tr><th>ID</th><th>Item</th><th>Qty</th><th>Project</th><th>Status</th><th>Cost</th><th>Source · Date</th><th>Location / Notes</th><th></th></tr></thead><tbody></tbody></table></div>
+
+<div id="inventory-summary" style="margin-top:1rem;"></div>
+
+<nav class="pagenav"><a href="bom.html"><span class="dir">Previous Page</span>&larr; Bill of Materials</a><a class="next" href="open.html"><span class="dir">Next Page</span>Open Items &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Review on-hand stock before placing any order</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script><script>
+const INVENTORY = [
+  {
+    "id": "INV-01",
+    "name": "ESP32-S3 DevKit-N16R8 Development Board",
+    "qty": 1,
+    "unit": "pcs",
+    "cost_inr": 599,
+    "purchased_from": "robobazar.in",
+    "purchased_on": "2026-08-16",
+    "project": "Undecided",
+    "status": "Pending",
+    "location": "",
+    "notes": "",
+    "linked": null
+  },
+  {
+    "id": "INV-02",
+    "name": "W5500 SPI Ethernet Network Module",
+    "qty": 1,
+    "unit": "pcs",
+    "cost_inr": 309,
+    "purchased_from": "robobazar.in",
+    "purchased_on": "2026-08-16",
+    "project": "Undecided",
+    "status": "Pending",
+    "location": "",
+    "notes": "",
+    "linked": null
+  },
+  {
+    "id": "INV-03",
+    "name": "400 Points Half Size Solderless Breadboard",
+    "qty": 1,
+    "unit": "pcs",
+    "cost_inr": 30,
+    "purchased_from": "robobazar.in",
+    "purchased_on": "2026-08-16",
+    "project": "Undecided",
+    "status": "Pending",
+    "location": "",
+    "notes": "",
+    "linked": null
+  },
+  {
+    "id": "INV-04",
+    "name": "Tactile Push Button Switch 6x6x5 (Pack of 10)",
+    "qty": 1,
+    "unit": "pack",
+    "cost_inr": 17,
+    "purchased_from": "robobazar.in",
+    "purchased_on": "2026-08-16",
+    "project": "Undecided",
+    "status": "Pending",
+    "location": "",
+    "notes": "",
+    "linked": null
+  },
+  {
+    "id": "INV-05",
+    "name": "220 ohm Resistor - 1/4 Watt (Pack Of 100)",
+    "qty": 1,
+    "unit": "pack",
+    "cost_inr": 39,
+    "purchased_from": "robobazar.in",
+    "purchased_on": "2026-08-16",
+    "project": "Undecided",
+    "status": "Pending",
+    "location": "",
+    "notes": "",
+    "linked": null
+  },
+  {
+    "id": "INV-06",
+    "name": "Jumper Wires M2M / M2F / F2F (20+20+20)",
+    "qty": 1,
+    "unit": "set",
+    "cost_inr": 106,
+    "purchased_from": "robobazar.in",
+    "purchased_on": "2026-08-16",
+    "project": "Undecided",
+    "status": "Pending",
+    "location": "",
+    "notes": "",
+    "linked": null
+  }
+];
+
+const STATUS_BADGE = {
+  Pending: 'badge-warn',
+  Allocated: 'badge-ok',
+  Excluded: 'badge-danger'
+};
+const PROJECT_BADGE = {
+  Undecided: 'badge-warn',
+  Apartment: 'badge-ok',
+  Other: 'badge-accent'
+};
+
+let inventory = INVENTORY;
+
+function render(list) {
+  const tbody = document.querySelector('#inventory-table tbody');
+  tbody.innerHTML = '';
+  let total = 0;
+  let pending = 0;
+
+  list.forEach(it => {
+    total += it.cost_inr || 0;
+    if (it.status === 'Pending') pending++;
+
+    const statusClass = STATUS_BADGE[it.status] || 'badge-warn';
+    const projClass = PROJECT_BADGE[it.project] || 'badge-warn';
+    const linked = it.linked ? ` <a href="${it.linked}" style="color:var(--accent);text-decoration-color:color-mix(in srgb, var(--accent) 45%, transparent);">linked to build</a>` : '';
+
+    const tr = document.createElement('tr');
+    tr.id = it.id.toLowerCase();
+    tr.dataset.status = it.status;
+    tr.dataset.project = it.project;
+    tr.innerHTML = `
+      <td class="num"><strong>${it.id}</strong></td>
+      <td><strong>${it.name}</strong>${linked}</td>
+      <td class="num">${it.qty} ${it.unit}</td>
+      <td><span class="badge ${projClass}">${it.project}</span></td>
+      <td><span class="badge ${statusClass}">${it.status}</span></td>
+      <td class="num">₹${(it.cost_inr || 0).toLocaleString()}</td>
+      <td><small>${it.purchased_from} · ${it.purchased_on}</small></td>
+      <td><small>${it.location || it.notes || '&mdash;'}</small></td>
+      <td class="num"><button class="btn-quiet" onclick="toggleStatus('${it.id}')">change status</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  const summary = document.getElementById('inventory-summary');
+  summary.innerHTML = `<strong>${list.length}</strong> items &middot; <strong>₹${total.toLocaleString()}</strong> total &middot; <strong>${pending}</strong> pending decision`;
+}
+
+function filterInventory(filter) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.toggle('active', b.dataset.filter === filter));
+  const list = filter === 'all' ? inventory : inventory.filter(it => filter === 'Pending' || filter === 'Allocated' || filter === 'Excluded' ? it.status === filter : it.project === filter);
+  render(list);
+}
+
+document.querySelectorAll('.filter-btn').forEach(b => {
+  b.addEventListener('click', () => filterInventory(b.dataset.filter));
+});
+
+function toggleStatus(id) {
+  const it = inventory.find(x => x.id === id);
+  const order = ['Pending', 'Allocated', 'Excluded'];
+  const next = order[(order.indexOf(it.status) + 1) % order.length];
+  it.status = next;
+  render(inventory);
+}
+
+render(inventory);
+</script></body></html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>3 · Sensor Bench Build &mdash; Apartment Thread</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><a href="index.html" class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Thread<small>Build Wiki · v2.0</small></div></a><details class="nav-toggle" open><summary>Contents</summary>
+<div class="nav-group"><h4>Room Patterns</h4><a href="rooms.html"><span>All Rooms &amp; Automations</span></a><a href="pattern-hardware.html"><span>Hardware by Pattern</span></a></div>
+<div class="nav-group"><h4>Hardware Components</h4><a href="server.html"><span>Server</span><span class="badge badge-ok">SRV</span></a><a href="thread-router.html"><span>Thread Router</span><span class="badge badge-ok">BR</span></a><a href="sensor.html"><span>Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="door-sensor.html"><span>Door Contact Sensor</span><span class="badge badge-warn">DS</span></a><a href="switch.html"><span>Smart Switch</span><span class="badge badge-warn">SW</span></a></div>
+<div class="nav-group"><h4>Planning &amp; Procurement</h4><a href="bom.html"><span>Bill of Materials</span></a><a href="inventory.html"><span>Inventory</span><span class="badge badge-accent">6 pending</span></a><a href="open.html"><span>Open Items</span><span class="badge badge-warn">9 open</span></a></div>
+<div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html" aria-current="page"><span>3 · Sensor Bench Build</span><span class="badge badge-warn">PS/DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
+<div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
+</details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Installation</span> &rsaquo; <span>3 · Sensor Bench Build</span></nav><h1>Stage 3 &mdash; Sensor Bench Build (PS-1 &amp; DS-1)</h1><p class="lede">Bench-assembling, flashing, pairing, and calibrating both battery-powered Matter-over-Thread sensors. Because Stages 1 &amp; 2 established the server and Thread network first, these sensors pair immediately on the bench without external vendor clouds.</p>
+
+<div class="box verdict"><span class="label">Stage 3 Objective</span><p>Build and verify two sensors on the bench: <strong>(1) PS-1 Presence Sensor</strong> (Seeed Studio XIAO nRF52840 + LD2410C mmWave radar + TPS62840 LDO power gate) running Sentinel Matter firmware, and <strong>(2) DS-1 Door Contact Sensor</strong> (Seeed Studio XIAO ESP32-C6 + MC-38 reed switch). Pair both into Home Assistant via native Matter QR-code scan over the local Thread mesh.</p></div>
+
+<h2 id="ps1-fw">1. Flash Sentinel Zephyr Firmware on XIAO nRF52840</h2>
+<p>The Seeed Studio XIAO nRF52840 ships with a factory UF2 USB mass storage bootloader &mdash; no JTAG/SWD programmer is required:</p>
+<ol>
+  <li>Download the precompiled Sentinel firmware UF2 binary from the <a href="https://github.com/LocalizedTech/sentinel-firmware/releases" target="_blank" rel="noopener">Sentinel GitHub Repository &rarr;</a>.</li>
+  <li>Connect the XIAO nRF52840 to your computer via USB-C.</li>
+  <li>Double-tap the tiny physical <strong>Reset button</strong> on the board. A virtual USB drive named <code>XIAO-SENSE</code> or <code>XIAO-NRF</code> will appear in your file manager.</li>
+  <li>Drag and drop <code>zephyr.uf2</code> directly onto the virtual USB drive. The board will automatically flash the firmware and reboot.</li>
+</ol>
+
+<h2 id="ps1-soldering">2. Assemble and Solder the Sentinel Reference PCB</h2>
+<p>If assembling on the Sentinel custom PCB (<a href="https://github.com/LocalizedTech/sentinel-electronics" target="_blank" rel="noopener">CERN-OHL-S-2.0</a>), follow the milled-window soldering sequence:</p>
+<div class="box ok"><span class="label">Step-by-Step Soldering Technique for Seeed Studio XIAO</span>
+  <ol>
+    <li><strong>Solder Surface Edge Castellations:</strong> Align the Seeed Studio XIAO nRF52840 squarely over footprint pads 1&ndash;14 on the top side of the PCB. Tack down opposite corners (Pin 1 and Pin 14) with flux and lead-free solder, then solder the remaining castellated edge pads.</li>
+    <li><strong>Flip Board &amp; Inspect Windows:</strong> Turn the PCB over. You will see circular through-milled cutouts directly exposing the gold bottom-side pads of the XIAO: pads 15 (<code>BAT+</code>), 16 (<code>GND</code>), and 19&ndash;22 (SWD debug).</li>
+    <li><strong>Bridge Solder into Windows:</strong> Apply a small drop of gel flux into windows 15 and 16. Touch your iron tip to the inside wall of the plated hole and feed solder until a solid solder dome connects the PCB copper ring to the underside XIAO pad. This connects the 2,000&nbsp;mAh battery directly to the onboard TI BQ25100 LiPo charger IC.</li>
+    <li><strong>Solder LDO &amp; Passives:</strong> Solder U2 (ST LDLN030G33R, TSOT-23-5 package) and passives C1&ndash;C4 and R1 (0603 or 0805 packages).</li>
+    <li><strong>Mount Radar Header &amp; JST:</strong> Solder the 5-pin female header on the left side and the 2-pin JST-PH battery connector.</li>
+  </ol>
+</div>
+
+<h2 id="ps1-wiring">3. Wire the Presence Sensor (PS-1) Circuit</h2>
+<p>Complete the low-voltage hookup as specified in the <a href="sensor.html#pcb-pinout">PS-1 Hardware Pinout</a>:</p>
+
+<div class="scroll"><table><thead><tr><th>XIAO nRF52840 Pin</th><th>Signal Role</th><th>Target Device &amp; Pin</th><th>Note</th></tr></thead><tbody>
+<tr><td><strong>Pin D6 (TX)</strong></td><td>UART Transmit</td><td>LD2410C Pin 3 (RX)</td><td>Configuration &amp; threshold commands</td></tr>
+<tr><td><strong>Pin D7 (RX)</strong></td><td>UART Receive</td><td>LD2410C Pin 4 (TX)</td><td>Real-time target distance &amp; energy data</td></tr>
+<tr><td><strong>Pin D3</strong></td><td>Interrupt Input</td><td>LD2410C Pin 2 (OUT)</td><td>Fast waking on initial motion (~50 ms)</td></tr>
+<tr><td><strong>Pin D2</strong></td><td>LDO Enable Gate</td><td>TPS62840 Pin EN</td><td>Powers off radar completely during sleep</td></tr>
+<tr><td><strong>3.3V Out (LDO)</strong></td><td>Regulated Radar Power</td><td>LD2410C Pin 5 (VCC)</td><td>Clean 3.3V power (bypasses battery sag)</td></tr>
+<tr><td><strong>GND</strong></td><td>Common Ground</td><td>LD2410C Pin 1 &amp; TPS62840 GND</td><td>Common 0V reference</td></tr>
+<tr><td><strong>BAT+ / BAT-</strong></td><td>LiPo Power Rail</td><td>LiPo Battery Cell (<a href="bom.html#stage-3">Stage 3 BOM</a>)</td><td>3.7V nominal chemistry</td></tr>
+</tbody></table></div>
+
+<h2 id="ps1-pair">4. Matter-over-Thread Commissioning into Home Assistant</h2>
+<ol>
+  <li>Power the assembled PS-1 sensor via its LiPo cell. The onboard status LED will blink slowly, indicating Matter commissioning mode.</li>
+  <li>Open the Home Assistant Companion App on your mobile device (must be on the same local Wi-Fi subnet as the Radxa server).</li>
+  <li>Navigate to <strong>Settings &rarr; Devices &amp; Services &rarr; Add Device &rarr; Add Matter Device</strong>.</li>
+  <li>Scan the printed Matter QR-code (or enter the 11-digit setup code from your firmware build).</li>
+  <li>Home Assistant securely shares the Thread operational credentials from <a href="install-thread.html">Stage 2</a> to the sensor over Bluetooth LE.</li>
+  <li>Within 15–30 seconds, the sensor joins the Thread mesh, and two new entities appear: <code>binary_sensor.study_occupancy</code> and <code>sensor.study_target_distance</code>.</li>
+</ol>
+
+<h2 id="ps1-cal">5. Run 2-Minute Auto-Threshold Noise Mapping</h2>
+<p>To eliminate phantom false triggers from room reflections:</p>
+<ol>
+  <li>Place the assembled bench sensor at its intended operating height (1.8m) pointing into the empty room.</li>
+  <li>Ensure no people or moving pets are in the room.</li>
+  <li>In Home Assistant, trigger the entity <code>button.study_run_noise_calibration</code> (or use the HLKRadarTool app via Bluetooth).</li>
+  <li>The sensor enters a 120-second learning cycle, recording ambient baseline RF noise across all 8 distance gates (0.75m to 6.0m) and setting stationary energy thresholds +20% above background noise.</li>
+</ol>
+
+<h2 id="ps1-enc">6. Enclosure Fit &amp; Housing Assembly</h2>
+<p>Snap the electronics into the 3D-printed enclosure (<a href="https://github.com/LocalizedTech/sentinel-enclosure" target="_blank" rel="noopener">Sentinel 3D Models</a>):</p>
+<ul>
+  <li>Slide the LD2410C radar into the front cavity with its antenna face pointing outward through the thin front wall.</li>
+  <li>Seat the XIAO nRF52840 into the tray with its USB-C port aligned with the service cutout.</li>
+  <li>Tuck the LiPo cell into the rear cavity behind the insulation barrier.</li>
+  <li>Snap the ball-and-socket baseplate onto the back.</li>
+</ul>
+
+<h2 id="ds1">7. Door Contact Sensor (DS-1) Assembly &amp; Pairing</h2>
+<p>As documented in the <a href="door-sensor.html">DS-1 Component Guide</a>, assemble the bathroom door sensor:</p>
+<ol>
+  <li>Solder the MC-38 magnetic reed switch wires to <strong>GPIO 2</strong> and <strong>GND</strong> on the XIAO ESP32-C6.</li>
+  <li>Connect the 2,000 mAh LiPo battery to the underside battery pads.</li>
+  <li>Flash the ESP-Matter contact sensor firmware via USB-C.</li>
+  <li>Scan the Matter QR-code in Home Assistant to commission the door sensor into the local Thread mesh.</li>
+  <li>Bring the magnet within 15 mm of the reed switch. Confirm that <code>binary_sensor.bathroom_door</code> updates between <code>Open</code> and <code>Closed</code> with sub-80ms latency. <span class="badge badge-ok">closes O-12</span></li>
+</ol>
+
+<div class="box ok"><span class="label">Pass &mdash; Stage 3 Sensor Gate</span><p>Both the PS-1 presence sensor and DS-1 door sensor commission cleanly over the local Thread mesh into Home Assistant, report state changes within 100 ms, monitor battery levels, and operate seamlessly when the internet cable is unplugged.</p></div>
+
+<nav class="pagenav"><a href="install-thread.html"><span class="dir">Previous Page</span>&larr; 2 · Thread Border Router</a><a class="next" href="install-plates.html"><span class="dir">Next Page</span>4 · Switch Plates &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Stage 3 · Presence &amp; Door Sensors (Matter over Thread)</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>

@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Overview &mdash; Apartment Thread</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><a href="index.html" class="brand" aria-current="page"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Thread<small>Build Wiki · v2.0</small></div></a><details class="nav-toggle" open><summary>Contents</summary>
+<div class="nav-group"><h4>Room Patterns</h4><a href="rooms.html"><span>All Rooms &amp; Automations</span></a><a href="pattern-hardware.html"><span>Hardware by Pattern</span></a></div>
+<div class="nav-group"><h4>Hardware Components</h4><a href="server.html"><span>Server</span><span class="badge badge-ok">SRV</span></a><a href="thread-router.html"><span>Thread Router</span><span class="badge badge-ok">BR</span></a><a href="sensor.html"><span>Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="door-sensor.html"><span>Door Contact Sensor</span><span class="badge badge-warn">DS</span></a><a href="switch.html"><span>Smart Switch</span><span class="badge badge-warn">SW</span></a></div>
+<div class="nav-group"><h4>Planning &amp; Procurement</h4><a href="bom.html"><span>Bill of Materials</span></a><a href="inventory.html"><span>Inventory</span><span class="badge badge-accent">6 pending</span></a><a href="open.html"><span>Open Items</span><span class="badge badge-warn">9 open</span></a></div>
+<div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3 · Sensor Bench Build</span><span class="badge badge-warn">PS/DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
+<div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
+</details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
+<main class="main"><div class="doc wide">
+
+<section class="hero">
+  <div class="folders">
+    <div class="folder-tab" data-reveal>PS · Presence sensor</div>
+    <div class="folder-tab" data-reveal>DS · Door sensor</div>
+    <div class="folder-tab" data-reveal>SW · Tinxy plate</div>
+    <div class="folder-tab" data-reveal>SRV · Server</div>
+    <div class="folder-tab" data-reveal>BR · Thread router</div>
+    <div class="folder-front">
+      <h1>Three patterns, one server, three switch plates</h1>
+      <p class="hero-sub">A pattern-based automation reference for an Indian apartment. Identifying three uniform room patterns: timer-driven hall lighting and fan (no sensors needed), mmWave radar-driven study light and fan, and door-triggered bathroom lighting and exhaust fan. Each room pattern has its own in-wall Tinxy 4+1 Fan Smart Switch plate preserving physical wall switches, orchestrated locally by Home Assistant on a Radxa Zero 3E.</p>
+      <div class="hero-actions">
+        <a class="btn" href="rooms.html">Explore Room Patterns &rarr;</a>
+        <a class="btn btn-quiet" href="bom.html">Pattern BOM · ₹8,233</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="facts">
+  <div class="fact" data-reveal><div class="fact-k">Uniform patterns</div><div class="fact-v">3 patterns</div><p class="fact-note">Hall, Study room, Bathroom.</p></div>
+  <div class="fact" data-reveal><div class="fact-k">Switch modules</div><div class="fact-v">3× Tinxy 4+1</div><p class="fact-note">1 dedicated plate per room.</p></div>
+  <div class="fact" data-reveal><div class="fact-k">Full Pattern BOM</div><div class="fact-v">₹8,233</div><p class="fact-note">All 3 patterns implemented.</p></div>
+  <div class="fact" data-reveal><div class="fact-k">Hall sensors needed</div><div class="fact-v">0 (₹0)</div><p class="fact-note">Pure timer-based automation.</p></div>
+</div>
+
+<h2 id="arch">How it fits together</h2>
+<figure class="diagram-card" data-reveal><svg viewBox="0 0 780 300" role="img" aria-label="Three Apartment Thread patterns reporting to Home Assistant, commanding the Tinxy switch plates">
+  <!-- Pattern 1: Hall -->
+  <rect x="24" y="20" width="180" height="66" rx="9" class="s-in" fill="var(--bg-code)"/>
+  <text x="114" y="42" class="t-fg" font-size="10.5" text-anchor="middle" font-weight="700">1 · HALL PATTERN</text>
+  <text x="114" y="58" class="t-mut" font-size="9" text-anchor="middle">HA Timers / Schedule</text>
+  <text x="114" y="72" class="t-mut" font-size="9" text-anchor="middle">No sensor needed (₹0)</text>
+
+  <!-- Pattern 2: Study -->
+  <rect x="24" y="105" width="180" height="76" rx="9" class="s-in" fill="var(--bg-code)"/>
+  <text x="114" y="126" class="t-fg" font-size="10.5" text-anchor="middle" font-weight="700">2 · STUDY ROOM PATTERN</text>
+  <text x="114" y="142" class="t-mut" font-size="9" text-anchor="middle">Sentinel mmWave Radar (PS-1)</text>
+  <text x="114" y="156" class="t-mut" font-size="9" text-anchor="middle">Matter / Thread · 2,000 mAh</text>
+  <text x="114" y="170" class="t-mut" font-size="9" text-anchor="middle">Desk &amp; stationary occupancy</text>
+
+  <!-- Pattern 3: Bathroom -->
+  <rect x="24" y="200" width="180" height="66" rx="9" class="s-in" fill="var(--bg-code)"/>
+  <text x="114" y="222" class="t-fg" font-size="10.5" text-anchor="middle" font-weight="700">3 · BATHROOM PATTERN</text>
+  <text x="114" y="238" class="t-mut" font-size="9" text-anchor="middle">Door Contact Sensor (DS-1)</text>
+  <text x="114" y="252" class="t-mut" font-size="9" text-anchor="middle">Closed = ON · Open = Grace OFF</text>
+
+  <!-- Connection paths -->
+  <path d="M204 53 L290 120" class="k-radar" stroke-width="1.6" stroke-dasharray="4 3" fill="none"/>
+  <path d="M204 143 L290 143" class="k-radar" stroke-width="1.8" fill="none"/>
+  <path d="M204 233 L290 166" class="k-radar" stroke-width="1.6" fill="none"/>
+  <text x="246" y="96" class="t-mut" font-size="8.5" text-anchor="middle">timer</text>
+  <text x="246" y="136" class="t-mut" font-size="8.5" text-anchor="middle">Thread</text>
+  <text x="246" y="208" class="t-mut" font-size="8.5" text-anchor="middle">Thread / contact</text>
+
+  <!-- Central Hub: Home Assistant -->
+  <rect x="290" y="85" width="195" height="115" rx="9" class="s-in" fill="var(--accent-bg)"/>
+  <text x="387" y="110" class="t-fg" font-size="11.5" text-anchor="middle" font-weight="700">HOME ASSISTANT</text>
+  <text x="387" y="128" class="t-mut" font-size="9.5" text-anchor="middle">Radxa Zero 3E (Debian Minimal)</text>
+  <text x="387" y="145" class="t-mut" font-size="9.5" text-anchor="middle">ESP32-H2 Thread Border Router</text>
+  <text x="387" y="162" class="t-mut" font-size="9.5" text-anchor="middle">All 3 pattern rules live here</text>
+  <text x="387" y="180" class="t-mut" font-size="9.5" text-anchor="middle">100% local · No cloud</text>
+
+  <!-- Link to Switch Plate -->
+  <path d="M485 142 L570 142" class="s-in" stroke-width="2" fill="none"/>
+  <path d="M562 137 L574 142 L562 147 z" class="b-soft"/>
+  <text x="527" y="132" class="t-mut" font-size="9" text-anchor="middle">local Wi-Fi</text>
+
+  <!-- Mains Actuators: Tinxy 4+1 Plates -->
+  <rect x="560" y="55" width="205" height="175" rx="9" class="s-in" fill="var(--bg-code)"/>
+  <text x="662" y="78" class="t-fg" font-size="10" text-anchor="middle" font-weight="700">TINXY 4+1 FAN SWITCHES</text>
+  <text x="662" y="93" class="t-fg" font-size="8.5" text-anchor="middle" font-weight="700">(1 IN-WALL PLATE PER ROOM)</text>
+  <text x="662" y="115" class="t-mut" font-size="8.5" text-anchor="middle">Hall: Light + Ceiling Fan (timers)</text>
+  <text x="662" y="132" class="t-mut" font-size="8.5" text-anchor="middle">Study: Light + Ceiling Fan (presence)</text>
+  <text x="662" y="149" class="t-mut" font-size="8.5" text-anchor="middle">Bath: Light + Exhaust Fan (door)</text>
+  <text x="662" y="170" class="t-mut" font-size="8.5" text-anchor="middle">Uniform: 4 Relays + 1 Fan per module</text>
+  <text x="662" y="186" class="t-mut" font-size="8.5" text-anchor="middle">Physical wall switches still work 24/7</text>
+
+  <text x="24" y="288" class="t-mut" font-size="9.5">Local-first: Dedicated Tinxy 4+1 in each room. Hall is timer-driven; Study is mmWave-driven; Bath is door-triggered.</text>
+</svg><figcaption><b>Three patterns, one server, three switch plates.</b> Each pattern has its own in-wall Tinxy 4+1 switch module controlling local lights and fan. Hall is timer-automated; Study uses battery mmWave radar; Bathroom is door-triggered. All physical wall switches work 100% offline.</figcaption></figure>
+
+<h2 id="components">The five hardware components</h2>
+<p>Each physical building block has its own dedicated specification page, schematic reference, and pinout guide. Hover a row to preview the part.</p>
+
+<div class="index-list has-preview" id="component-index">
+  <a class="index-row" href="sensor.html" data-img="assets/images/ld2410-radar.jpg">
+    <span class="idx-id">PS-1</span>
+    <span class="idx-name">Presence Sensor (Study)</span>
+    <span class="idx-what">Sentinel open-source architecture (Seeed XIAO nRF52840 + HLK-LD2410S). Real-time millimeter-wave micro-motion detection.</span>
+    <span class="idx-cost">₹2,462<small>Matter over Thread</small></span>
+  </a>
+  <a class="index-row" href="door-sensor.html" data-img="assets/images/esp32-c6-devkit.jpg">
+    <span class="idx-id">DS-1</span>
+    <span class="idx-name">Door Contact Sensor (Bath)</span>
+    <span class="idx-what">Ultra-low-latency door contact sensor (Seeed XIAO ESP32-C6 + MC-38 reed switch). Sub-50ms door trigger response.</span>
+    <span class="idx-cost">₹985<small>Matter over Thread</small></span>
+  </a>
+  <a class="index-row" href="switch.html" data-img="assets/images/switchboard-relay-installation.jpg">
+    <span class="idx-id">SW-1</span>
+    <span class="idx-name">Tinxy 4+1 Fan Switches (&times;3)</span>
+    <span class="idx-what">Uniform in-wall modular switch plate per room (Hall, Study, Bath). Controls 4 relays + 1 fan regulator with physical rocker override.</span>
+    <span class="idx-cost">₹3,897<small>3 &times; Wi-Fi Plates</small></span>
+  </a>
+  <a class="index-row" href="server.html#srv" data-img="assets/images/radxa-zero-3e.webp">
+    <span class="idx-id">SRV-1</span>
+    <span class="idx-name">Local Server Host</span>
+    <span class="idx-what">Radxa Zero 3E single-board computer running Debian Minimal + Docker Home Assistant. 100% offline local orchestrator.</span>
+    <span class="idx-cost">₹0<small>Radxa Zero 3E</small></span>
+  </a>
+  <a class="index-row" href="thread-router.html" data-img="assets/images/m5stack-esp32-h2.webp">
+    <span class="idx-id">BR-1</span>
+    <span class="idx-name">Thread Border Router</span>
+    <span class="idx-what">M5Stack ESP32-H2 gateway module communicating via 3.3V UART2. Forms the central IEEE 802.15.4 local mesh network.</span>
+    <span class="idx-cost">₹889<small>ESP32-H2 (UART)</small></span>
+  </a>
+</div>
+<div class="index-preview" id="index-preview" aria-hidden="true"><span class="idx-none">No photograph yet</span></div>
+
+<h2 id="sections">Explore the Wiki</h2>
+<div class="facts" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 2rem;">
+  <a class="fact" href="rooms.html" style="text-decoration:none; color:inherit;" data-reveal>
+    <div class="fact-k">Automations &amp; Logic</div>
+    <div class="fact-v" style="font-size:1.3rem;">Room Patterns &rarr;</div>
+    <p class="fact-note">State machines, YAML automations, and test cases for Hall, Study, and Bathroom.</p>
+  </a>
+  <a class="fact" href="pattern-hardware.html" style="text-decoration:none; color:inherit;" data-reveal>
+    <div class="fact-k">Architecture</div>
+    <div class="fact-v" style="font-size:1.3rem;">Hardware by Pattern &rarr;</div>
+    <p class="fact-note">Complete hardware matrix and layer breakdowns categorized by individual room automation rules.</p>
+  </a>
+  <a class="fact" href="install.html" style="text-decoration:none; color:inherit;" data-reveal>
+    <div class="fact-k">Execution Sequence</div>
+    <div class="fact-v" style="font-size:1.3rem;">Install Guide &rarr;</div>
+    <p class="fact-note">The five-stage deployment order: server setup, Thread network, bench sensors, switch plates, and mounting.</p>
+  </a>
+  <a class="fact" href="bom.html" style="text-decoration:none; color:inherit;" data-reveal>
+    <div class="fact-k">Procurement Plan</div>
+    <div class="fact-v" style="font-size:1.3rem;">Bill of Materials &rarr;</div>
+    <p class="fact-note">Itemized hardware bill, stage-by-stage breakdowns, and verified Indian distributor buying links.</p>
+  </a>
+  <a class="fact" href="open.html" style="text-decoration:none; color:inherit;" data-reveal>
+    <div class="fact-k">Safety &amp; Verification</div>
+    <div class="fact-v" style="font-size:1.3rem;">Open Items &rarr;</div>
+    <p class="fact-note">Engineering verification gates, pass/fail evidence criteria, and offline safety checks.</p>
+  </a>
+  <a class="fact" href="inventory.html" style="text-decoration:none; color:inherit;" data-reveal>
+    <div class="fact-k">Stock Management</div>
+    <div class="fact-v" style="font-size:1.3rem;">Inventory &rarr;</div>
+    <p class="fact-note">On-hand lab stock, components available for allocation, and purchase order records.</p>
+  </a>
+</div>
+
+<h2 id="india">India-specific notes</h2>
+<ul data-reveal>
+  <li><strong>Neutral at the switchboard.</strong> Most Indian switchboards have neutral at the plate, but older wiring may not. Check before buying the Tinxy modules, they need neutral to power their onboard ESP8266 and relays (<a href="open.html#o11">O-11</a>).</li>
+  <li><strong>Fan load.</strong> Ceiling fans draw 60–75 W running but far more on start. Confirm the Tinxy capacitor regulator rating covers the motor inrush, not just steady current.</li>
+  <li><strong>230 V / 50 Hz.</strong> Everything here is rated for Indian domestic mains. Tinxy is engineered in Bengaluru for Indian modular boxes.</li>
+  <li><strong>Mains work needs an electrician.</strong> Low-voltage sensor work is yours. The wall plate is not.</li>
+</ul>
+
+<nav class="pagenav"><span></span><a class="next" href="rooms.html"><span class="dir">Next Page</span>All Rooms & Automations &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Prices are estimates · Verify before ordering</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>

@@ -192,9 +192,46 @@
     }, { passive: true });
   }
 
-  // On narrow screens the nav starts collapsed
+  // Sidebar navigation state management
   var nav = document.querySelector('.nav-toggle');
-  if (nav && window.matchMedia('(max-width: 960px)').matches) {
-    nav.removeAttribute('open');
+  if (nav) {
+    var isDesktop = window.matchMedia('(min-width: 901px)').matches;
+    var savedNavState = null;
+    try {
+      savedNavState = sessionStorage.getItem('ps-nav-open');
+    } catch (e) {}
+
+    if (isDesktop) {
+      // Desktop: Keep navigation open permanently
+      nav.setAttribute('open', '');
+    } else if (savedNavState !== null) {
+      // Mobile / narrow: Respect user's explicit open/close choice
+      if (savedNavState === 'true') {
+        nav.setAttribute('open', '');
+      } else {
+        nav.removeAttribute('open');
+      }
+    } else {
+      // First visit on very small phone screens (<= 640px) starts collapsed
+      if (window.matchMedia('(max-width: 640px)').matches) {
+        nav.removeAttribute('open');
+      } else {
+        nav.setAttribute('open', '');
+      }
+    }
+
+    // Persist user's explicit open/collapse preference across page navigations
+    nav.addEventListener('toggle', function () {
+      try {
+        sessionStorage.setItem('ps-nav-open', nav.open ? 'true' : 'false');
+      } catch (e) {}
+    });
+
+    // Ensure desktop view stays open on window resize
+    window.addEventListener('resize', function () {
+      if (window.matchMedia('(min-width: 901px)').matches) {
+        nav.setAttribute('open', '');
+      }
+    });
   }
 })();

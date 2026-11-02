@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>4 · Switch Plates &mdash; Apartment Thread</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><a href="index.html" class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Thread<small>Build Wiki · v2.0</small></div></a><details class="nav-toggle" open><summary>Contents</summary>
+<div class="nav-group"><h4>Room Patterns</h4><a href="rooms.html"><span>All Rooms &amp; Automations</span></a><a href="pattern-hardware.html"><span>Hardware by Pattern</span></a></div>
+<div class="nav-group"><h4>Hardware Components</h4><a href="server.html"><span>Server</span><span class="badge badge-ok">SRV</span></a><a href="thread-router.html"><span>Thread Router</span><span class="badge badge-ok">BR</span></a><a href="sensor.html"><span>Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="door-sensor.html"><span>Door Contact Sensor</span><span class="badge badge-warn">DS</span></a><a href="switch.html"><span>Smart Switch</span><span class="badge badge-warn">SW</span></a></div>
+<div class="nav-group"><h4>Planning &amp; Procurement</h4><a href="bom.html"><span>Bill of Materials</span></a><a href="inventory.html"><span>Inventory</span><span class="badge badge-accent">6 pending</span></a><a href="open.html"><span>Open Items</span><span class="badge badge-warn">9 open</span></a></div>
+<div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3 · Sensor Bench Build</span><span class="badge badge-warn">PS/DS</span></a><a href="install-plates.html" aria-current="page"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
+<div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
+</details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Installation</span> &rsaquo; <span>4 · Switch Plates</span></nav><h1>Stage 4 &mdash; Switch Plates (Tinxy 4+1 Fan)</h1><p class="lede">Fitting smart switch modules behind physical modular wall plates in each room. The onboard <strong>Espressif ESP8266</strong> microcontroller delivers true local-first control via <strong>ESPHome</strong>, <strong>Tasmota</strong>, or Tinxy's local HTTP/MQTT API with zero vendor cloud dependency, while physical wall switches remain 100% functional offline.</p>
+
+<div class="box verdict"><span class="label">Stage 4 Objective</span><p>Deploy Tinxy 4 Node Smart Switch modules with fan regulation behind modular wall switch plates in Hall, Study, and Bathroom. Establish 100% local control via ESP8266 (ESPHome or local HTTP API), verify Neutral conductor presence (<a href="open.html#o11">O-11</a>), and confirm that mechanical wall toggles retain instant manual override with the server offline (<a href="open.html#o18">O-18</a>).</p></div>
+
+<div class="box danger"><span class="label">The mains voltage boundary</span><p>All in-wall switchboard work involves <strong>230 V AC mains electricity</strong> and must be performed with the main MCB isolator switched OFF by a <strong>qualified electrician</strong>. Never touch live conductors.</p></div>
+
+<h2 id="checks">1. Electrician Pre-Installation Checks</h2>
+<p>Before fitting any hardware into the conduit boxes, hand over these mandatory checks:</p>
+<ol>
+  <li><strong>Confirm Neutral wire presence:</strong> Ensure a continuous Neutral conductor (typically black or blue wire) is present inside each targeted switchboard (Hall, Study, and Bathroom). The Tinxy module requires active AC neutral to power its internal power supply, ESP8266 core, and relay coils. <span class="badge badge-ok">closes O-11</span></li>
+  <li><strong>Ceiling fan motor rating:</strong> Confirm the fan regulator channel is wired to standard AC induction ceiling fans (60–75 W). Tinxy uses multi-step capacitor regulation to deliver silent, hum-free speed control.</li>
+  <li><strong>Box depth and clearance:</strong> Standard Indian modular flush boxes (Anchor Roma, Crabtree, Legrand, etc.) must have at least 45 mm internal depth to accommodate the module behind the switches without crushing mains wire joints.</li>
+</ol>
+
+<h2 id="wiring">2. Physical In-Wall Module Hookup</h2>
+<p>Fit one Tinxy 4 Node Smart Switch with Fan Regulators (<a href="switch.html">SW-1 Component Specs</a>) per room behind the modular switch plate:</p>
+<ul>
+  <li>Connect <strong>Phase (L)</strong> from the mains circuit breaker to the module's <code>L</code> terminal.</li>
+  <li>Connect <strong>Neutral (N)</strong> from the conduit neutral bus to the module's <code>N</code> terminal.</li>
+  <li>Connect <strong>Load outputs (L1, L2, L3, L4)</strong> to the respective room lighting fixtures and bathroom exhaust fan.</li>
+  <li>Connect the <strong>Fan regulation output (F)</strong> directly to the ceiling fan motor wire.</li>
+  <li>Wire the <strong>Switch inputs (S1–S4, SF)</strong> directly to the existing mechanical wall rocker switches. Physical switches act as local trigger inputs to the secondary coprocessor, ensuring that flipping a wall switch toggles the load with sub-10ms response regardless of network state. <span class="badge badge-ok">closes O-18</span></li>
+</ul>
+
+<h2 id="local-esp">3. Local ESP Integration (The ESP8266 Advantage)</h2>
+<p>Unlike Tuya-based modules that require cloud developer portal accounts, temporary API tokens, and internet handshakes, Tinxy is built on the <strong>Espressif ESP8266</strong>. This enables two distinct local control paths:</p>
+
+<div class="tabs" style="margin:1.25rem 0;">
+  <h3>Option A: Native ESPHome Firmware (Recommended for Local-First Purists)</h3>
+  <p>Tinxy multi-node modules utilize a dual-MCU architecture: the ESP8266 communicates with the relay/fan coprocessor via an internal serial UART bus at 9600 baud. You can flash ESPHome directly onto the ESP8266 for native Home Assistant push integration:</p>
+  <ol>
+    <li>Temporarily desolder the small <code>W2</code> and <code>W3</code> solder bridge pads on the back of the PCB to isolate the ESP8266's TX/RX lines from the coprocessor during programming.</li>
+    <li>Connect a 3.3V USB-to-UART adapter to the <code>3.3V</code>, <code>GND</code>, <code>TXD</code>, and <code>RXD</code> pads. Hold the onboard button while powering up to enter bootloader mode.</li>
+    <li>Flash ESPHome using <code>esptool.py</code> or the ESPHome Web Flasher.</li>
+    <li>Resolder the <code>W2</code> and <code>W3</code> bridge pads so the ESP8266 can talk to the coprocessor again.</li>
+  </ol>
+  <p>Example ESPHome YAML configuration snippet for the UART interface:</p>
+  <pre><code>uart:
+  id: uart_bus
+  tx_pin: GPIO1
+  rx_pin: GPIO3
+  baud_rate: 9600
+
+switch:
+  - platform: template
+    name: "Light 1"
+    turn_on_action:
+      - uart.write: "#1100#"
+    turn_off_action:
+      - uart.write: "#1000#"
+  - platform: template
+    name: "Light 2"
+    turn_on_action:
+      - uart.write: "#2100#"
+    turn_off_action:
+      - uart.write: "#2000#"
+
+fan:
+  - platform: speed
+    name: "Ceiling Fan"
+    output: fan_output
+    speed_count: 4</code></pre>
+  <p>Home Assistant discovers the module automatically via the native ESPHome API with zero cloud and sub-millisecond local response. <span class="badge badge-ok">closes O-10</span></p>
+
+  <h3>Option B: Tinxy Local API / Home Assistant Integration (Plug-and-Play)</h3>
+  <p>If you prefer not to open the heat-shrink casing or solder:</p>
+  <ol>
+    <li>Power on the module and complete initial Wi-Fi pairing to your dedicated 2.4 GHz IoT Wi-Fi network using the mobile app.</li>
+    <li>Assign a static DHCP lease on your local router.</li>
+    <li>Add the device in Home Assistant using the native Tinxy Local integration or local MQTT mode. Communication occurs entirely over LAN without routing through external servers.</li>
+    <li>In your router firewall settings, add a rule to <strong>block all WAN egress for the Tinxy switch IP addresses</strong>. The switches continue to operate smoothly on the local network. <span class="badge badge-ok">closes O-10</span></li>
+  </ol>
+</div>
+
+<h2 id="mapping">4. Channel Mapping &amp; Entity Naming</h2>
+<p>Assign descriptive, standardized entity IDs for automations across all three rooms:</p>
+
+<div class="scroll"><table><thead><tr><th>Room</th><th>Tinxy Module Channel</th><th>Home Assistant Entity ID</th><th>Function</th></tr></thead><tbody>
+<tr><td><strong>Hall</strong></td><td>Relay 1 (L1)</td><td><code>light.hall_light</code></td><td>Evening / night lighting (timers)</td></tr>
+<tr><td><strong>Hall</strong></td><td>Fan Speed (F)</td><td><code>fan.hall_ceiling_fan</code></td><td>Stepped speed regulation (1–4)</td></tr>
+<tr><td><strong>Study</strong></td><td>Relay 1 (L1)</td><td><code>light.study_light</code></td><td>Occupancy lighting (<a href="sensor.html">PS-1</a> radar)</td></tr>
+<tr><td><strong>Study</strong></td><td>Fan Speed (F)</td><td><code>fan.study_ceiling_fan</code></td><td>Occupancy fan control</td></tr>
+<tr><td><strong>Bathroom</strong></td><td>Relay 1 (L1)</td><td><code>light.bathroom_light</code></td><td>Door entry lighting (<a href="door-sensor.html">DS-1</a>)</td></tr>
+<tr><td><strong>Bathroom</strong></td><td>Relay 2 (L2)</td><td><code>fan.bathroom_exhaust_fan</code></td><td>Humidity / ventilation cycle</td></tr>
+</tbody></table></div>
+
+<h2 id="offline-test">5. Verification &amp; Manual Override Gate</h2>
+<p>Run the two mandatory failure-mode tests before closing switchboard plates:</p>
+<ol>
+  <li><b>Offline local control test (<a href="open.html#o10">O-10</a>):</b> Unplug the router's WAN / internet cable. Toggle each light and fan from the Home Assistant dashboard. Loads must react with sub-50ms latency.</li>
+  <li><b>Server failure manual override test (<a href="open.html#o18">O-18</a>):</b> Stop the Home Assistant container (<code>docker stop homeassistant</code>). Flip each physical wall switch toggle. Every load must switch on and off instantly without delay or reboot loops. The physical switch must remain a switch regardless of server status.</li>
+</ol>
+
+<div class="box ok"><span class="label">Pass &mdash; Stage 4 Switch Plate Gate</span><p>All three switch plates are safely installed, verified with neutral conductors present, operate 100% locally with zero cloud traffic on Espressif ESP8266 hardware, and mechanical wall toggles retain instant manual override even with the server completely halted.</p></div>
+
+<nav class="pagenav"><a href="install-sensors.html"><span class="dir">Previous Page</span>&larr; 3 · Sensor Bench Build</a><a class="next" href="install-commissioning.html"><span class="dir">Next Page</span>5 · Mounting & Tuning &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Stage 4 · Tinxy 4+1 Smart Switch Plates</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>

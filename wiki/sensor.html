@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Presence Sensor (PS) &mdash; Apartment Thread</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><a href="index.html" class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Thread<small>Build Wiki · v2.0</small></div></a><details class="nav-toggle" open><summary>Contents</summary>
+<div class="nav-group"><h4>Room Patterns</h4><a href="rooms.html"><span>All Rooms &amp; Automations</span></a><a href="pattern-hardware.html"><span>Hardware by Pattern</span></a></div>
+<div class="nav-group"><h4>Hardware Components</h4><a href="server.html"><span>Server</span><span class="badge badge-ok">SRV</span></a><a href="thread-router.html"><span>Thread Router</span><span class="badge badge-ok">BR</span></a><a href="sensor.html" aria-current="page"><span>Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="door-sensor.html"><span>Door Contact Sensor</span><span class="badge badge-warn">DS</span></a><a href="switch.html"><span>Smart Switch</span><span class="badge badge-warn">SW</span></a></div>
+<div class="nav-group"><h4>Planning &amp; Procurement</h4><a href="bom.html"><span>Bill of Materials</span></a><a href="inventory.html"><span>Inventory</span><span class="badge badge-accent">6 pending</span></a><a href="open.html"><span>Open Items</span><span class="badge badge-warn">9 open</span></a></div>
+<div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3 · Sensor Bench Build</span><span class="badge badge-warn">PS/DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
+<div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
+</details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Hardware Components</span> &rsaquo; <span>Presence Sensor (PS)</span></nav><h1>Presence Sensor</h1><p class="lede">The battery device that tells Home Assistant a room is occupied. Built on the open-source <a href="https://github.com/LocalizedTech" target="_blank" rel="noopener"><strong>Sentinel</strong></a> reference design (Localized Tech): HLK-LD2410S 24 GHz radar, Seeed Studio XIAO nRF52840, and native Matter-over-Thread with 4&ndash;5 months proven battery life.</p>
+
+<div class="box verdict"><span class="label">Component identity &mdash; PS-1</span><p>Every presence sensor in this build is identified as <strong>PS-1</strong>: <strong>HLK-LD2410S radar + Seeed Studio XIAO nRF52840 + 2,000 mAh LiPo cell + Sentinel firmware (Matter over Thread)</strong> in an articulating ball-and-socket enclosure. Commissions natively via standard Matter QR code directly into Home Assistant &mdash; zero cloud dependency, no proprietary hubs.</p></div>
+
+<div class="box info"><span class="label">Reference Design &amp; Video Walkthrough</span>
+  <p>The presence sensor architecture is open source and documented by Localized Tech:</p>
+  <ul>
+    <li><strong>Video Guide:</strong> <a href="https://youtu.be/sjROLjp5sEw" target="_blank" rel="noopener">Sentinel: Battery-powered mmWave Presence Sensor (YouTube) &rarr;</a> &mdash; full walkthrough of the ball-and-socket enclosure, 4–5 month battery runtime, QR code Matter pairing, and Home Assistant setup.</li>
+    <li><strong>GitHub Organization:</strong> <a href="https://github.com/LocalizedTech" target="_blank" rel="noopener">github.com/LocalizedTech &rarr;</a></li>
+    <li><strong>Source Repositories:</strong>
+      <a href="https://github.com/LocalizedTech/sentinel-electronics" target="_blank" rel="noopener"><code>sentinel-electronics</code></a> (schematics &amp; PCB layout) &middot;
+      <a href="https://github.com/LocalizedTech/sentinel-firmware" target="_blank" rel="noopener"><code>sentinel-firmware</code></a> (Zephyr RTOS source &amp; <code>ld2410s.c</code> driver) &middot;
+      <a href="https://github.com/LocalizedTech/sentinel-enclosure" target="_blank" rel="noopener"><code>sentinel-enclosure</code></a> (3D-printable articulating mount)
+    </li>
+  </ul>
+</div>
+
+<h2 id="specs">Technical Specifications</h2>
+<div class="scroll"><table><thead><tr><th>Subsystem</th><th>Component &amp; Specification</th><th>Operational Details</th></tr></thead><tbody>
+<tr><td><strong>Radar Sensor</strong></td><td>Hi-Link HLK-LD2410S (24 GHz FMCW mmWave)</td><td>Detects stationary and moving occupants up to 8 m across 0.75 m distance gates. 0.04&ndash;0.6 mA active draw.</td></tr>
+<tr><td><strong>Microcontroller</strong></td><td>Seeed Studio XIAO nRF52840 (Nordic 64 MHz ARM Cortex-M4)</td><td>Native 802.15.4 radio, 2&ndash;4 &micro;A deep sleep current, integrated TI BQ25100 LiPo charger with underside battery solder pads.</td></tr>
+<tr><td><strong>Networking &amp; Protocol</strong></td><td>Matter over Thread (Sleepy End Device / ICD)</td><td>Native Home Assistant commissioning via BLE QR code. Local IPv6 mesh communication through the Thread border router.</td></tr>
+<tr><td><strong>Firmware &amp; Driver</strong></td><td>Open-source Sentinel firmware (Zephyr RTOS / nRF Connect SDK)</td><td>Dedicated <a href="https://github.com/LocalizedTech/sentinel-firmware/blob/main/drivers/ld2410s.c" target="_blank" rel="noopener"><code>drivers/ld2410s.c</code></a> driver operating at 115200 8N1 with GPIO interrupt wake on pin D3.</td></tr>
+<tr><td><strong>Power &amp; Battery</strong></td><td>3.7 V 2,000 mAh LiPo + ST LDLN030G33R LDO</td><td>4&ndash;5 months proven runtime in active household use. Dynamic radar power gating via XIAO pin D2.</td></tr>
+</tbody></table></div>
+
+<h2 id="parts">Parts for one unit</h2>
+<div class="index-list has-preview" style="margin-bottom:0">
+  <div class="index-row" style="cursor:default">
+    <span class="idx-id">Radar</span>
+    <span class="index-thumb"><img src="assets/images/ld2410-radar.jpg" alt="HLK-LD2410S radar module" loading="lazy"></span>
+    <span class="idx-what">HLK-LD2410S 24 GHz mmWave radar module: sees still persons up to 8 m, draws 0.04&ndash;0.6 mA.</span>
+    <span class="idx-cost">₹639<small><a href="https://robu.in/product/hi-link-hlk-ld2410s/" target="_blank" rel="noopener">Robu.in</a></small></span>
+  </div>
+  <div class="index-row" style="cursor:default">
+    <span class="idx-id">MCU</span>
+    <span class="index-thumb"><img src="assets/images/seeed-xiao-nrf52840.jpg" alt="Seeed Studio XIAO nRF52840" loading="lazy"></span>
+    <span class="idx-what">Seeed Studio XIAO BLE nRF52840: Nordic nRF52840 SoC, Matter over Thread, ~2&ndash;4 &micro;A sleep, built-in LiPo charger.</span>
+    <span class="idx-cost">₹1,149<small><a href="https://robocraze.com/products/seeed-studio-xiao-nrf52840-development-board-supports-bluetooth-5-0?_pos=3&amp;_sid=99e9e998c&amp;_ss=r" target="_blank" rel="noopener">Robocraze</a></small></span>
+  </div>
+  <div class="index-row" style="cursor:default">
+    <span class="idx-id">Case</span>
+    <span class="index-thumb"><img src="assets/images/abs-junction-box.jpg" alt="Sentinel ball-and-socket enclosure" loading="lazy"></span>
+    <span class="idx-what">Sentinel ball-and-socket 3D-printed enclosure with wall mount, allowing flexible tilt and angle adjustment.</span>
+    <span class="idx-cost">₹200<small>3D Print</small></span>
+  </div>
+</div>
+
+<div class="photo-card">
+  <div class="photo-card-media" style="aspect-ratio: auto; min-height: 280px; background: #0c1424; display: flex; align-items: center; justify-content: center; padding: 16px;">
+    <img src="assets/images/sentinel-pcb.png" alt="Sentinel hardware architecture and PCB layout" style="max-height: 420px; width: auto; max-width: 100%; object-fit: contain; margin: 0 auto; display: block;" loading="lazy">
+    <div class="photo-tag">Sentinel Reference PCB Layout</div>
+  </div>
+  <div class="photo-card-desc"><b>Sentinel Reference PCB Architecture (CERN-OHL-S-2.0).</b> 2-layer custom board integrating the Seeed Studio XIAO nRF52840 (right), Hi-Link HLK-LD2410S 24&nbsp;GHz mmWave radar 5-pin socket (left), JST LiPo battery terminal, and dedicated ST LDLN030G33R ultra-low-noise LDO power gating on GPIO pin D2 (center). Includes through-milled plated via windows to access the XIAO underside battery charging and SWD debug pads.</div>
+</div>
+
+<h2 id="pcb">PCB Architecture, Pinout &amp; Trace Details</h2>
+<p>The presence sensor utilizes a dedicated 2-layer printed circuit board designed to fit inside the articulating 3D-printed ball mount. It eliminates point-to-point wiring loops that degrade the 24&nbsp;GHz microwave radar signal and provides hardware-level power isolation between the radar RF frontend and the nRF52840 2.4&nbsp;GHz Thread mesh radio.</p>
+
+<div class="box info"><span class="label">Circuit Design Highlights</span>
+  <ul>
+    <li><strong>Full Hardware Power Gating:</strong> The ST LDLN030G33R LDO regulator enables the XIAO microcontroller to physically de-energize the HLK-LD2410S radar during deep sleep intervals via GPIO pin D2 (<code>LDO_EN</code>), collapsing idle draw from ~600&nbsp;&micro;A to &lt;4&nbsp;&micro;A and unlocking 4&ndash;5 months of real-world battery life on a 2,000&nbsp;mAh LiPo.</li>
+    <li><strong>Castellated Pad &amp; Underside Window Routing:</strong> The Seeed Studio XIAO nRF52840 exposes its LiPo battery charger pins (<code>BAT+</code> and <code>BAT-</code>) and SWD debugging pins exclusively on the bottom face of the module. The Sentinel PCB incorporates <strong>through-milled plated via windows</strong> (pads 15&ndash;16 and 19&ndash;22), enabling direct solder bridging from the reverse side into the XIAO's onboard Texas Instruments BQ25100 charging IC.</li>
+    <li><strong>Dedicated Ultra-Low-Noise Rail:</strong> The LD2410S radar requires an exceptionally clean 3.3V rail. Driving the radar directly from digital MCU outputs or noisy switching supplies causes false ghost reflections. The LDLN030G33R delivers a ripple noise of just 7.5&nbsp;&micro;V<sub>RMS</sub> with local LC filtering.</li>
+  </ul>
+</div>
+
+<h3 id="pcb-pinout">Complete PCB Pinout &amp; Signal Interconnect Matrix</h3>
+<p>The table below provides the full pin mapping for all headers, traces, and footprints visible on the reference PCB layout:</p>
+
+<div class="scroll"><table><thead><tr><th>Section / Footprint</th><th>Pin #</th><th>PCB Silkscreen / Label</th><th>Signal Name</th><th>Target Connection</th><th>Direction</th><th>Electrical Function &amp; Notes</th></tr></thead><tbody>
+<tr><td rowspan="5"><strong>Radar Socket</strong><br><small>HLK-LD2410S 5-pin 2.54mm header (Left)</small></td><td>1</td><td><code>+3V3</code></td><td><code>VDD_RADAR</code></td><td>LDO U2 VOUT (Pin 5)</td><td>Power In</td><td>Switched 3.3V supply rail. Powered down during deep sleep; draws 0.04&ndash;0.6&nbsp;mA during active radar scans.</td></tr>
+<tr><td>2</td><td><code>GND</code></td><td><code>GND</code></td><td>System Ground Plane</td><td>Power In</td><td>Common digital and RF return ground.</td></tr>
+<tr><td>3</td><td><code>UART_RX</code></td><td><code>RADAR_RX</code></td><td>XIAO Pin D6 (Pad 7)</td><td>Input</td><td>115,200 baud serial input to radar. Receives sensitivity thresholds, gate limits, and engineering mode commands.</td></tr>
+<tr><td>4</td><td><code>UART_TX</code></td><td><code>RADAR_TX</code></td><td>XIAO Pin D7 (Pad 8)</td><td>Output</td><td>115,200 baud serial output from radar. Streams target distance, movement energy, and still presence data.</td></tr>
+<tr><td>5</td><td><code>SENSOR_IRQ</code></td><td><code>RADAR_OUT</code></td><td>XIAO Pin D3 (Pad 4)</td><td>Output</td><td>High-speed hardware interrupt line. Driven HIGH upon human presence detection; wakes nRF52840 from deep sleep.</td></tr>
+
+<tr><td rowspan="7"><strong>XIAO Right Bank</strong><br><small>Seeed XIAO nRF52840 (Right Edge Pads 1&ndash;7)</small></td><td>1</td><td><code>X</code></td><td><code>NC (D0)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D0 / A0 (left floating / unused).</td></tr>
+<tr><td>2</td><td><code>X</code></td><td><code>NC (D1)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D1 / A1 (left floating / unused).</td></tr>
+<tr><td>3</td><td><code>LDO_EN</code></td><td><code>PWR_GATE_EN</code></td><td>LDO U2 EN (Pin 3)</td><td>Output</td><td><strong>GPIO Pin D2.</strong> Drives LDO enable pin. Set HIGH to wake radar; set LOW to cut radar power during sleep.</td></tr>
+<tr><td>4</td><td><code>SENSOR_IRQ</code></td><td><code>SENSOR_WAKE</code></td><td>Radar OUT (Pin 5)</td><td>Input</td><td><strong>GPIO Pin D3.</strong> Configured in Zephyr RTOS as an asynchronous low-power edge-triggered wake interrupt.</td></tr>
+<tr><td>5</td><td><code>X</code></td><td><code>NC (D4)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D4 (left floating / unused).</td></tr>
+<tr><td>6</td><td><code>X</code></td><td><code>NC (D5)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D5 (left floating / unused).</td></tr>
+<tr><td>7</td><td><code>UART_TX</code></td><td><code>MCU_TX</code></td><td>Radar RX (Pin 3)</td><td>Output</td><td><strong>GPIO Pin D6 / UART0 TX.</strong> Serial data transmit from nRF52840 to LD2410S configuration port.</td></tr>
+
+<tr><td rowspan="7"><strong>XIAO Left Bank</strong><br><small>Seeed XIAO nRF52840 (Center Edge Pads 8&ndash;14)</small></td><td>8</td><td><code>UART_RX</code></td><td><code>MCU_RX</code></td><td>Radar TX (Pin 4)</td><td>Input</td><td><strong>GPIO Pin D7 / UART0 RX.</strong> Serial data receive to nRF52840 driver parser.</td></tr>
+<tr><td>9</td><td><code>X</code></td><td><code>NC (D8)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D8 / SCK (left floating / unused).</td></tr>
+<tr><td>10</td><td><code>X</code></td><td><code>NC (D9)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D9 / MISO (left floating / unused).</td></tr>
+<tr><td>11</td><td><code>X</code></td><td><code>NC (D10)</code></td><td>Unconnected</td><td>&mdash;</td><td>GPIO Pin D10 / MOSI (left floating / unused).</td></tr>
+<tr><td>12</td><td><code>X</code></td><td><code>NC (3V3)</code></td><td>Unconnected</td><td>&mdash;</td><td>XIAO onboard 3.3V LDO output (left disconnected; radar uses dedicated low-noise LDO).</td></tr>
+<tr><td>13</td><td><code>GND</code></td><td><code>GND</code></td><td>System Ground Plane</td><td>Power</td><td>Main microcontroller system ground pad.</td></tr>
+<tr><td>14</td><td><code>+BATT</code></td><td><code>VBAT_IN</code></td><td>Battery Rail / JST</td><td>Power</td><td>Raw battery rail feed to XIAO 5V/VIN pad for voltage monitoring and reverse power distribution.</td></tr>
+
+<tr><td rowspan="6"><strong>Underside Cutouts</strong><br><small>Milled via windows for bottom-side SMD pads</small></td><td>15</td><td><code>+BATT</code></td><td><code>BAT+</code></td><td>JST Pin 1 (+BATT)</td><td>Power In</td><td>Bottom-side positive battery terminal of XIAO. Connects battery directly to onboard TI BQ25100 charger IC.</td></tr>
+<tr><td>16</td><td><code>GND</code></td><td><code>BAT-</code></td><td>JST Pin 2 (GND)</td><td>Power</td><td>Bottom-side ground pad of XIAO battery charger circuit.</td></tr>
+<tr><td>19</td><td><code>20 / 19</code></td><td><code>SWDIO</code></td><td>SWD Test Point</td><td>Bidirectional</td><td>Reverse access cutout for Serial Wire Debug data line (Zephyr firmware programming / J-Link).</td></tr>
+<tr><td>20</td><td><code>21 / 20</code></td><td><code>SWCLK</code></td><td>SWD Test Point</td><td>Input</td><td>Reverse access cutout for Serial Wire Debug clock line.</td></tr>
+<tr><td>21</td><td><code>RST</code></td><td><code>nRESET</code></td><td>Reset Test Point</td><td>Input</td><td>Reverse access cutout for hardware reset line.</td></tr>
+<tr><td>22</td><td><code>GND</code></td><td><code>GND</code></td><td>System Ground Plane</td><td>Power</td><td>Reverse access cutout for debugger ground reference.</td></tr>
+
+<tr><td rowspan="5"><strong>Power Regulator</strong><br><small>ST LDLN030G33R TSOT-23-5 Package (U2)</small></td><td>1</td><td><code>+BATT</code></td><td><code>VIN</code></td><td>JST Pin 1 &amp; C1/C4</td><td>Power In</td><td>LiPo input voltage (3.0V&ndash;4.2V nominal). Filtered by input decoupling capacitors C1 and C4.</td></tr>
+<tr><td>2</td><td><code>GND</code></td><td><code>GND</code></td><td>System Ground Plane</td><td>Power</td><td>Regulator ground reference.</td></tr>
+<tr><td>3</td><td><code>LDO_EN</code></td><td><code>EN</code></td><td>XIAO Pin D2 (Pad 3)</td><td>Input</td><td>Active-high enable. Controlled by XIAO firmware. Pulled to GND via 100k&Omega; resistor R1.</td></tr>
+<tr><td>4</td><td><code>Net-(U2-PG)</code></td><td><code>PG / BYPASS</code></td><td>Resistor R1 / Test Pad</td><td>Passive</td><td>Power Good flag / noise bypass filter node.</td></tr>
+<tr><td>5</td><td><code>+3V3</code></td><td><code>VOUT</code></td><td>Radar Pin 1 &amp; C2/C3</td><td>Power Out</td><td>Regulated 3.3V low-noise output rail (&lt;7.5&nbsp;&micro;V<sub>RMS</sub> ripple). Powers LD2410S radar module.</td></tr>
+
+<tr><td rowspan="3"><strong>Battery &amp; Passives</strong><br><small>Power terminal &amp; decoupling network</small></td><td>JST-1</td><td><code>+BATT</code></td><td><code>VBAT</code></td><td>LiPo Positive Terminal</td><td>Power In</td><td>Keyed 2-pin JST-PH 2.0 connector (Pin 1: +BATT, Pin 2: GND) prevents reverse-polarity cell insertion.</td></tr>
+<tr><td>C1, C4</td><td><code>+BATT / GND</code></td><td>Input Filter</td><td>U2 VIN &amp; Ground</td><td>Passive</td><td>10&nbsp;&micro;F + 0.1&nbsp;&micro;F ceramic capacitors to suppress voltage sag during radar startup surge.</td></tr>
+<tr><td>C2, C3</td><td><code>+3V3 / GND</code></td><td>Output Filter</td><td>U2 VOUT &amp; Ground</td><td>Passive</td><td>4.7&nbsp;&micro;F + 0.1&nbsp;&micro;F low-ESR ceramic capacitors to guarantee radar RF frequency stability.</td></tr>
+</tbody></table></div>
+
+<h3 id="pcb-power-gating">Hardware Engineering: Why Radar Power Gating is Critical</h3>
+<p>Standard ESP32 or mmWave builds power radar modules continuously. The Hi-Link HLK-LD2410S draws approximately <strong>0.5&nbsp;mA to 0.6&nbsp;mA</strong> in active detection mode. While minimal compared to older 24&nbsp;GHz modules (which drew 50&ndash;80&nbsp;mA), leaving it powered 24/7 on a 2,000&nbsp;mAh battery depletes the cell in under 18 weeks without accounting for MCU radio transmissions:</p>
+
+<div class="scroll"><table><thead><tr><th>Operational Topology</th><th>Radar Active State</th><th>Microcontroller State</th><th>Average Current</th><th>Battery Life (2,000 mAh LiPo)</th></tr></thead><tbody>
+<tr><td><strong>No Power Gating (Constant Radar)</strong></td><td>Powered ON 24/7 (0.6&nbsp;mA)</td><td>Thread Sleepy End Device (ICD)</td><td class="num">~620&nbsp;&micro;A</td><td class="num"><strong>~4.4 months maximum</strong></td></tr>
+<tr><td><strong>Sentinel Dynamic Power Gating (PS-1)</strong></td><td>Gated OFF via D2 in quiet periods; ON during presence confirmation</td><td>Nordic nRF52840 Deep Sleep (3&nbsp;&micro;A)</td><td class="num"><strong>~18&ndash;45&nbsp;&micro;A avg</strong></td><td class="num"><strong>4&ndash;5+ months proven in active homes</strong></td></tr>
+</tbody></table></div>
+
+<p>Furthermore, running the radar module directly off the Seeed Studio XIAO's integrated 3.3V LDO creates RF cross-talk: the 802.15.4 Thread transceiver bursts at +8&nbsp;dBm, causing voltage transients that introduce false motion triggers on the sensitive microwave analog mixer. The dedicated ST LDLN030G33R regulator and decoupling capacitors (C1&ndash;C4) isolate the two RF domains completely.</p>
+
+<div class="box info"><span class="label">Assembly &amp; Soldering Guide</span>
+<p>For step-by-step surface soldering techniques, bridging gold underside battery pads through milled PCB windows, and bench wiring, see <a href="install-sensors.html#ps1-soldering">Stage 3 &middot; Sensor Bench Build Guide &rarr;</a>.</p>
+</div>
+
+<h3 id="pcb-specs">PCB Manufacturing &amp; Fabrication Specifications</h3>
+<div class="scroll"><table><thead><tr><th>Parameter</th><th>Fabrication Specification</th><th>Recommended Vendor Settings (JLCPCB / PCBWay / LionCircuits)</th></tr></thead><tbody>
+<tr><td><strong>Board Dimensions</strong></td><td>48.0 mm × 24.5 mm</td><td>Fits inside Sentinel 3D-printed articulating sphere</td></tr>
+<tr><td><strong>Layer Count</strong></td><td>2 Layers</td><td>Top layer: Signal traces &amp; component routing; Bottom layer: Solid Ground Plane</td></tr>
+<tr><td><strong>Material &amp; Thickness</strong></td><td>FR-4 standard, 1.6 mm (or 1.2 mm for ultra-low weight)</td><td>Standard TG 130–140</td></tr>
+<tr><td><strong>Copper Weight</strong></td><td>1 oz (35 &micro;m)</td><td>Standard outer copper</td></tr>
+<tr><td><strong>Minimum Track / Spacing</strong></td><td>6 mil / 6 mil (0.15 mm)</td><td>Standard capability across all Indian and international board houses</td></tr>
+<tr><td><strong>Minimum Hole Diameter</strong></td><td>0.3 mm (via) / 0.9 mm (through-hole headers)</td><td>Standard mechanical drill</td></tr>
+<tr><td><strong>Surface Finish</strong></td><td>Lead-free HASL or ENIG (Electroless Nickel Immersion Gold)</td><td>ENIG recommended for effortless SMD pad and underside cutout soldering</td></tr>
+<tr><td><strong>Solder Mask &amp; Silkscreen</strong></td><td>Blue mask, White silkscreen</td><td>Matches Sentinel reference aesthetic; silk text on top and bottom</td></tr>
+<tr><td><strong>Gerber &amp; KiCad Files</strong></td><td><a href="https://github.com/LocalizedTech/sentinel-electronics" target="_blank" rel="noopener">LocalizedTech/sentinel-electronics &rarr;</a></td><td>CERN-OHL-S-2.0 open hardware repository</td></tr>
+</tbody></table></div>
+
+<h3 id="circuit-engineering">Sentinel Circuit Engineering: ST LDLN030G33R &amp; Filtering Passives</h3>
+<p>The Sentinel reference PCB incorporates a dedicated power-gating and decoupling network around the ST LDLN030G33R ultra-low-noise LDO. Every passive component plays a mandatory role in maintaining radar accuracy and multi-month battery life:</p>
+
+<div class="box info"><span class="label">Circuit Component Functions</span>
+  <ul>
+    <li><strong>LDO Negative Feedback Loop Stability (C2 &amp; C3):</strong> The ST LDLN030G33R requires an output capacitance (C<sub>OUT</sub> &ge; 1&nbsp;&micro;F) to maintain closed-loop phase margin. The reference design places C2 (4.7&nbsp;&micro;F ceramic) and C3 (0.1&nbsp;&micro;F high-frequency bypass) directly at the regulator output pins to prevent loop oscillation and deliver pristine 3.3V DC with only 7.5&nbsp;&micro;V<sub>RMS</sub> residual noise.</li>
+    <li><strong>Radar FMCW Chirp Current Transient Absorption:</strong> While the HLK-LD2410S averages ~0.6&nbsp;mA, its 24&nbsp;GHz microwave frequency synthesizer draws sharp microsecond current spikes during frequency sweeps. Local output capacitors C2 and C3 supply these instantaneous bursts, preventing the 3.3V supply rail from dipping below the radar's 3.0V brownout threshold and eliminating phantom occupancy triggers.</li>
+    <li><strong>Thread Radio Burst Isolation (C1 &amp; C4):</strong> When the nRF52840's 2.4&nbsp;GHz Thread radio fires +8&nbsp;dBm mesh packet transmissions, it draws transient current pulses of 15&ndash;20&nbsp;mA from the battery rail. Input capacitors C1 (10&nbsp;&micro;F) and C4 (0.1&nbsp;&micro;F) absorb these spikes on the <code>+BATT</code> rail, preventing RF switching noise from leaking into the radar frontend.</li>
+    <li><strong>Floating Enable Gate Pull-Down (R1):</strong> When the XIAO nRF52840 is in deep sleep or bootloader reset, its GPIO pins enter a high-impedance (tri-state) state. Resistor R1 (100&nbsp;k&Omega; pull-down to GND) keeps the LDO enable pin tied low, ensuring the radar power rail stays completely OFF and preventing battery drain during sleep.</li>
+  </ul>
+</div>
+
+<h2 id="bom">Bill of Materials &mdash; Sentinel PS-1 (Exact Replica)</h2>
+<div class="scroll"><table><thead><tr><th>Part</th><th>Search term / Source</th><th>Store Link (India / Global)</th><th>Est.</th><th>Role in Sentinel Architecture</th></tr></thead><tbody>
+<tr><td><strong>HLK-LD2410S radar</strong></td><td><code>LD2410S</code></td><td><a href="https://robu.in/product/hi-link-hlk-ld2410s/" target="_blank" rel="noopener">Robu.in (In Stock) &rarr;</a></td><td class="num">₹639</td><td>24 GHz FMCW mmWave radar module, 8 m range, 0.75 m distance gates.</td></tr>
+<tr><td><strong>Seeed Studio XIAO nRF52840</strong></td><td><code>Seeed Studio XIAO nRF52840</code></td><td><a href="https://robocraze.com/products/seeed-studio-xiao-nrf52840-development-board-supports-bluetooth-5-0?_pos=3&amp;_sid=99e9e998c&amp;_ss=r" target="_blank" rel="noopener">Robocraze (In Stock) &rarr;</a></td><td class="num">₹1,149</td><td>Nordic ARM Cortex-M4 MCU, native Thread 802.15.4 radio, integrated LiPo charger.</td></tr>
+<tr><td><strong>3.7V 2,000 mAh LiPo Battery</strong></td><td><code>Witty Fox 3.7V 2000mAh Prismatic</code></td><td><a href="https://robocraze.com/products/3-7v-2000mah-li-ion-gps-battery" target="_blank" rel="noopener">Robocraze (In Stock) &rarr;</a></td><td class="num">₹256</td><td>Single-cell prismatic battery with protection PCB. Powers Sentinel for 4&ndash;5 months.</td></tr>
+<tr><td><strong>Sentinel Reference PCB</strong></td><td><a href="https://github.com/LocalizedTech/sentinel-electronics" target="_blank" rel="noopener">sentinel-electronics Gerbers</a></td><td><a href="https://www.lioncircuits.com/" target="_blank" rel="noopener">LionCircuits</a> / <a href="https://jlcpcb.com/" target="_blank" rel="noopener">JLCPCB</a></td><td class="num">₹150</td><td>Custom 2-layer FR-4 board with plated via windows for underside XIAO pads.</td></tr>
+<tr><td><strong>ST LDLN030G33R &amp; Passives</strong></td><td>LDLN030G33R + C1&ndash;C4 + R1 + JST</td><td><a href="https://www.mouser.in/ProductDetail/STMicroelectronics/LDLN030G33R" target="_blank" rel="noopener">Mouser India</a> / <a href="https://robu.in" target="_blank" rel="noopener">Robu.in</a></td><td class="num">₹68</td><td>Ultra-low-noise 300 mA LDO (TSOT-23-5), ceramic caps (10&micro;F, 4.7&micro;F, 0.1&micro;F), 100k&Omega; resistor, JST-PH 2.0.</td></tr>
+<tr><td><strong>Sentinel 3D Enclosure</strong></td><td><a href="https://github.com/LocalizedTech/sentinel-enclosure" target="_blank" rel="noopener">Sentinel enclosure STLs</a></td><td>Local 3D Print / Hub</td><td class="num">₹200</td><td>Articulating ball-and-socket enclosure for precision radar aiming.</td></tr>
+<tr><td colspan="3"><strong>Total Per Sentinel Unit (Study Room Pattern)</strong></td><td class="num"><strong>₹2,462</strong></td><td>1 unit deployed for Study Room (<a href="rooms.html#study">Study Room Pattern</a>). Native Matter over Thread.</td></tr>
+</tbody></table></div>
+
+<h2 id="assembly">Assembly &amp; Build Guide</h2>
+<p class="lede">Per this wiki's architecture, hardware component pages contain specifications, schematics, and pinout details only. Complete step-by-step soldering, Zephyr UF2 flashing, Matter-over-Thread pairing, auto-threshold noise mapping, and enclosure fitting are documented in the <strong>Installation</strong> section:</p>
+
+<div class="scroll"><table><thead><tr><th>Procedure</th><th>Scope</th><th>Guide Link</th></tr></thead><tbody>
+<tr><td><strong>Sentinel PS-1 Assembly &amp; Commissioning</strong></td><td>Flashing <code>zephyr.uf2</code> via mass storage, PCB soldering, Matter pairing into Home Assistant, 2-minute noise calibration, and 3D enclosure assembly</td><td><a href="install-sensors.html">Install Guide &mdash; Stage 3 (Sensor Bench Build) &rarr;</a></td></tr>
+</tbody></table></div>
+
+<div class="box ok"><span class="label">Native Home Assistant Entities</span><p>Once paired via Matter, Sentinel natively exposes: <strong>Occupancy</strong> (binary sensor), <strong>Target Distance</strong> (sensor in meters), <strong>Auto Threshold</strong> (trigger switch), and <strong>Battery Level</strong> (percentage sensor). Discovered automatically through Home Assistant's native Matter integration.</p></div>
+
+<nav class="pagenav"><a href="thread-router.html"><span class="dir">Previous Page</span>&larr; Thread Router (BR)</a><a class="next" href="door-sensor.html"><span class="dir">Next Page</span>Door Contact Sensor (DS) &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Component PS-1 · change a part, assign a new ID</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>

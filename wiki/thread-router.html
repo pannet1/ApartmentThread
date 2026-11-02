@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Thread Router (BR) &mdash; Apartment Thread</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><a href="index.html" class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Thread<small>Build Wiki · v2.0</small></div></a><details class="nav-toggle" open><summary>Contents</summary>
+<div class="nav-group"><h4>Room Patterns</h4><a href="rooms.html"><span>All Rooms &amp; Automations</span></a><a href="pattern-hardware.html"><span>Hardware by Pattern</span></a></div>
+<div class="nav-group"><h4>Hardware Components</h4><a href="server.html"><span>Server</span><span class="badge badge-ok">SRV</span></a><a href="thread-router.html" aria-current="page"><span>Thread Router</span><span class="badge badge-ok">BR</span></a><a href="sensor.html"><span>Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="door-sensor.html"><span>Door Contact Sensor</span><span class="badge badge-warn">DS</span></a><a href="switch.html"><span>Smart Switch</span><span class="badge badge-warn">SW</span></a></div>
+<div class="nav-group"><h4>Planning &amp; Procurement</h4><a href="bom.html"><span>Bill of Materials</span></a><a href="inventory.html"><span>Inventory</span><span class="badge badge-accent">6 pending</span></a><a href="open.html"><span>Open Items</span><span class="badge badge-warn">9 open</span></a></div>
+<div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3 · Sensor Bench Build</span><span class="badge badge-warn">PS/DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
+<div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
+</details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Hardware Components</span> &rsaquo; <span>Thread Router (BR)</span></nav><h1>Thread Router</h1><p class="lede">The radio bridge. Battery sensors speak Thread; Home Assistant does not, so something has to join the two networks. It is one radio plus three pieces of software on the server &mdash; and it is the least understood part of the build.</p>
+
+<div class="box verdict"><span class="label">Component identity &mdash; BR-1</span><p><strong>ESP32-H2 dev board flashed with OpenThread RCP firmware</strong>, plugged into the Radxa, with the border-router service running on the server and one Thread dataset issued for the whole network. Change the radio, the firmware image or the border-router software and it becomes <strong>BR-2</strong> &mdash; a fresh commissioning test and a fresh proof sequence. It fails independently of the server it sits on.</p></div>
+
+<div class="box ok"><span class="label">Thread Border Router Stack Active &middot; Proven on Hardware</span><p>All three components of the border router stack are now live and operational on the Radxa Zero 3E: <strong>(1)</strong> Native OpenThread RCP firmware verified on the ESP32-H2 (HDLC-Spinel over UART2 at 460,800 baud), <strong>(2)</strong> <code>otbr-agent</code> running in Docker in network state <strong><code>leader</code></strong>, and <strong>(3)</strong> active operational dataset <code>ApartmentThread</code> (Channel 15, PAN ID 0x1234) issued and exposed via local REST API (<code>http://127.0.0.1:8081</code>). <a href="open.html#o07">O-07 / O-08</a></p></div>
+
+<h2 id="options">Options, with what each costs you</h2>
+<div class="scroll"><table><thead><tr><th>ID</th><th>Router build</th><th>Cost</th><th>Effort</th><th>Verdict</th></tr></thead><tbody>
+<tr><td><strong>BR-1</strong></td><td><strong>M5Stack ESP32-H2 Gateway Module</strong> on the Radxa: RCP firmware + border-router service + dataset</td><td class="num">₹889</td><td>Highest &mdash; firmware image, host service, credentials</td><td><span class="badge badge-ok">Start here</span> cheapest and already in the plan</td></tr>
+<tr><td><strong>BR-2</strong></td><td>Purpose-built Thread dongle (HA SkyConnect / Yellow radio class) plugged into the same server</td><td class="num">₹1,500&ndash;3,000 + import</td><td>Low &mdash; flashed for the job out of the box</td><td>Fallback if BR-1's RCP image is a dead end; check Indian stock first</td></tr>
+<tr><td><strong>BR-3</strong></td><td>Built into a replacement server (Home Assistant Yellow/Green class board)</td><td class="num">high</td><td>Low</td><td>Not worth it for one apartment; listed only for completeness</td></tr>
+</tbody></table></div>
+<p>Change the approach and it is a new component ID with its own proof &mdash; <strong>BR-1 does not transfer to BR-2</strong>.</p>
+
+<div class="photo-card">
+  <div class="photo-card-media">
+    <img src="assets/images/m5stack-esp32-h2.webp" alt="M5Stack ESP32-H2 Gateway Module" loading="lazy">
+    <div class="photo-tag">BR-1 &mdash; 802.15.4 Thread Radio</div>
+  </div>
+  <div class="photo-card-desc"><b>M5Stack ESP32-H2 Thread/Zigbee Gateway Module (SKU M141).</b> Stackable M-Bus module containing the ESP32-H2-MINI-1 transceiver. <i>Physical reality:</i> Has <b>no onboard USB Type-C port</b>. The underside has exposed male pins with zero pin labels; the top enclosure houses female header sockets, an 8-bit DIP switch, and the bare 6-hole "Burning Port". Pre-flashed from the factory with OpenThread Radio Co-Processor (RCP) firmware and wired to the Radxa SBC via 3.3V UART to turn it into a local Matter/Thread Border Router.</div>
+</div>
+
+<h2 id="pinout">Hardware Anatomy &amp; Connector Layout</h2>
+
+<div class="box warn"><span class="label">Why this board's layout is confusing</span>
+<p>As seen in the photo above, the physical hardware defies common development board expectations:</p>
+<ul>
+  <li><b>Labels are completely absent on the underside:</b> The bottom male pins protrude through blank white plastic with zero pin names, numbering, or polarity markers.</li>
+  <li><b>Top-side labels reference M5 hosts, not raw pins:</b> The silkscreen inside the box does not label pins as 1 to 30. Instead, it features a multiplexing matrix referencing <code>Core</code>, <code>Core 2</code>, and <code>Core S3</code>, because the module was engineered to stack onto three different generations of M5Stack host controllers via its 8-bit DIP switch.</li>
+  <li><b>The "Burning Port" has no connector:</b> The 6-pin download interface is just a row of unpopulated plated through-holes (bare holes in the PCB) expecting pogo pins or soldered legs.</li>
+</ul>
+</div>
+
+<h3>M-Bus 30-Pin Dual-Row Connector Layout</h3>
+<p>The module features a standard M5Stack 30-pin M-Bus connector (2&times;15 pins, 2.54mm pitch). It has female pass-through sockets inside the top enclosure cavity and male header pins protruding from the underside base.</p>
+
+<div class="scroll"><table><thead><tr><th>Pin Pair Position</th><th>GND / Bus Column (Beside Mounting Hole)</th><th>Signal / Power Column (Away from Mounting Hole)</th><th>Electrical Specification</th></tr></thead><tbody>
+<tr><td><strong>Pair 1</strong></td><td><strong>GND</strong> (Ground)</td><td><strong>TX0</strong> (ESP32-H2 UART TX / GPIO35)</td><td>Digital Ground / 3.3V Logic Out</td></tr>
+<tr><td><strong>Pair 2</strong></td><td>GND (Ground)</td><td>NC (No Connection)</td><td>Digital Ground</td></tr>
+<tr><td><strong>Pair 3</strong></td><td>GND (Ground)</td><td>NC (No Connection)</td><td>Digital Ground</td></tr>
+<tr><td><strong>Pair 4</strong></td><td>MOSI / GPIO23</td><td>BT_PRIORITY / GPIO22</td><td>3.3V SPI / Coexistence Logic</td></tr>
+<tr><td><strong>Pair 5</strong></td><td>MISO / GPIO19</td><td>NC (No Connection)</td><td>3.3V SPI Logic</td></tr>
+<tr><td><strong>Pair 6</strong></td><td>CLK / GPIO18</td><td><strong>3V3</strong> (+3.3V DC Power Input)</td><td>Primary 3.3V supply rail (3.0V–3.63V max)</td></tr>
+<tr><td><strong>Pair 7</strong></td><td>NC (No Connection)</td><td>NC (No Connection)</td><td>&mdash;</td></tr>
+<tr><td><strong>Pair 8</strong></td><td><strong>G9</strong> (ESP32-H2 Bootloader / GPIO9)</td><td><strong>RX0</strong> (ESP32-H2 UART RX / GPIO17)</td><td>ROM Boot Strap / 3.3V Logic In</td></tr>
+<tr><td><strong>Pair 9</strong></td><td>NC (No Connection)</td><td>NC (No Connection)</td><td>&mdash;</td></tr>
+<tr><td><strong>Pair 10</strong></td><td>NC (No Connection)</td><td>NC (No Connection)</td><td>&mdash;</td></tr>
+<tr><td><strong>Pair 11</strong></td><td>BT_ACTIVE / GPIO21</td><td><strong>H2-EN</strong> (ESP32-H2 Reset / Chip Enable)</td><td>Active-Low Hardware Reset</td></tr>
+<tr><td><strong>Pair 12</strong></td><td>CS / GPIO5</td><td>WL_ACTIVE / GPIO20</td><td>3.3V SPI / Coexistence Logic</td></tr>
+<tr><td><strong>Pair 13</strong></td><td>HPWR (High Power Bus)</td><td>NC (No Connection)</td><td>Pass-through bus</td></tr>
+<tr><td><strong>Pair 14</strong></td><td>HPWR (High Power Bus)</td><td>5V (5.0V DC Bus)</td><td>5V pass-through (unused by H2 core)</td></tr>
+<tr><td><strong>Pair 15</strong></td><td>HPWR (High Power Bus)</td><td>BAT (Battery Rail)</td><td>Pass-through battery rail</td></tr>
+</tbody></table></div>
+
+<div class="box info"><span class="label">Implementation &amp; Build Link</span>
+<p>For physical jumper hookup from the underside male pins to the Radxa Zero 3E, Linux UART configuration, and <code>otbr-agent</code> container deployment, see <a href="install-thread.html">Stage 2 &middot; Thread Border Router Build Guide &rarr;</a>.</p>
+</div>
+
+<h2 id="parts">Parts now</h2>
+<div class="scroll"><table><thead><tr><th>Part</th><th>Search term / Source</th><th>Store Link (India)</th><th>Est.</th><th>Note</th></tr></thead><tbody>
+<tr><td><strong>M5Stack ESP32-H2 Module (BR-1)</strong></td><td><code>M5Stack ESP32-H2</code></td><td><a href="https://robu.in/product/m5stack-esp32-h2-thread-zigbee-gateway-module/" target="_blank" rel="noopener">Robu.in (In Stock) &rarr;</a></td><td class="num">₹889</td><td>802.15.4 radio; stackable M-Bus module with female sockets on top, male pins below. Connects to Radxa 40-pin header via 3.3V UART.</td></tr>
+<tr><td colspan="3"><strong>BR-1 total</strong></td><td class="num"><strong>₹889</strong></td><td><span class="badge badge-ok">On Bench &middot; Active</span> &mdash; proven live on hardware with active Thread dataset</td></tr>
+</tbody></table></div>
+
+<h2 id="proof">Proof sequence &mdash; cheapest failure first</h2>
+<ol>
+<li>Server up and reachable with the WAN cable out.</li>
+<li>Radio on RCP firmware; server detects it.</li>
+<li>Border-router service running; Thread network appears and survives a reboot.</li>
+<li><strong>Commission a store-bought Thread device</strong> &mdash; any off-the-shelf sensor. This is the whole test: if a known-good device can't join and report, a custom sensor never will. <span class="badge badge-warn">closes O-07</span></li>
+<li>Remove and re-add it; confirm it works after a server reboot with the WAN out.</li>
+<li>Only then start the second presence sensor.</li>
+</ol>
+<p>Full sequence with pass/fail gates: <a href="install-thread.html">Stage 2 &middot; Thread Border Router</a>. Host hardware metrics are documented in <a href="server.html">Server Specifications</a>.</p>
+
+<div class="box info"><span class="label">Why this comes before the sensors</span><p>A store-bought Thread device costs less than one PS-1 kit and tests exactly the same risk. Buying the router parts and a cheap test sensor together &mdash; before any presence sensor &mdash; moves the biggest unknown to the front of the queue. Both lines are on the <a href="bom.html">buy list</a>.</p></div>
+
+<nav class="pagenav"><a href="server.html"><span class="dir">Previous Page</span>&larr; Server (SRV)</a><a class="next" href="sensor.html"><span class="dir">Next Page</span>Presence Sensor (PS) &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Component BR-1 · change the approach, assign a new ID</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>

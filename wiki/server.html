@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Server (SRV) &mdash; Apartment Thread</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><a href="index.html" class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Thread<small>Build Wiki · v2.0</small></div></a><details class="nav-toggle" open><summary>Contents</summary>
+<div class="nav-group"><h4>Room Patterns</h4><a href="rooms.html"><span>All Rooms &amp; Automations</span></a><a href="pattern-hardware.html"><span>Hardware by Pattern</span></a></div>
+<div class="nav-group"><h4>Hardware Components</h4><a href="server.html" aria-current="page"><span>Server</span><span class="badge badge-ok">SRV</span></a><a href="thread-router.html"><span>Thread Router</span><span class="badge badge-ok">BR</span></a><a href="sensor.html"><span>Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="door-sensor.html"><span>Door Contact Sensor</span><span class="badge badge-warn">DS</span></a><a href="switch.html"><span>Smart Switch</span><span class="badge badge-warn">SW</span></a></div>
+<div class="nav-group"><h4>Planning &amp; Procurement</h4><a href="bom.html"><span>Bill of Materials</span></a><a href="inventory.html"><span>Inventory</span><span class="badge badge-accent">6 pending</span></a><a href="open.html"><span>Open Items</span><span class="badge badge-warn">9 open</span></a></div>
+<div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3 · Sensor Bench Build</span><span class="badge badge-warn">PS/DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
+<div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
+</details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Hardware Components</span> &rsaquo; <span>Server (SRV)</span></nav><h1>Server</h1><p class="lede">The box that runs Home Assistant and holds every rule. Local only, no cloud, and it has to stay up while the WAN is out. The <a href="thread-router.html">Thread router</a> is a separate component that plugs into it &mdash; it has its own page, its own ID and its own failure mode.</p>
+
+<h2 id="srv">SRV-1 &amp; SRV-2 &mdash; Server</h2>
+<div class="box verdict"><span class="label">Component identity &mdash; SRV-1 &amp; SRV-2</span><p><strong>Radxa Zero 3E (RK3566 SoC) + 32 GB A2 card + 5 V/3 A USB-C supply</strong>, running Debian 13 (Trixie) Minimal and Home Assistant Container under Docker. <strong>SRV-1</strong> is the baseline 1 GB model; <strong>SRV-2</strong> is the 2 GB benchmarked model. Changing the board, RAM, storage or install method assigns a new component ID and requires a fresh backup/restore validation.</p></div>
+
+<div class="photo-card">
+  <div class="photo-card-media">
+    <img src="assets/images/radxa-zero-3e.webp" alt="Radxa Zero 3E Single Board Computer" loading="lazy">
+    <div class="photo-tag">Server Hardware &mdash; Radxa Zero 3E</div>
+  </div>
+  <div class="photo-card-desc"><b>Radxa Zero 3E Single-Board Computer.</b> Powered by a Rockchip RK3566 quad-core Cortex-A55 processor, onboard Gigabit Ethernet (RJ45), dual Type-C ports (power + USB 3.0 host), and 40-pin GPIO. Tested and benchmarked locally with Docker Home Assistant.</div>
+</div>
+
+<div class="scroll"><table><thead><tr><th>Part</th><th>Search term / Source</th><th>Buying Link (India)</th><th>Est.</th><th>Note</th></tr></thead><tbody>
+<tr><td><strong>Radxa Zero 3E (SRV-1 / SRV-2)</strong></td><td><code>Radxa Zero 3E</code></td><td><a href="https://evelta.com/radxa-zero-3e-tiny-rk3566-sbc/" target="_blank" rel="noopener">Evelta &rarr;</a> &middot; <a href="https://www.fabtolab.com/radxa-zero-3e" target="_blank" rel="noopener">Fab.to.Lab &rarr;</a> <small>(On hand)</small></td><td class="num">&mdash;</td><td>Baseline server. Runs HA + border-router service. Reference link saved for spare SBCs.</td></tr>
+<tr><td><strong>microSD 32 GB (A1/A2)</strong></td><td><code>MicroSD 32GB</code></td><td><a href="https://robu.in/product/sandisk-micro-sd-sdhc-32gb-class-10-memory-card-with-adapter/" target="_blank" rel="noopener">Robu.in &rarr;</a> <small>(On hand)</small></td><td class="num">&mdash;</td><td>High-endurance flash storage for HA database and logs. Reference link saved for spare SD.</td></tr>
+<tr><td><strong>5 V USB-C supply, 3 A</strong></td><td><code>5V 3A USB-C</code></td><td><a href="https://robu.in/product/pro-range-5-1v-3a-power-adapter-with-c-type-for-raspberry-pi-4/" target="_blank" rel="noopener">Robu.in &rarr;</a> <small>(On hand)</small></td><td class="num">&mdash;</td><td>Clean, regulated 3A power. Reference link saved if dedicated supply needed later.</td></tr>
+<tr><td colspan="3"><strong>SRV Accessories Total</strong></td><td class="num"><strong>&mdash;</strong></td><td>All server accessories already on hand (₹0 to buy)</td></tr>
+</tbody></table></div>
+
+<h3 id="srv-metrics">Verified Resource Baseline</h3>
+<p>Tested on the Radxa Zero 3E with Debian 13 Minimal (Armbian vendor 6.1 kernel) running Home Assistant Container via Docker. Measured live under standard idle operations:</p>
+
+<div class="scroll"><table><thead><tr><th>Metric</th><th>Measured value</th><th>Percentage / Status</th><th>Impact on build</th></tr></thead><tbody>
+<tr><td><strong>HA Container RAM</strong></td><td class="num">~254 MiB</td><td>~13% of 2 GB</td><td>Lightweight core container footprint.</td></tr>
+<tr><td><strong>Total System RAM (OS + HA)</strong></td><td class="num">~564 MiB</td><td>~28% (2 GB) / ~55% (1 GB)</td><td>Armbian CLI baseline idles at only ~80–110 MiB.</td></tr>
+<tr><td><strong>Free / Available RAM</strong></td><td class="num">~1.4 GiB (SRV-2)</td><td>~460 MiB projected (SRV-1)</td><td>Ample headroom for <code>otbr-agent</code> (~50–80 MiB). <a href="open.html#o09">O-09</a></td></tr>
+<tr><td><strong>Swap usage</strong></td><td class="num">&lt; 1 MiB</td><td>Negligible</td><td>Zero disk thrashing or micro-SD wear.</td></tr>
+</tbody></table></div>
+
+<div class="box ok"><span class="label">Server sizing verified &mdash; closes memory doubt in O-09</span><p>Debian Minimal + Docker HA uses <strong>~564 MiB total</strong>. Even on the 1 GB board (SRV-1), over 400 MiB remains free &mdash; more than sufficient for the OpenThread border router daemon. 24-hour USB contention testing remains the only open verification.</p></div>
+
+<h2 id="gpio">40-Pin GPIO Header &amp; Color-Coded Hardware Interfaces</h2>
+<p class="lede">The Radxa Zero 3E features a factory color-coded 40-pin header with Rockchip RK3566 peripheral multiplexing. Each pin has a colored plastic collar making visual identification foolproof without counting pins blind. All digital logic runs at <strong>3.3V (3.63V maximum)</strong> &mdash; never feed 5V into any GPIO or serial line.</p>
+
+<div class="box ok"><span class="label">Radxa factory pin color coding system</span>
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;font-size:0.92rem;">
+  <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(234,179,8,0.15);border:1px solid #eab308;padding:3px 10px;border-radius:6px;color:#e4e2da;"><span style="width:12px;height:12px;border-radius:3px;background:#eab308;"></span> <b>Yellow:</b> +3.3V Power Out (Pins 1, 17)</span>
+  <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(239,68,68,0.15);border:1px solid #ef4444;padding:3px 10px;border-radius:6px;color:#e4e2da;"><span style="width:12px;height:12px;border-radius:3px;background:#ef4444;"></span> <b>Red:</b> +5.0V Power In/Out (Pins 2, 4 &mdash; <i>Never feed to 3.3V logic</i>)</span>
+  <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(15,23,42,0.4);border:1px solid #475569;padding:3px 10px;border-radius:6px;color:#e4e2da;"><span style="width:12px;height:12px;border-radius:3px;background:#0f172a;border:1px solid #64748b;"></span> <b>Black:</b> Ground GND (8 pins: 6, 9, 14, 20, 25, 30, 34, 39)</span>
+  <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(59,130,246,0.15);border:1px solid #3b82f6;padding:3px 10px;border-radius:6px;color:#e4e2da;"><span style="width:12px;height:12px;border-radius:3px;background:#3b82f6;"></span> <b>Blue:</b> Special USB2 Host / I2C3 (Pins 27, 28)</span>
+  <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(16,185,129,0.15);border:1px solid #10b981;padding:3px 10px;border-radius:6px;color:#e4e2da;"><span style="width:12px;height:12px;border-radius:3px;background:#10b981;"></span> <b>Green:</b> GPIO / UART / SPI / I2C (All remaining signal pins)</span>
+</div>
+</div>
+
+<figure class="hero-flow" style="margin:1.5rem 0;">
+<svg viewBox="0 0 920 250" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;max-width:920px;margin:0 auto;background:#1c150d;border-radius:12px;border:1px solid #55452c;font-family:Archivo,ui-sans-serif,system-ui,sans-serif;">
+<rect x="15" y="32" width="890" height="162" rx="10" fill="#241c12" stroke="#382d1e" stroke-width="1.5"/>
+<text x="30" y="22" fill="#bda38b" font-size="11" font-weight="700" letter-spacing="0.05em">◄ ETHERNET PORT (PIN 1 &amp; 2 END)</text>
+<text x="890" y="22" fill="#a39a8b" font-size="11" font-weight="700" letter-spacing="0.05em" text-anchor="end">MICRO-SD / USB-C (PIN 39 &amp; 40 END) ►</text>
+<text x="77" y="79" fill="#a39a8b" font-size="9.5" font-weight="600" text-anchor="end">OUTER (Edge)</text>
+<text x="77" y="149" fill="#a39a8b" font-size="9.5" font-weight="600" text-anchor="end">INNER (SoC)</text>
+<rect x="82" y="62" width="26" height="26" rx="4" fill="#ef4444" stroke="#ef4444" stroke-width="1"/>
+<circle cx="95" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="95" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">2</text>
+<text x="95" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">5V</text>
+<rect x="82" y="132" width="26" height="26" rx="4" fill="#eab308" stroke="#ffffff" stroke-width="2"/>
+<circle cx="95" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="95" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">1</text>
+<text x="95" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">3V3</text>
+<text x="95" y="183" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">3V3</text>
+<rect x="122" y="62" width="26" height="26" rx="4" fill="#ef4444" stroke="#ef4444" stroke-width="1"/>
+<circle cx="135" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="135" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">4</text>
+<text x="135" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">5V</text>
+<rect x="122" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="135" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="135" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">3</text>
+<text x="135" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">SDA</text>
+<rect x="162" y="62" width="26" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+<circle cx="175" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="175" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">6</text>
+<text x="175" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">GND</text>
+<rect x="162" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="175" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="175" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">5</text>
+<text x="175" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">SCL</text>
+<rect x="202" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="215" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="215" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">8</text>
+<text x="215" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">TX2</text>
+<rect x="202" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="215" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="215" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">7</text>
+<text x="215" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">B7</text>
+<rect x="242" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="255" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="255" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">10</text>
+<text x="255" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">RX2</text>
+<rect x="242" y="132" width="26" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+<circle cx="255" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="255" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">9</text>
+<text x="255" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">GND</text>
+<rect x="282" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="295" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="295" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">12</text>
+<text x="295" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">C3</text>
+<rect x="282" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="295" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="295" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">11</text>
+<text x="295" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">C2</text>
+<rect x="322" y="62" width="26" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+<circle cx="335" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="335" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">14</text>
+<text x="335" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">GND</text>
+<rect x="322" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="335" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="335" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">13</text>
+<text x="335" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">C4</text>
+<rect x="362" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="375" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="375" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">16</text>
+<text x="375" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">C6</text>
+<rect x="362" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="375" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="375" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">15</text>
+<text x="375" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">C5</text>
+<rect x="402" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="415" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="415" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">18</text>
+<text x="415" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">C7</text>
+<rect x="402" y="132" width="26" height="26" rx="4" fill="#eab308" stroke="#eab308" stroke-width="1"/>
+<circle cx="415" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="415" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">17</text>
+<text x="415" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">3V3</text>
+<rect x="442" y="62" width="26" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+<circle cx="455" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="455" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">20</text>
+<text x="455" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">GND</text>
+<rect x="442" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="455" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="455" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">19</text>
+<text x="455" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">MOSI</text>
+<rect x="482" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="495" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="495" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">22</text>
+<text x="495" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">A4</text>
+<rect x="482" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="495" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="495" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">21</text>
+<text x="495" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">MISO</text>
+<rect x="522" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="535" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="535" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">24</text>
+<text x="535" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">CS0</text>
+<rect x="522" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="535" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="535" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">23</text>
+<text x="535" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">CLK</text>
+<rect x="562" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="575" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="575" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">26</text>
+<text x="575" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">A5</text>
+<rect x="562" y="132" width="26" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+<circle cx="575" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="575" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">25</text>
+<text x="575" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">GND</text>
+<rect x="602" y="62" width="26" height="26" rx="4" fill="#3b82f6" stroke="#3b82f6" stroke-width="1"/>
+<circle cx="615" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="615" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">28</text>
+<text x="615" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">D+</text>
+<rect x="602" y="132" width="26" height="26" rx="4" fill="#3b82f6" stroke="#3b82f6" stroke-width="1"/>
+<circle cx="615" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="615" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">27</text>
+<text x="615" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">D-</text>
+<rect x="642" y="62" width="26" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+<circle cx="655" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="655" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">30</text>
+<text x="655" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">GND</text>
+<rect x="642" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="655" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="655" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">29</text>
+<text x="655" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">B3</text>
+<rect x="682" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="695" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="695" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">32</text>
+<text x="695" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">RX3</text>
+<rect x="682" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="695" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="695" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">31</text>
+<text x="695" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">B4</text>
+<rect x="722" y="62" width="26" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+<circle cx="735" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="735" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">34</text>
+<text x="735" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">GND</text>
+<rect x="722" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="735" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="735" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">33</text>
+<text x="735" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">TX3</text>
+<rect x="762" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="775" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="775" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">36</text>
+<text x="775" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">C0</text>
+<rect x="762" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="775" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="775" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">35</text>
+<text x="775" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">B7</text>
+<rect x="802" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="815" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="815" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">38</text>
+<text x="815" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">C2</text>
+<rect x="802" y="132" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="815" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="815" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">37</text>
+<text x="815" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">C1</text>
+<rect x="842" y="62" width="26" height="26" rx="4" fill="#10b981" stroke="#10b981" stroke-width="1"/>
+<circle cx="855" cy="75" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="855" y="57" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">40</text>
+<text x="855" y="99" fill="#a39a8b" font-size="8.5" text-anchor="middle">C3</text>
+<rect x="842" y="132" width="26" height="26" rx="4" fill="#0f172a" stroke="#475569" stroke-width="1"/>
+<circle cx="855" cy="145" r="3" fill="#fbbf24" stroke="#b45309" stroke-width="0.5"/>
+<text x="855" y="170" fill="#e4e2da" font-size="9" font-weight="600" text-anchor="middle">39</text>
+<text x="855" y="127" fill="#a39a8b" font-size="8.5" text-anchor="middle">GND</text>
+<g transform="translate(40, 230)">
+<rect x="0" y="0" width="13" height="13" rx="3" fill="#eab308"/><text x="18" y="10" fill="#e4e2da" font-size="9.5">Yellow: 3.3V Power</text>
+<rect x="135" y="0" width="13" height="13" rx="3" fill="#ef4444"/><text x="153" y="10" fill="#e4e2da" font-size="9.5">Red: 5.0V Power</text>
+<rect x="255" y="0" width="13" height="13" rx="3" fill="#0f172a" stroke="#475569" stroke-width="1"/><text x="273" y="10" fill="#e4e2da" font-size="9.5">Black: Ground</text>
+<rect x="375" y="0" width="13" height="13" rx="3" fill="#3b82f6"/><text x="393" y="10" fill="#e4e2da" font-size="9.5">Blue: USB/I2C3</text>
+<rect x="500" y="0" width="13" height="13" rx="3" fill="#10b981"/><text x="518" y="10" fill="#e4e2da" font-size="9.5">Green: GPIO/UART/SPI</text>
+</g>
+</svg>
+<figcaption style="text-align:center;font-size:0.85rem;color:#a39a8b;margin-top:0.4rem;"><b>Physical Radxa 40-Pin Color Header.</b> Pins 1 &amp; 2 start at the Ethernet port end. Outer row (even pins) is on the PCB edge; Inner row (odd pins) faces the RK3566 SoC.</figcaption>
+</figure>
+
+<div class="box warn"><span class="label">Hardware pull-up caveat</span>
+<p>Pins <strong>3, 5, 27, and 28</strong> include onboard hardware pull-up resistors intended for I2C devices. Avoid using these four pins as raw digital inputs or high-frequency lines.</p>
+</div>
+
+<h3>40-Pin Header Color-Coded Register Table</h3>
+
+<div class="scroll"><table><thead><tr><th>Pin</th><th>Inner Row (Odd &middot; SoC Side)</th><th>Pin</th><th>Outer Row (Even &middot; Edge Side)</th><th>Build Function / Note</th></tr></thead><tbody>
+<tr style="background:rgba(234,179,8,0.1);"><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#eab308;color:#1c150d;font-weight:700;">1</span></td><td><strong>+3.3V Power Out</strong></td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#ef4444;color:#fff;font-weight:700;">2</span></td><td>+5.0V Power In/Out</td><td><b>Pin 1 (Yellow)</b> &mdash; Primary +3.3V DC Power Rail</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">3</span></td><td>I2C2_SDA (pull-up)</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#ef4444;color:#fff;font-weight:700;">4</span></td><td>+5.0V Power In/Out</td><td>5V supply bus (Red)</td></tr>
+<tr style="background:rgba(15,23,42,0.2);"><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">5</span></td><td>I2C2_SCL (pull-up)</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#0f172a;color:#fff;font-weight:700;border:1px solid #475569;">6</span></td><td><strong>GND (Ground)</strong></td><td><b>Pin 6 (Black)</b> &mdash; Digital Ground GND</td></tr>
+<tr style="background:rgba(16,185,129,0.1);"><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">7</span></td><td>GPIO0_B7</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">8</span></td><td><strong>UART2_TX_M0 / GPIO0_C0</strong></td><td><b>Pin 8 (Green)</b> &mdash; UART2_TX to BR-1 (enabled via <code>rk3568-uart2-m0</code> overlay)</td></tr>
+<tr style="background:rgba(16,185,129,0.1);"><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#0f172a;color:#fff;font-weight:700;border:1px solid #475569;">9</span></td><td><strong>GND</strong> (Alt Ground)</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">10</span></td><td><strong>UART2_RX_M0 / GPIO0_C1</strong></td><td><b>Pin 10 (Green)</b> &mdash; UART2_RX from BR-1 (enabled via <code>rk3568-uart2-m0</code> overlay)</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">11</span></td><td>GPIO0_C2</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">12</span></td><td>GPIO0_C3</td><td>General purpose I/O</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">13</span></td><td>GPIO0_C4</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#0f172a;color:#fff;font-weight:700;border:1px solid #475569;">14</span></td><td>GND</td><td>Ground reference (Black)</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">15</span></td><td>GPIO0_C5</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">16</span></td><td>GPIO0_C6</td><td>General purpose I/O</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#eab308;color:#1c150d;font-weight:700;">17</span></td><td>+3.3V Power Out</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">18</span></td><td>GPIO0_C7</td><td>Secondary 3.3V rail (Yellow)</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">19</span></td><td>SPI3_MOSI / GPIO3_A1</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#0f172a;color:#fff;font-weight:700;border:1px solid #475569;">20</span></td><td>GND</td><td>SPI Master Out / Ground</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">21</span></td><td>SPI3_MISO / GPIO3_A0</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">22</span></td><td>GPIO3_A4</td><td>SPI Master In / General I/O</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">23</span></td><td>SPI3_CLK / GPIO3_A2</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">24</span></td><td>SPI3_CS0 / GPIO3_A3</td><td>SPI Clock / Chip Select</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#0f172a;color:#fff;font-weight:700;border:1px solid #475569;">25</span></td><td>GND</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">26</span></td><td>GPIO3_A5</td><td>Ground / General I/O</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#3b82f6;color:#fff;font-weight:700;">27</span></td><td>I2C3_SDA / USB2_D-</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#3b82f6;color:#fff;font-weight:700;">28</span></td><td>I2C3_SCL / USB2_D+</td><td>USB Host / I2C3 bus (Blue)</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">29</span></td><td>GPIO3_B3</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#0f172a;color:#fff;font-weight:700;border:1px solid #475569;">30</span></td><td>GND</td><td>General I/O / Ground</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">31</span></td><td>GPIO3_B4</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">32</span></td><td><strong>UART3_RX_M0 / GPIO3_B5</strong></td><td>Alternative UART3 RX (via <code>rk3568-uart3-m0</code>)</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">33</span></td><td><strong>UART3_TX_M0 / GPIO3_B6</strong></td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#0f172a;color:#fff;font-weight:700;border:1px solid #475569;">34</span></td><td>GND</td><td>Alternative UART3 TX (via <code>rk3568-uart3-m0</code>)</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">35</span></td><td>GPIO3_B7</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">36</span></td><td>GPIO3_C0</td><td>General purpose I/O</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">37</span></td><td>GPIO3_C1</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">38</span></td><td>GPIO3_C2</td><td>General purpose I/O</td></tr>
+<tr><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#0f172a;color:#fff;font-weight:700;border:1px solid #475569;">39</span></td><td>GND</td><td><span style="display:inline-block;padding:1px 7px;border-radius:4px;background:#10b981;color:#fff;font-weight:700;">40</span></td><td>GPIO3_C3</td><td>Ground / General I/O</td></tr>
+</tbody></table></div>
+
+<h2 id="setup">Implementation &amp; Build Guides</h2>
+<p class="lede">Per this wiki's architecture, hardware component pages contain specifications, electrical limits, and physical pinouts only. Complete step-by-step operating system setup, container deployment, and inter-component wiring are documented in the <strong>Build &amp; Plan</strong> section:</p>
+
+<div class="scroll"><table><thead><tr><th>Implementation Procedure</th><th>Scope &amp; Artifacts</th><th>Guide Link</th></tr></thead><tbody>
+<tr><td><strong>Server OS &amp; Home Assistant Container</strong></td><td>Armbian 13 Minimal image flashing, headless SSH, sudo user creation, Docker Engine installation, and Home Assistant Container deployment</td><td><a href="install-server.html">Stage 1 · Server Setup &rarr;</a></td></tr>
+<tr><td><strong>Thread Radio Interconnection &amp; Flashing</strong></td><td>Color-matched 4-wire DuPont hookup to M5Stack Gateway H2, UART overlay selection, Docker <code>otbr-agent</code> service startup, and Thread dataset initialization</td><td><a href="install-thread.html">Stage 2 · Thread Border Router &rarr;</a></td></tr>
+</tbody></table></div>
+
+<nav class="pagenav"><a href="pattern-hardware.html"><span class="dir">Previous Page</span>&larr; Hardware by Pattern</a><a class="next" href="thread-router.html"><span class="dir">Next Page</span>Thread Router (BR) &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Component SRV-1 · change a part, assign a new ID</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>

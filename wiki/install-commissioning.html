@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>5 · Mounting & Tuning &mdash; Apartment Thread</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><a href="index.html" class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Thread<small>Build Wiki · v2.0</small></div></a><details class="nav-toggle" open><summary>Contents</summary>
+<div class="nav-group"><h4>Room Patterns</h4><a href="rooms.html"><span>All Rooms &amp; Automations</span></a><a href="pattern-hardware.html"><span>Hardware by Pattern</span></a></div>
+<div class="nav-group"><h4>Hardware Components</h4><a href="server.html"><span>Server</span><span class="badge badge-ok">SRV</span></a><a href="thread-router.html"><span>Thread Router</span><span class="badge badge-ok">BR</span></a><a href="sensor.html"><span>Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="door-sensor.html"><span>Door Contact Sensor</span><span class="badge badge-warn">DS</span></a><a href="switch.html"><span>Smart Switch</span><span class="badge badge-warn">SW</span></a></div>
+<div class="nav-group"><h4>Planning &amp; Procurement</h4><a href="bom.html"><span>Bill of Materials</span></a><a href="inventory.html"><span>Inventory</span><span class="badge badge-accent">6 pending</span></a><a href="open.html"><span>Open Items</span><span class="badge badge-warn">9 open</span></a></div>
+<div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3 · Sensor Bench Build</span><span class="badge badge-warn">PS/DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html" aria-current="page"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
+<div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
+</details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Installation</span> &rsaquo; <span>5 · Mounting & Tuning</span></nav><h1>Stage 5 &mdash; Mounting, Tuning &amp; Automation</h1><p class="lede">The final integration. Mounting sensors at their surveyed physical positions, calibrating radar energy thresholds against spinning ceiling fans, activating room automations, and verifying power-cut resilience.</p>
+
+<div class="box verdict"><span class="label">Stage 5 Objective</span><p>Deploy physical hardware to wall mounts, fine-tune the LD2410 mmWave radar distance gates to eliminate false triggers from ceiling fans, activate the room state machines (<a href="rooms.html">HL-01, ST-01, BA-01</a>), and verify that all systems cold-boot cleanly after a complete power failure.</p></div>
+
+<h2 id="mounting">1. Physical Sensor Mounting &amp; Geometry</h2>
+<p>Mount the benched sensors at their surveyed apartment positions according to the <a href="mounting.html">Radar Placement Guide</a>:</p>
+<ul>
+  <li><strong>Study Room (PS-1 Presence Sensor):</strong> Mount on the interior wall at a height of <strong>1.8 meters</strong>, tilted downward by <strong>15 degrees</strong> directly facing the study desk chair. Ensure the radar beam avoids door swing arcs to prevent hallway walk-by triggers.</li>
+  <li><strong>Bathroom (DS-1 Door Sensor):</strong> Mount the XIAO ESP32-C6 transmitter on the door exterior frame, and the magnetic reed target on the moving door leaf. Keep the gap under <strong>15 mm</strong> when the door is latched.</li>
+</ul>
+
+<h2 id="fan-tuning">2. Ceiling Fan Radar Calibration</h2>
+<p>Ceiling fan blade rotation is the #1 cause of phantom presence triggers in Indian apartments. Tune out fan vibrations using the LD2410 gate thresholds:</p>
+<ol>
+  <li>Power ON the Study Room ceiling fan at maximum speed (Speed 5). Ensure no humans or moving objects are in the room.</li>
+  <li>Open the Home Assistant LD2410 diagnostic entities (or open the HLKRadarTool app via Bluetooth).</li>
+  <li>Inspect the real-time energy readouts across distance gates (each gate represents 0.75 meters):
+    <ul>
+      <li>Identify which gates exhibit energy spikes from the spinning fan blades (typically Gate 2: 1.5m, or Gate 3: 2.25m).</li>
+      <li>Note the peak stationary energy value reported by the fan (e.g. energy level 38).</li>
+    </ul>
+  </li>
+  <li>Adjust the <strong>Stationary Threshold</strong> for that specific gate to <strong>15 points above the fan's peak reading</strong> (e.g. set threshold to 55).</li>
+  <li>Sit in the study desk chair. Confirm that normal sedentary breathing produces energy well above 55 (typically 75–90), maintaining steady presence without dropping out.</li>
+  <li>Set the <strong>Occupancy Delay / Hold Time</strong> to <strong>90 seconds</strong> to bridge brief postures or head turns.</li>
+</ol>
+
+<h2 id="automations">3. Room Automation State Machine Activation</h2>
+<p>Enable the YAML automations in Home Assistant corresponding to each approved pattern in <a href="rooms.html">Room Patterns</a>:</p>
+
+<div class="scroll"><table><thead><tr><th>Pattern ID</th><th>Room</th><th>Trigger Input</th><th>Controlled Loads</th><th>Logic &amp; Behavior</th></tr></thead><tbody>
+<tr><td><strong>HL-01</strong></td><td>Hall</td><td>Time of day (Clock)</td><td><code>light.hall_light</code> &middot; <code>fan.hall_ceiling_fan</code></td><td>No sensors needed. Time-based evening/night modes with wall toggle override.</td></tr>
+<tr><td><strong>ST-01</strong></td><td>Study</td><td>Radar Presence (PS-1)</td><td><code>light.study_light</code> &middot; <code>fan.study_ceiling_fan</code></td><td>Sub-1s light &amp; fan activation on occupancy; 90s timeout after exit.</td></tr>
+<tr><td><strong>BA-01</strong></td><td>Bathroom</td><td>Door Contact (DS-1)</td><td><code>light.bathroom_light</code> &middot; <code>fan.bathroom_exhaust_fan</code></td><td>Door open/close state machine. Light triggers immediately; fan runs timed humidity cycle.</td></tr>
+</tbody></table></div>
+
+<h2 id="cold-boot">4. Power Outage Cold-Boot Resilience Test</h2>
+<p>In Indian power grids, power cuts and inverter transfers occur frequently. Test cold-boot recovery:</p>
+<ol>
+  <li>Trip the main apartment lighting breaker for 30 seconds, simulating a complete power failure.</li>
+  <li>Restore mains power.</li>
+  <li>Observe system recovery:
+    <ul>
+      <li>Radxa Zero 3E powers up; Armbian boots into systemd in ~25 seconds.</li>
+      <li>Docker Engine starts; <code>homeassistant</code> and <code>otbr</code> containers auto-start under <code>--restart=unless-stopped</code>.</li>
+      <li>The ESP32-H2 radio initializes and OTBR restores the <code>ApartmentThread</code> mesh within 45 seconds.</li>
+      <li>Tinxy Wi-Fi switchboards reconnect to the local router and resume local communication.</li>
+      <li>Battery-powered PS-1 and DS-1 sensors reattach to their parent router automatically.</li>
+    </ul>
+  </li>
+  <li>Confirm all three room automations function correctly within 60 seconds of power restoration without manual intervention.</li>
+</ol>
+
+<h2 id="maintenance">5. Ongoing Maintenance Routine</h2>
+<div class="scroll"><table><thead><tr><th>Maintenance Task</th><th>Frequency</th><th>Standard Operating Procedure</th></tr></thead><tbody>
+<tr><td><strong>Sleepy Sensor OTA</strong></td><td>As needed</td><td>Set <code>poll_period: 0</code> on battery sensor &rarr; push OTA update &rarr; restore sleep interval. (OTA fails while deep sleep is active).</td></tr>
+<tr><td><strong>LiPo Battery Swap</strong></td><td>Every 12–18 months</td><td>Monitor battery voltage entities in HA. Swap with charged spare LiPo cell when voltage drops below 3.5V.</td></tr>
+<tr><td><strong>Database Pruning</strong></td><td>Automated / Weekly</td><td>Home Assistant <code>recorder</code> component configured with 10-day retention to prevent micro-SD wear.</td></tr>
+<tr><td><strong>Configuration Backup</strong></td><td>Monthly</td><td>Create automated snapshot of <code>~/homeassistant/config</code> and sync off-device (to NAS or secure local machine).</td></tr>
+</tbody></table></div>
+
+<div class="box ok"><span class="label">Pass &mdash; System Commissioned</span><p>All sensors mounted, mmWave radar gates tuned against ceiling fans, room automations active, and clean recovery verified after power cuts. The Apartment Thread build is 100% operational, local-first, and cloud-independent.</p></div>
+
+<nav class="pagenav"><a href="install-plates.html"><span class="dir">Previous Page</span>&larr; 4 · Switch Plates</a><a class="next" href="mounting.html"><span class="dir">Next Page</span>Radar Placement &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Stage 5 · Mounting, Tuning &amp; Full Automation</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>

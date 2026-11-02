@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Radar Placement &mdash; Apartment Automation</title>
+<title>Radar Placement &mdash; Apartment Thread</title>
 <link rel="stylesheet" href="assets/style.css">
 <script>(function(){try{var t=null;var m=window.location.search.match(/[?&]theme=(dark|light)/);if(m){t=m[1];}if(!t&&window.name){try{var wn=JSON.parse(window.name);if(wn&&wn.psTheme)t=wn.psTheme;}catch(e){}}if(!t){try{t=localStorage.getItem('ps-theme');}catch(e){}}if(!t){try{t=sessionStorage.getItem('ps-theme');}catch(e){}}if(!t&&document.cookie){var cm=document.cookie.match(/(?:^|;\s*)ps-theme=(dark|light)/);if(cm)t=cm[1];}if(t==='dark'||t==='light'){document.documentElement.setAttribute('data-theme',t);}}catch(e){}})();</script>
 </head>
@@ -11,62 +11,18 @@
 <div id="reading-progress"></div>
 <div class="wrap">
 
-<aside class="sidebar" data-ui>
-  <div class="brand">
-    <div class="brand-icon">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/>
-      </svg>
-    </div>
-    <div>Apartment Automation<small>Build Wiki · v2.0</small></div>
-  </div>
-
-  <details class="nav-toggle" open>
-    <summary>Contents</summary>
-    <div class="nav-group">
-      <h4>Start here</h4>
-      <a href="index.html"><span>The design</span></a>
-      <a href="bom.html"><span>Buy list</span><span class="badge badge-accent">5 components</span></a>
-    </div>
-    <div class="nav-group">
-      <h4>Components</h4>
-      <a href="sensor.html"><span>Presence sensor</span><span class="badge badge-warn">PS</span></a>
-      <a href="aziot.html"><span>Aziot switch</span><span class="badge badge-warn">SW</span></a><a href="server.html"><span>Server</span><span class="badge badge-warn">SRV</span></a>
-      <a href="thread-router.html"><span>Thread router</span><span class="badge badge-warn">BR</span></a>
-      <a href="bathroom.html"><span>Bathroom input</span><span class="badge badge-warn">BATH</span></a>
-    </div>
-    <div class="nav-group">
-      <h4>Set up</h4>
-      <a href="install.html"><span>Install order</span></a>
-      <a href="rooms.html"><span>HA automations</span></a>
-    </div>
-    <div class="nav-group">
-      <h4>Checks</h4>
-      <a href="open.html"><span>Open items</span><span class="badge badge-warn">12</span></a>
-    </div>
-    <div class="nav-group">
-      <h4>Reference</h4>
-      <a href="mounting.html" aria-current="page"><span>Radar placement</span></a>
-      <a href="sensing.html"><span>Why radar</span></a>
-    </div>
-  </details>
-
-  <div class="sidebar-footer">
-    <div><b>Local-first · India build</b></div>
-    <div class="license-pill">
-      <span>Home Assistant</span>
-    </div>
-  </div>
-</aside>
+<aside class="sidebar" data-ui><a href="index.html" class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Thread<small>Build Wiki · v2.0</small></div></a><details class="nav-toggle" open><summary>Contents</summary>
+<div class="nav-group"><h4>Room Patterns</h4><a href="rooms.html"><span>All Rooms &amp; Automations</span></a><a href="pattern-hardware.html"><span>Hardware by Pattern</span></a></div>
+<div class="nav-group"><h4>Hardware Components</h4><a href="server.html"><span>Server</span><span class="badge badge-ok">SRV</span></a><a href="thread-router.html"><span>Thread Router</span><span class="badge badge-ok">BR</span></a><a href="sensor.html"><span>Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="door-sensor.html"><span>Door Contact Sensor</span><span class="badge badge-warn">DS</span></a><a href="switch.html"><span>Smart Switch</span><span class="badge badge-warn">SW</span></a></div>
+<div class="nav-group"><h4>Planning &amp; Procurement</h4><a href="bom.html"><span>Bill of Materials</span></a><a href="inventory.html"><span>Inventory</span><span class="badge badge-accent">6 pending</span></a><a href="open.html"><span>Open Items</span><span class="badge badge-warn">9 open</span></a></div>
+<div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3 · Sensor Bench Build</span><span class="badge badge-warn">PS/DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
+<div class="nav-group"><h4>Reference</h4><a href="mounting.html" aria-current="page"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
+</details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
 
 <main class="main">
 <div class="doc wide">
 
-  <nav class="breadcrumb" aria-label="Breadcrumb">
-    <a href="index.html">Wiki</a> &rsaquo;
-    <span>Reference</span> &rsaquo;
-    <span>Radar placement</span>
-  </nav>
+  <nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Reference</span> &rsaquo; <span>Radar Placement</span></nav>
 
   <h1>Radar Placement</h1>
   <p class="lede">A ceiling fan sitting directly under the radar is the single worst-case mounting. Here is why, and the placement that removes it.</p>
@@ -226,7 +182,7 @@
 
   <h2 id="split">Where to put it instead</h2>
 
-  <p>Separate the radar from the fan. Put it in a small ABS enclosure at <strong>2.2 m on a side wall</strong>, looking across the room at an oblique downward angle. The Aziot plate stays in the switchboard where the mains wiring already terminates &mdash; the sensor never goes near mains.</p>
+  <p>Separate the radar from the fan. Put it in a small ABS enclosure at <strong>2.2 m on a side wall</strong>, looking across the room at an oblique downward angle. The Tinxy plate stays in the switchboard where the mains wiring already terminates &mdash; the sensor never goes near mains.</p>
 
   <div class="photo-card">
     <div class="photo-card-media">
@@ -290,10 +246,10 @@
     <li><strong>Verify the Vacancy Window:</strong> Leave the room and confirm the sensor drops out within the configured no-one duration before the fan is allowed to switch off.</li>
   </ol>
 
-  <nav class="pagenav"><a href="open.html"><span class="dir">Previous Page</span>&larr; Open items</a><a class="next" href="sensing.html"><span class="dir">Next Page</span>Why radar &rarr;</a></nav>
+  <nav class="pagenav"><a href="install-commissioning.html"><span class="dir">Previous Page</span>&larr; 5 · Mounting & Tuning</a><a class="next" href="sensing.html"><span class="dir">Next Page</span>Radar vs PIR &rarr;</a></nav>
 
   <footer class="page-footer">
-    <div>&copy; 2026 Apartment Automation · Local-first build guide</div>
+    <div>&copy; 2026 Apartment Thread · Local-first build guide</div>
     <div>Placement must be validated in the actual room</div>
   </footer>
 
@@ -302,6 +258,6 @@
 </div>
 
 <button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button>
-<script src="assets/theme.js"></script><script src="assets/motion.js"></script>
+<script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script>
 </body>
 </html>
