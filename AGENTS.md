@@ -39,12 +39,13 @@ Never confuse the top-level wiki navigation with a physical build timeline:
 3. **Planning & Procurement (`bom.html` &rarr; `inventory.html` &rarr; `open.html`)**
    * *Phase: Budget, Sourcing & Verification Gates.*
    * Must precede physical installation! A builder reviews on-hand lab stock (`inventory.html`), verifies procurement budgets and vendor links (`bom.html`), and checks open safety gates (`open.html`) *before* cutting wires or modifying mains boxes.
-4. **Installation (`install.html` &rarr; `install-server.html` &rarr; `install-thread.html` &rarr; `install-sensors.html` &rarr; `install-plates.html` &rarr; `install-commissioning.html`)**
+4. **Installation (`install.html` &rarr; `install-server.html` &rarr; `install-thread.html` &rarr; `install-sensors.html` &rarr; `install-door.html` &rarr; `install-plates.html` &rarr; `install-commissioning.html`)**
    * *Phase: Step-by-Step Physical Build & Flashing.*
    * Five non-negotiable sequential stages:
      * Stage 1: Server Setup (SRV-1) &mdash; Armbian, Docker, Home Assistant container.
      * Stage 2: Thread Border Router (BR-1) &mdash; UART wiring, OTBR container. *Note:* Proves the Thread stack with a bench reference node (Seeed XIAO ESP32-C6 from DS-1), NOT expensive imported retail sensors.
-     * Stage 3: Sensor Bench Build (PS-1 & DS-1) &mdash; Firmware flashing, radar UART, reed switch.
+     * Stage 3a: Presence Sensor Bench Build (PS-1) &mdash; Sentinel Zephyr firmware flashing, HLK-LD2410S radar UART, noise calibration.
+     * Stage 3b: Door Contact Sensor Bench Build (DS-1) &mdash; Seeed Studio XIAO ESP32-C6, MC-38 reed switch, deep sleep SED power gating.
      * Stage 4: Switch Plates (SW-1) &mdash; Electrician mains check, Tinxy 4+1 wiring, mechanical rocker test.
      * Stage 5: Mounting & Tuning &mdash; **Holds the executable deployment YAML** in collapsible, copy-paste ready blocks with one-click copy buttons (`#yaml-hall`, `#yaml-study`, `#yaml-bathroom`).
 5. **Reference (`mounting.html` &rarr; `sensing.html`)**
@@ -58,7 +59,7 @@ index.html ──► rooms.html ──► pattern-hardware.html
            ──► server.html ──► thread-router.html ──► sensor.html ──► door-sensor.html ──► switch.html
            ──► bom.html ──► inventory.html ──► open.html
            ──► install.html ──► install-server.html (Stage 1) ──► install-thread.html (Stage 2)
-           ──► install-sensors.html (Stage 3) ──► install-plates.html (Stage 4) ──► install-commissioning.html (Stage 5)
+           ──► install-sensors.html (Stage 3a) ──► install-door.html (Stage 3b) ──► install-plates.html (Stage 4) ──► install-commissioning.html (Stage 5)
            ──► mounting.html ──► sensing.html ──► (loops back to index.html)
 ```
 
@@ -143,7 +144,8 @@ Must strictly feature the 5 nav-groups in chronological order with exact badges:
     <a href="install.html"><span>Overview &amp; Sequence</span></a>
     <a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a>
     <a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a>
-    <a href="install-sensors.html"><span>3 · Sensor Bench Build</span><span class="badge badge-warn">PS/DS</span></a>
+    <a href="install-sensors.html"><span>3a · Presence Sensor</span><span class="badge badge-warn">PS</span></a>
+    <a href="install-door.html"><span>3b · Door Sensor</span><span class="badge badge-warn">DS</span></a>
     <a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a>
     <a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a>
   </div>

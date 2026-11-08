@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>3b · Door Sensor &mdash; Apartment Thread</title><link rel="stylesheet" href="assets/style.css"></head>
+<body><div id="reading-progress"></div><div class="wrap"><aside class="sidebar" data-ui><a href="index.html" class="brand"><div class="brand-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 12a9 9 0 0 1 18 0"/><circle cx="12" cy="12" r="2.5"/><path d="M7.5 12a4.5 4.5 0 0 1 9 0"/></svg></div><div>Apartment Thread<small>Build Wiki · v2.0</small></div></a><details class="nav-toggle" open><summary>Contents</summary>
+<div class="nav-group"><h4>Room Patterns</h4><a href="rooms.html"><span>All Rooms &amp; Automations</span></a><a href="pattern-hardware.html"><span>Hardware by Pattern</span></a></div>
+<div class="nav-group"><h4>Hardware Components</h4><a href="server.html"><span>Server</span><span class="badge badge-ok">SRV</span></a><a href="thread-router.html"><span>Thread Router</span><span class="badge badge-ok">BR</span></a><a href="sensor.html"><span>Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="door-sensor.html"><span>Door Contact Sensor</span><span class="badge badge-warn">DS</span></a><a href="switch.html"><span>Smart Switch</span><span class="badge badge-warn">SW</span></a></div>
+<div class="nav-group"><h4>Planning &amp; Procurement</h4><a href="bom.html"><span>Bill of Materials</span></a><a href="inventory.html"><span>Inventory</span><span class="badge badge-accent">6 pending</span></a><a href="open.html"><span>Open Items</span><span class="badge badge-warn">9 open</span></a></div>
+<div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3a · Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="install-door.html" aria-current="page"><span>3b · Door Sensor</span><span class="badge badge-warn">DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
+<div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
+</details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><div class="license-pill"><span>Home Assistant</span></div></div></aside>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Installation</span> &rsaquo; <span>3b · Door Sensor</span></nav><h1>Stage 3b &mdash; Door Contact Sensor Bench Build (DS-1)</h1><p class="lede">Bench-assembling, wiring, flashing, and testing the ultra-low-latency Matter-over-Thread door contact sensor. Joins the same IEEE 802.15.4 Thread mesh established in Stage 2 to deliver instantaneous lighting triggers before stepping across the bathroom threshold.</p>
+
+<div class="box verdict"><span class="label">Stage 3b Objective</span><p>Build and bench-verify the <strong>DS-1 Door Contact Sensor</strong>: Seeed Studio XIAO ESP32-C6 + MC-38 magnetic reed switch + 2,000&nbsp;mAh LiPo battery. Commission natively into Home Assistant via Matter over Thread, verify &lt;50ms state updates on door opening (<a href="open.html#o12">O-12</a>), and guarantee safe low-voltage isolation (<a href="open.html#o13">O-13</a>).</p></div>
+
+<h2 id="ds1-arch">1. Sensor Architecture &amp; Power Profile</h2>
+<p>Unlike presence sensors that power an active 24&nbsp;GHz radar transmitter, a magnetic door contact sensor operates with <strong>zero active sensing current</strong>. The microcontroller remains in deep sleep mode drawing less than <strong>5&nbsp;&micro;A</strong>:</p>
+<ul>
+  <li><strong>Normal State (Door Closed or Open stationary):</strong> The reed switch circuit is static. The XIAO ESP32-C6 RISC-V core is powered down in deep sleep. The Thread radio sleeps as a Sleepy End Device (SED).</li>
+  <li><strong>Trigger Event (Door Opens/Closes):</strong> The magnetic field breaks or engages, triggering an immediate hardware GPIO edge interrupt on the MCU.</li>
+  <li><strong>Instant Wake &amp; Broadcast:</strong> The MCU wakes up within &lt;15&nbsp;ms, transmits a Matter <code>BooleanState</code> cluster attribute update over the Thread mesh (&lt;35&nbsp;ms), and returns to deep sleep within 100&nbsp;ms total.</li>
+  <li><strong>Battery Longevity:</strong> With a 2,000&nbsp;mAh LiPo cell, this sleep profile yields <strong>4 to 5+ years of continuous operation</strong> without battery replacement.</li>
+</ul>
+
+<h2 id="ds1-wiring">2. Direct Bench Interconnect &amp; Wiring</h2>
+<p>The DS-1 sensor requires only 4 connections: 2 for the dry-contact reed switch, and 2 for the LiPo battery cell. No external resistors or pull-up modules are needed because the XIAO ESP32-C6 internal pull-up resistor is enabled in software.</p>
+
+<div class="box danger"><span class="label">Strict Safety Rule &middot; 230V Mains Isolation (O-13)</span>
+<p><strong>NEVER connect the MC-38 reed switch or its wires to the 230V Tinxy smart switchboard or in-wall electrical conduits.</strong> The reed switch is a low-voltage (3.3V) sensor meant solely for the battery-powered XIAO ESP32-C6. Keep the sensor body and wiring physically isolated on the exterior door jamb, away from both mains wiring and bathroom water spray.</p>
+</div>
+
+<!-- SVG Wiring Diagram for DS-1 -->
+<svg viewBox="0 0 940 460" xmlns="http://www.w3.org/2000/svg" style="display:block;width:100%;height:auto;max-width:940px;margin:1.5rem auto;background:#17120c;border-radius:12px;border:1px solid #4a3b29;font-family:Archivo,ui-sans-serif,system-ui,sans-serif;">
+  <defs>
+    <filter id="wire-glow-ds" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <rect width="940" height="460" fill="#17120c" rx="12"/>
+
+  <!-- Top Title Banner -->
+  <rect x="25" y="15" width="890" height="42" rx="8" fill="#201811" stroke="#3b2b1d" stroke-width="1"/>
+  <text x="45" y="41" fill="#f59e0b" font-size="13.5" font-weight="700" letter-spacing="0.04em">DS-1 DOOR CONTACT SENSOR &#8212; BENCH WIRING SCHEMATIC</text>
+  <text x="895" y="41" fill="#10b981" font-size="11" font-weight="600" text-anchor="end">&#10003; LOW POWER THREAD SED &#183; &lt;50ms LATENCY</text>
+
+  <!-- LEFT: XIAO ESP32-C6 -->
+  <rect x="35" y="75" width="380" height="360" rx="10" fill="#201811" stroke="#3b2b1d" stroke-width="1.5"/>
+  <text x="50" y="102" fill="#f59e0b" font-size="13" font-weight="700">SEEED STUDIO XIAO ESP32-C6</text>
+  <text x="50" y="118" fill="#a89a85" font-size="10.5">Top-down pinout &#8212; RISC-V 160MHz &#183; IEEE 802.15.4</text>
+
+  <!-- USB-C Port -->
+  <rect x="155" y="132" width="140" height="24" rx="5" fill="#332a1e" stroke="#55452c" stroke-width="1.2"/>
+  <text x="225" y="148" fill="#c9c3b6" font-size="9.5" font-weight="600" text-anchor="middle">USB-C (Flashing &amp; Charge)</text>
+
+  <!-- Board Body -->
+  <rect x="60" y="165" width="330" height="250" rx="8" fill="#13100b" stroke="#42351f" stroke-width="1"/>
+  <rect x="140" y="180" width="170" height="40" rx="6" fill="#1c1610" stroke="#3b2b1d" stroke-width="1"/>
+  <text x="225" y="198" fill="#bda38b" font-size="11" font-weight="700" text-anchor="middle">ESP32-C6FH4</text>
+  <text x="225" y="212" fill="#a89a85" font-size="8.5" text-anchor="middle">Thread / Zigbee / BLE 5.0</text>
+
+  <!-- Underside Battery Pads Box -->
+  <rect x="110" y="235" width="230" height="36" rx="4" fill="#241c12" stroke="#55452c" stroke-width="0.8"/>
+  <text x="225" y="250" fill="#f59e0b" font-size="9" font-weight="700" text-anchor="middle">Underside Solder Pads: BAT+ / BAT-</text>
+  <text x="225" y="262" fill="#a89a85" font-size="8" text-anchor="middle">Connects 3.7V 2000mAh LiPo Cell with Protection IC</text>
+
+  <!-- Pins on XIAO -->
+  <!-- D1 / GPIO 1 (Pin 2) -->
+  <rect x="68" y="295" width="145" height="26" rx="4" fill="#1e3a8a" fill-opacity="0.35" stroke="#3b82f6" stroke-width="1.5"/>
+  <circle cx="80" cy="308" r="5" fill="#3b82f6"/>
+  <text x="92" y="312" fill="#93c5fd" font-size="10" font-weight="700">Pin D1 (GPIO 1 / IRQ)</text>
+
+  <!-- GND (Pin 13) -->
+  <rect x="235" y="295" width="145" height="26" rx="4" fill="#0f172a" stroke="#94a3b8" stroke-width="1.5"/>
+  <circle cx="368" cy="308" r="5" fill="#94a3b8"/>
+  <text x="356" y="312" fill="#f1f5f9" font-size="10" font-weight="700" text-anchor="end">GND (Pin 13 Ground)</text>
+
+  <!-- RIGHT CARD: MC-38 REED SWITCH & MAGNET -->
+  <rect x="525" y="75" width="380" height="360" rx="10" fill="#201811" stroke="#3b2b1d" stroke-width="1.5"/>
+  <text x="545" y="102" fill="#f59e0b" font-size="13" font-weight="700">MC-38 MAGNETIC CONTACT SENSOR</text>
+  <text x="545" y="118" fill="#a89a85" font-size="10.5">Normally Open (NO) &middot; Surface Mount with Screw Tabs</text>
+
+  <!-- Switch piece (wired) -->
+  <rect x="545" y="145" width="160" height="180" rx="8" fill="#13100b" stroke="#42351f" stroke-width="1.2"/>
+  <text x="625" y="172" fill="#e4e2da" font-size="11" font-weight="700" text-anchor="middle">Switch Unit</text>
+  <text x="625" y="188" fill="#a89a85" font-size="8.5" text-anchor="middle">(Mounts to Door Frame)</text>
+
+  <!-- Reed switch glass tube graphic -->
+  <rect x="580" y="210" width="90" height="24" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="1"/>
+  <line x1="595" y1="222" x2="622" y2="222" stroke="#cbd5e1" stroke-width="2"/>
+  <line x1="626" y1="219" x2="655" y2="222" stroke="#cbd5e1" stroke-width="2"/>
+  <text x="625" y="250" fill="#38bdf8" font-size="8" text-anchor="middle">Internal Hermetic Reed</text>
+
+  <!-- Magnet piece (unwired) -->
+  <rect x="735" y="145" width="150" height="180" rx="8" fill="#13100b" stroke="#f59e0b" stroke-width="1.2" stroke-dasharray="4,3"/>
+  <text x="810" y="172" fill="#f59e0b" font-size="11" font-weight="700" text-anchor="middle">Magnet Piece</text>
+  <text x="810" y="188" fill="#a89a85" font-size="8.5" text-anchor="middle">(Mounts to Moving Door)</text>
+
+  <!-- Neodymium magnet bar -->
+  <rect x="760" y="205" width="45" height="34" rx="4" fill="#dc2626"/>
+  <text x="782" y="226" fill="#fff" font-size="10" font-weight="700" text-anchor="middle">N</text>
+  <rect x="805" y="205" width="45" height="34" rx="4" fill="#2563eb"/>
+  <text x="827" y="226" fill="#fff" font-size="10" font-weight="700" text-anchor="middle">S</text>
+
+  <text x="810" y="260" fill="#a89a85" font-size="8.5" text-anchor="middle">Operating Gap: &le;15 mm</text>
+
+  <!-- Wires from Reed Switch -->
+  <text x="545" y="355" fill="#a89a85" font-size="9.5" font-weight="600">2-Wire Terminal Out &rarr; Passive dry-contact:</text>
+  <circle cx="560" cy="380" r="5" fill="#3b82f6"/>
+  <text x="575" y="384" fill="#93c5fd" font-size="10" font-weight="700">Wire 1 &rarr; Pin D1 (GPIO 1)</text>
+
+  <circle cx="560" cy="408" r="5" fill="#94a3b8"/>
+  <text x="575" y="412" fill="#f1f5f9" font-size="10" font-weight="700">Wire 2 &rarr; GND</text>
+
+  <!-- Curved Connecting Wires -->
+  <!-- Wire 1: Blue to D1 -->
+  <path d="M 213,308 C 340,308 420,380 550,380" fill="none" stroke="#3b82f6" stroke-width="2.5" filter="url(#wire-glow-ds)"/>
+  <!-- Wire 2: Black to GND -->
+  <path d="M 380,308 C 440,308 470,408 550,408" fill="none" stroke="#94a3b8" stroke-width="2.5" stroke-dasharray="6,2"/>
+
+</svg>
+
+<h3>Wiring &amp; Connection Reference Table</h3>
+<div class="scroll"><table><thead><tr><th>Signal Function</th><th>XIAO ESP32-C6 Terminal</th><th>Wire</th><th>MC-38 Reed Switch Lead</th><th>Electrical Role</th></tr></thead><tbody>
+<tr><td><strong>GPIO Sensing &amp; Wake</strong></td><td><strong>Pin D1 (GPIO 1)</strong></td><td><span style="color:#3b82f6;font-weight:700;">Blue</span></td><td>Lead 1 (either wire)</td><td>Monitors dry-contact closure. Configured with internal pull-up (`INPUT_PULLUP`). Driven to 0V when magnet is near.</td></tr>
+<tr><td><strong>Circuit Ground</strong></td><td><strong>Pin 13 (GND)</strong></td><td><span style="color:#94a3b8;font-weight:700;">Black</span></td><td>Lead 2 (either wire)</td><td>Digital ground return path for reed switch contact closure.</td></tr>
+<tr><td><strong>Battery Positive</strong></td><td><strong>Underside Pad `BAT+`</strong></td><td><span style="color:#ef4444;font-weight:700;">Red</span></td><td>LiPo Cell (+) Positive Terminal</td><td>Supplies 3.7V nominal DC to onboard TI/SGMICRO regulator and charger IC.</td></tr>
+<tr><td><strong>Battery Negative</strong></td><td><strong>Underside Pad `BAT-`</strong></td><td><span style="color:#94a3b8;font-weight:700;">Black</span></td><td>LiPo Cell (-) Negative Terminal</td><td>Battery negative ground reference.</td></tr>
+</tbody></table></div>
+
+<h2 id="ds1-fw">3. Flashing Matter-over-Thread Firmware</h2>
+<p class="lede">The Seeed Studio XIAO ESP32-C6 runs open-source Matter-over-Thread Contact Sensor firmware based on Espressif ESP-Matter and the ESP-IDF framework.</p>
+
+<h3 id="flash-prereq">A. Toolchain Setup &amp; Repository Clone</h3>
+<pre><code># 1. Install prerequisites
+sudo apt-get update &amp;&amp; sudo apt-get install -y git python3-pip cmake ninja-build
+
+# 2. Clone ESP-Matter with submodules
+mkdir -p ~/esp &amp;&amp; cd ~/esp
+git clone --depth 1 --recursive https://github.com/espressif/esp-matter.git
+cd esp-matter
+./install.sh</code></pre>
+
+<h3 id="flash-build">B. Build &amp; Flash via USB-C</h3>
+<p>Connect the XIAO ESP32-C6 to your PC via USB-C, identify its port (typically <code>/dev/ttyACM0</code> or <code>/dev/ttyUSB0</code>), and compile the contact sensor example targeting Thread:</p>
+<pre><code>cd ~/esp/esp-matter/examples/contact_sensor
+source ~/esp/esp-matter/export.sh
+
+# Configure target for ESP32-C6 and Thread
+idf.py set-target esp32c6
+
+# Build and flash
+idf.py -p /dev/ttyACM0 build flash monitor</code></pre>
+
+<div class="box ok"><span class="label">Pre-Built Binary Option Available</span>
+<p>If you prefer not to compile ESP-IDF from source on your workstation, you can flash the pre-compiled binary directly using <code>esptool.py</code>:</p>
+<pre><code>pip install --user esptool
+esptool.py -p /dev/ttyACM0 -b 460800 --chip esp32c6 write_flash 0x0 ds1_matter_thread.bin</code></pre>
+</div>
+
+<h3 id="flash-codes">C. Extract Onboarding Codes</h3>
+<p>During the first boot in the monitor terminal, the firmware outputs the standard Matter pairing discriminator, QR code URL, and manual pairing code:</p>
+<pre><code>I (892) chip[DL]: Setup Discriminator: 3840 (0xf00)
+I (895) chip[DL]: Setup Passcode: 20202021
+I (901) chip[SVR]: Manual pairing code: [34970112332]
+I (908) chip[SVR]: Setup QRCode: [MT:Y.K90-Q000KA0648G00]</code></pre>
+
+<h2 id="ds1-pair">4. Commissioning into Home Assistant</h2>
+<p>Commissioning the door sensor follows the same local-first flow as the presence sensor:</p>
+<ol>
+  <li><strong>Keep Sensor in Direct Line-of-Sight:</strong> For initial Thread pairing, place the XIAO ESP32-C6 within 1–2 meters of the Radxa server / ESP32-H2 border router.</li>
+  <li><strong>Open Home Assistant Companion App:</strong> Ensure your phone is connected to the local home Wi-Fi network.</li>
+  <li><strong>Add Matter Device:</strong> In Home Assistant, go to <strong>Settings &rarr; Devices &amp; Services &rarr; Add Integration &rarr; Add Matter Device</strong>.</li>
+  <li><strong>Scan QR or Enter Code:</strong> Enter the manual pairing code from the firmware build (e.g. <code>34970112332</code>).</li>
+  <li><strong>Assign Area:</strong> Name the entity <strong>`Bathroom Door Sensor`</strong> and assign it to the <strong>Bathroom</strong> area.</li>
+  <li><strong>Verify State:</strong> Home Assistant will create <code>binary_sensor.bathroom_door</code> under the Matter integration.</li>
+</ol>
+
+<h2 id="ds1-test">5. Bench Testing &amp; Latency Verification</h2>
+<p class="lede">Before final adhesive mounting on the door frame, run this 3-step bench test to prove latency and contact behavior:</p>
+
+<div class="box ok"><span class="label">Bench Test Sequence</span>
+<ol>
+  <li><strong>Closed State Test (Magnet In Contact):</strong> Hold the magnet piece directly against the MC-38 sensor body (gap &lt;10&nbsp;mm). Confirm that <code>binary_sensor.bathroom_door</code> in Home Assistant shows <strong>`Off` (Closed)</strong>.</li>
+  <li><strong>Open State Test (Magnet Removed):</strong> Pull the magnet away (&gt;20&nbsp;mm). Confirm that the state flips immediately to <strong>`On` (Open)</strong> in under <strong>50&nbsp;ms</strong>. <span class="badge badge-ok">closes O-12</span></li>
+  <li><strong>Rapid Toggle Stress Test:</strong> Move the magnet back and forth rapidly 5 times. Confirm that Home Assistant records every single transition without dropping packets or stalling the Thread border router.</li>
+</ol>
+</div>
+
+<h2 id="ds1-mount">6. Physical Enclosure &amp; Door Frame Mounting</h2>
+<p>Once bench testing passes, mount the door sensor on the bathroom door following these architectural guidelines:</p>
+<ul>
+  <li><strong>Exterior Frame Location:</strong> Mount the sensor body (with XIAO and battery) on the <strong>outside header jamb or exterior door frame</strong>. This keeps the electronics 100% protected from shower steam and condensation.</li>
+  <li><strong>Magnet Orientation:</strong> Affix the magnet piece to the moving door leaf directly aligned with the sensor body marker notch. Ensure the gap when the door is closed is <strong>5&ndash;10 mm</strong> (well within the rated 15 mm maximum).</li>
+  <li><strong>Mounting Medium:</strong> Use outdoor-rated 3M VHB double-sided acrylic foam tape (<a href="bom.html#stage-5">BOM Stage 5</a>) for clean, vibration-proof attachment that resists door slams.</li>
+</ul>
+
+<div class="box ok"><span class="label">Pass &mdash; Stage 3b Door Sensor Gate</span><p>The DS-1 Door Contact Sensor is fully verified on the bench: reports open/close transitions across the Thread mesh within 50 ms, maintains &lt;5&mu;A deep sleep current, and operates 100% locally with zero cloud dependencies.</p></div>
+
+<nav class="pagenav"><a href="install-sensors.html"><span class="dir">Previous Page</span>&larr; 3a · Presence Sensor</a><a class="next" href="install-plates.html"><span class="dir">Next Page</span>4 · Switch Plates &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Stage 3b · Door Contact Sensor (Matter over Thread)</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>

@@ -92,7 +92,7 @@
       "status": "open",
       "status_label": "OPEN",
       "stage": 3,
-      "closed_by": "install-sensors.html#ds1"
+      "closed_by": "install-door.html#ds1-test"
     },
     {
       "id": "O-13",
@@ -106,7 +106,7 @@
       "status": "open",
       "status_label": "OPEN",
       "stage": 3,
-      "closed_by": "install-sensors.html#ds1"
+      "closed_by": "install-door.html#ds1-wiring"
     },
     {
       "id": "O-14",
