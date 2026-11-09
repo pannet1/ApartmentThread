@@ -19,7 +19,7 @@
 <tr><td><code>switch.study_light</code></td><td>Study task/room light</td></tr>
 <tr><td><code>fan.study_fan</code></td><td>Study ceiling fan</td></tr>
 
-<tr><td rowspan="3"><strong>3. Bathroom Pattern</strong><br><a href="#bathroom">Door-Triggered</a></td><td><code>binary_sensor.bathroom_door_contact</code></td><td>Door physical state</td><td rowspan="3"><strong>Bathroom Tinxy 4+1 Switch Plate</strong><br>Trigger: Door contact sensor (<a href="door-sensor.html">DS-1</a> reed switch)</td></tr>
+<tr><td rowspan="3"><strong>3. Bathroom Pattern</strong><br><a href="#bathroom">Door-Triggered</a></td><td><code>binary_sensor.bathroom_door_contact</code></td><td>Door physical state (S2 input)</td><td rowspan="3"><strong>Bathroom Tinxy Switch Plate (Dummy Channel DS-1)</strong><br>Trigger: Hardwired door contact reed switch on Ch 2 (`S2`), on-chip state machine</td></tr>
 <tr><td><code>switch.bathroom_light</code></td><td>Bathroom vanity/light</td></tr>
 <tr><td><code>fan.bathroom_exhaust_fan</code></td><td>Exhaust / ventilation fan</td></tr>
 
@@ -72,37 +72,43 @@
 <tr><td class="num">S-06</td><td>Manual wall switch toggle</td><td>Manual switch overrides; automation respects manual state</td></tr>
 </tbody></table></div>
 
-<h2 id="bathroom">3. The Bathroom Pattern &mdash; Door Contact-Driven Light &amp; Exhaust Fan</h2>
-<div class="box verdict"><span class="label">Pattern Philosophy &mdash; Physical Boundary Determinism</span><p>Bathrooms possess an absolute physical boundary: the door. When an occupant enters and closes the door, occupancy is certain. When the door is opened, the occupant is either entering (light turns on immediately so they never step into darkness) or exiting (grace timer begins). The <strong>low-latency door contact sensor (<a href="door-sensor.html">DS-1</a>) triggers the bathroom's Tinxy 4+1 switch directly to turn the light and exhaust fan on and off</strong>.</p></div>
+<h2 id="bathroom">3. The Bathroom Pattern &mdash; Hardwired Door Contact State Machine</h2>
+<div class="box verdict"><span class="label">Pattern Philosophy &mdash; Physical Boundary Determinism &amp; The Hardwired Dummy Channel</span><p>Bathrooms possess an absolute physical boundary: the door. In standard Indian apartments, the switchboard is positioned directly adjacent to the door frame. Rather than relying on battery-powered wireless links or central hub polling, the <strong>hardwired door contact sensor (<a href="door-sensor.html">DS-1</a>) connects directly to the switchboard as a "Dummy Channel" (switch input S2 on the Tinxy module)</strong>. An on-chip state machine executes locally on the microcontroller silicon with zero hub dependency, while exposing full bidirectional state to Home Assistant when a server is present.</p></div>
 
-<h3>The Automation State Machine &mdash; Solving Entry &amp; Exit</h3>
-<p>A naive rule like <em>"Door closed &rarr; Light ON; Door open &rarr; Light OFF"</em> fails when someone enters: they open the door, step in, and are left in pitch darkness until they pull the door shut! The Home Assistant state machine resolves all 4 states cleanly:</p>
+<h3>The Automation State Machine &mdash; Solving Entry &amp; Exit Locally</h3>
+<p>A naive rule like <em>"Door closed &rarr; Light ON; Door open &rarr; Light OFF"</em> fails when someone enters: they open the door, step in, and are left in pitch darkness until they pull the door shut! Similarly, a blind <em>"Toggle on close"</em> rule desynchronizes if someone opens and shuts the door without staying inside. The on-chip state machine evaluates conditional light state to resolve all 4 states cleanly with sub-5ms local response:</p>
 
-<div class="box info"><span class="label">Bathroom Presence State Machine</span><ol>
-<li><strong>State 1 &mdash; Entry Trigger (Door Transitions CLOSED &rarr; OPEN):</strong> Light (<code>switch.bathroom_light</code>) turns ON immediately (&lt;50ms). The room illuminates <em>before</em> the occupant steps over the threshold. A 60-second entry timer starts.</li>
-<li><strong>State 2 &mdash; Occupied Latch (Door Transitions OPEN &rarr; CLOSED):</strong> The occupant is inside. The entry timer is cancelled. Light and exhaust fan (<code>fan.bathroom_exhaust_fan</code>) are locked ON continuously. No stationary timeouts will ever leave a showering occupant in the dark.</li>
-<li><strong>State 3 &mdash; Exit Trigger (Door Transitions CLOSED &rarr; OPEN):</strong> The occupant finishes and opens the door to exit. A 60-second vacancy countdown begins.</li>
+<div class="box info"><span class="label">Bathroom Presence State Machine (On-Chip Execution)</span><ol>
+<li><strong>State 1 &mdash; Entry Trigger (Door Transitions CLOSED &rarr; OPEN, Light currently OFF):</strong> Light (<code>switch.bathroom_light</code>) turns ON immediately (&lt;5ms). The threshold illuminates <em>before</em> the occupant steps into the room. A 60-second entry timer starts locally on silicon.</li>
+<li><strong>State 2 &mdash; Occupied Latch (Door Transitions OPEN &rarr; CLOSED):</strong> The occupant is inside. The entry countdown is cancelled immediately. Light and exhaust fan (<code>fan.bathroom_exhaust_fan</code>) lock ON continuously. No motion dropout can ever leave a showering occupant in the dark.</li>
+<li><strong>State 3 &mdash; Exit Trigger (Door Transitions CLOSED &rarr; OPEN, Light ALREADY ON):</strong> The occupant finishes and opens the door to exit. A 60-second vacancy countdown begins on the chip's internal clock.</li>
 <li><strong>State 4 &mdash; Vacated (Timer Expires OR Door Re-closed during Exit):</strong> Light and fan turn OFF automatically.</li>
-<li><strong>45-Minute Safety Watchdog:</strong> If the door is accidentally shut while vacant, HA turns the load off after 45 minutes to prevent wasted electricity.</li>
+<li><strong>45-Minute Safety Watchdog:</strong> If the door is accidentally shut while vacant, the on-chip timer forces the load off after 45 minutes to prevent wasted electricity.</li>
 </ol></div>
 
-<h3>Moisture &amp; Sensor Placement Guidelines</h3>
+<h3>Standalone Hardware Execution &amp; HASS Integration</h3>
+<ul>
+  <li><strong>Standalone Mode (No Server / Hub):</strong> For deployments without a central Home Assistant server, the ESP8266 microcontroller inside the switch module executes the entire conditional logic, timer tracking (via <code>millis()</code>), and load switching autonomously on silicon.</li>
+  <li><strong>Central HASS Mode:</strong> When Home Assistant is active on the local network, the module auto-discovers via native ESPHome API. HASS can read door/light state, trigger manual overrides from dashboards, and adjust timer parameters without breaking the local on-chip fallback.</li>
+</ul>
+
+<h3>Wiring &amp; Sensor Placement Guidelines</h3>
 <ol>
-<li><strong>Exterior Door Frame Placement:</strong> Mount the active sensor body (<a href="door-sensor.html">DS-1</a> containing MCU/battery) on the <em>outer or top edge</em> of the door frame, not inside the wet shower splash zone. Only the passive magnet piece mounts to the moving door leaf.</li>
-<li><strong>Gap Tolerance:</strong> Ensure the alignment gap when the door is shut is &le;15&nbsp;mm (the Sonoff SNZB-04P supports up to 20&nbsp;mm).</li>
-<li><strong>Steam &amp; Condensation:</strong> In Indian bathrooms with geysers, steam rises. Mounting the sensor at mid-height on the exterior door jamb avoids condensation pools.</li>
+  <li><strong>Exterior Door Frame Placement:</strong> Mount the passive magnetic reed switch on the door frame header or strike jamb, routed via thin concealed 2-core wire directly into the adjacent switchboard box.</li>
+  <li><strong>Gap Tolerance:</strong> Ensure the alignment gap between the magnet on the moving door leaf and the reed sensor is &le;15&nbsp;mm when latched shut.</li>
+  <li><strong>Steam &amp; Condensation Protection:</strong> Mounting the dry contact on the exterior door jamb keeps electrical contacts isolated from hot shower steam and condensation pools.</li>
 </ol>
 
 <h3>Automation Deployment Link</h3>
-<p>The state machine transitions are latched by the door contact sensor (<a href="door-sensor.html">DS-1</a>) and executed via Home Assistant automation blocks:</p>
+<p>The on-chip state machine configuration (for ESPHome) and corresponding Home Assistant entity mappings are documented in Stage 5:</p>
 <p><a href="install-commissioning.html#yaml-bathroom" class="badge badge-accent">Copy Deployment YAML in Stage 5 (BA-01) &rarr;</a></p>
 
 <h3>Test Cases</h3>
 <div class="scroll"><table><thead><tr><th>ID</th><th>Condition / Event</th><th>Expected Behaviour</th></tr></thead><tbody>
-<tr><td class="num">B-01</td><td>Door is opened from outside</td><td>Door contact reports open &rarr; Light turns ON immediately (&lt;80ms); room illuminated before stepping in</td></tr>
-<tr><td class="num">B-02</td><td>Door is closed behind occupant</td><td>Door contact reports closed &rarr; Exhaust fan turns ON, light stays ON, occupancy locked</td></tr>
+<tr><td class="num">B-01</td><td>Door is opened from outside (Light OFF)</td><td>Door contact reports open &rarr; Light turns ON immediately (&lt;10ms); room illuminated before stepping in</td></tr>
+<tr><td class="num">B-02</td><td>Door is closed behind occupant</td><td>Door contact reports closed &rarr; Light stays ON, exhaust fan locks ON, entry timer cancelled</td></tr>
 <tr><td class="num">B-03</td><td>Occupant remains stationary in shower/bath</td><td>Door remains closed &rarr; Light and exhaust fan stay locked ON indefinitely (no sensor sleep timeout)</td></tr>
-<tr><td class="num">B-04</td><td>Door is opened upon exit</td><td>Door contact reports open &rarr; 60-second vacancy countdown begins</td></tr>
+<tr><td class="num">B-04</td><td>Door is opened upon exit (Light ON)</td><td>Door contact reports open &rarr; 60-second vacancy countdown begins on silicon clock</td></tr>
 <tr><td class="num">B-05</td><td>Door left open for ventilation (&gt; 60 s)</td><td>Grace period expires &rarr; Light and exhaust fan turn OFF automatically</td></tr>
 <tr><td class="num">B-06</td><td>Wall switch toggled manually</td><td>Manual wall switch press overrides automation immediately (100% offline mechanical safety)</td></tr>
 </tbody></table></div>

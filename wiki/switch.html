@@ -46,8 +46,10 @@
 <div class="scroll"><table><thead><tr><th>Room Pattern</th><th>Plate Location</th><th>Lighting Channel (L1–L4)</th><th>Fan Channel (F)</th><th>Trigger Mechanism</th></tr></thead><tbody>
 <tr><td><strong>1. Hall Pattern</strong></td><td>Hallway Switchboard</td><td>Hall main lighting &amp; ambient lamps</td><td>Hall ceiling fan</td><td><a href="rooms.html#hallway">HA Timers / Schedule</a> (zero sensors)</td></tr>
 <tr><td><strong>2. Study Room Pattern</strong></td><td>Study Switchboard</td><td>Study task &amp; ceiling lights</td><td>Study ceiling fan</td><td><a href="rooms.html#study">Sentinel mmWave Radar</a> (<a href="sensor.html">PS-1</a>)</td></tr>
-<tr><td><strong>3. Bathroom Pattern</strong></td><td>Bathroom Switchboard</td><td>Bathroom vanity &amp; ceiling lights</td><td>Exhaust / ventilation fan</td><td><a href="rooms.html#bathroom">Door Contact Sensor</a> (<a href="door-sensor.html">DS-1</a>)</td></tr>
+<tr><td><strong>3. Bathroom Pattern</strong></td><td>Bathroom Switchboard</td><td>Bathroom vanity &amp; ceiling lights</td><td>Exhaust / ventilation fan (or Dummy Ch 2)</td><td><a href="rooms.html#bathroom">Hardwired Dummy Channel</a> (<a href="door-sensor.html">DS-1</a> on S2)</td></tr>
 </tbody></table></div>
+
+<div class="box ok"><span class="label">The In-Wall Dummy Channel Technique (Bathroom)</span><p>Because the bathroom switchboard is directly adjacent to the door frame, the Tinxy switch module supports <strong>decoupled on-chip sensing</strong>: Channel 1 drives lighting, while Channel 2's relay output remains unconnected as a "Dummy Channel" with its physical switch input (<code>S2</code>) wired to the door's magnetic reed switch. When flashed with ESPHome, the ESP8266 detects door open/close events directly on silicon, running the full bathroom timer state machine autonomously without a central hub.</p></div>
 
 <h2 id="install">Installation &amp; Commissioning</h2>
 <p class="lede">Per this wiki's architecture, hardware component pages contain specifications and pricing only. For complete electrician safety handover protocols, neutral conductor verification, in-wall wiring schematics, ESPHome UART configuration, and local Home Assistant onboarding, see the <strong>Installation</strong> section:</p>

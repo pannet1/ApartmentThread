@@ -119,55 +119,108 @@ mode: single</code></pre>
 
 <details class="code-fold" id="yaml-bathroom">
   <summary>
-    <div class="fold-title"><span>Pattern 3: Bathroom Door Contact State Machine (BA-01)</span> <span class="badge badge-warn">Door Contact</span></div>
+    <div class="fold-title"><span>Pattern 3: Bathroom Hardwired Dummy Channel &amp; State Machine (BA-01)</span> <span class="badge badge-ok">ESPHome &amp; HA</span></div>
     <button class="btn-copy-code" type="button">Copy YAML</button>
   </summary>
   <div class="fold-body">
     <div class="fold-meta">
-      <span>Destination: <code>config/automations.yaml</code></span>
-      <span>Entities: <code>binary_sensor.bathroom_door_contact</code>, <code>switch.bathroom_light</code>, <code>fan.bathroom_exhaust_fan</code></span>
+      <span>Firmware: <code>esphome/bathroom-tinxy.yaml</code> (Runs Standalone on Chip)</span>
+      <span>Entities: <code>switch.bathroom_light</code>, <code>binary_sensor.bathroom_door_contact</code></span>
     </div>
-    <pre><code># 1. Door Opens -> Light ON Immediately (Illuminate before entering)
-alias: "Bathroom: Door Opened -> Light ON Immediately"
-trigger:
-  - platform: state
-    entity_id: binary_sensor.bathroom_door_contact
-    to: "on"                       # "on" represents physically open
-action:
-  - service: switch.turn_on
-    target:
-      entity_id: switch.bathroom_light
-mode: single
+    <pre><code># ==============================================================================
+# Track A: On-Chip Autonomous State Machine (ESPHome for Tinxy ESP8266)
+# Runs 100% locally on silicon: 0 servers, 0 hubs, 0 network dependencies needed.
+# Auto-discovers into Home Assistant via native API when network is present.
+# ==============================================================================
 
-# 2. Door Closes -> Occupancy Latched (Light & Exhaust Fan ON continuously)
-alias: "Bathroom: Door Closed -> Occupancy Latched ON"
-trigger:
-  - platform: state
-    entity_id: binary_sensor.bathroom_door_contact
-    to: "off"                      # "off" represents physically closed/latched
-action:
-  - service: switch.turn_on
-    target:
-      entity_id: switch.bathroom_light
-  - service: fan.turn_on
-    target:
-      entity_id: fan.bathroom_exhaust_fan
-mode: single
+esphome:
+  name: bathroom-switchboard
 
-# 3. Door Left Open / Exit -> Vacancy Grace Countdown -> Turn OFF
-alias: "Bathroom: Door Opened / Vacated -> Turn OFF After Grace Period"
+esp8266:
+  board: esp01_1m
+
+# Local on-chip script managing the exit grace countdown
+script:
+  - id: exit_countdown
+    mode: restart
+    then:
+      - delay: 60s
+      - switch.turn_off: bathroom_light
+
+  - id: entry_watchdog
+    mode: restart
+    then:
+      - delay: 60s
+      - if:
+          condition:
+            binary_sensor.is_on: door_contact   # Still open after 60s
+          then:
+            - switch.turn_off: bathroom_light
+
+  - id: max_run_watchdog
+    mode: restart
+    then:
+      - delay: 45min
+      - switch.turn_off: bathroom_light
+
+binary_sensor:
+  # Hardwired Reed Switch connected to Switch Input S2 (Dummy Channel)
+  - platform: gpio
+    pin:
+      number: GPIO14                           # Tinxy S2 input pin
+      mode: INPUT_PULLUP
+      inverted: true                           # Magnet present (door shut) = contact closed (OFF in HA)
+    name: "Bathroom Door Contact"
+    id: door_contact
+    on_press:
+      # EVENT: Door Opens
+      then:
+        - if:
+            condition:
+              switch.is_off: bathroom_light
+            then:
+              # State 1: Entry -> Turn light ON immediately (<5ms)
+              - switch.turn_on: bathroom_light
+              - script.execute: entry_watchdog
+            else:
+              # State 3: Exit -> Occupant exiting, start 60s countdown
+              - script.execute: exit_countdown
+    on_release:
+      # EVENT: Door Closes (Occupant Inside or Door Latched)
+      then:
+        # State 2: Occupied Latch -> Cancel countdowns, lock light ON
+        - script.stop: entry_watchdog
+        - script.stop: exit_countdown
+        - script.execute: max_run_watchdog
+
+switch:
+  # Channel 1 Relay: Bathroom Lighting & Ventilation
+  - platform: gpio
+    pin: GPIO12                                # Tinxy Relay 1 pin
+    name: "Bathroom Light"
+    id: bathroom_light
+    on_turn_off:
+      then:
+        - script.stop: entry_watchdog
+        - script.stop: exit_countdown
+        - script.stop: max_run_watchdog
+
+# ==============================================================================
+# Track B: Home Assistant Central Automations (Companion / Dashboard Override)
+# Destination: config/automations.yaml (If central HASS server is active)
+# ==============================================================================
+
+# 1. Dashboard / Central Failsafe Watchdog
+alias: "Bathroom: Failsafe Max Duration Turn-Off"
 trigger:
   - platform: state
-    entity_id: binary_sensor.bathroom_door_contact
+    entity_id: switch.bathroom_light
     to: "on"
-    for: "00:01:00"                # 60-second grace period for exit / ventilation
+    for: "00:45:00"
 action:
   - service: switch.turn_off
     target:
       entity_id: switch.bathroom_light
-  - service: fan.turn_off
-    target:
-      entity_id: fan.bathroom_exhaust_fan
 mode: single</code></pre>
   </div>
 </details>
