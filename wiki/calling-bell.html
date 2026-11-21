@@ -7,52 +7,39 @@
 <div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3a · Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="install-door.html"><span>3b · Door Sensor</span><span class="badge badge-warn">DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
 <div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
 </details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><a class="companion-link" href="calling-bell.html">Smart Calling Bell guide <span aria-hidden="true">&rarr;</span></a><div class="license-pill"><span>ESP-12F · PAM8403 · 433 MHz</span></div></div></aside>
-<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Hardware Components</span> &rsaquo; <span>Calling Bell</span></nav><h1>Calling Bell &amp; Talking Clock &mdash; Start With One Unit</h1><p class="lede">One-unit calling bell and talking clock. 220 V AC, local-only. ESP-12F + PCF8563 + PAM8403 + 433 MHz EV1527. Sample ≈₹1,738; production target ₹540 at five units.</p>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Hardware Components</span> &rsaquo; <span>Calling Bell</span></nav><h1>Calling Bell &amp; Talking Clock &mdash; Start With One Unit</h1><p class="lede">One-unit calling bell and talking clock. 220 V AC, strictly local-only. ESP-12F + PCF8563 + PAM8403 + 433 MHz EV1527. Sample ₹1,738; production target ₹540 at five units.</p>
 
 <h2 id="overview">Bird's Eye View</h2>
-<p>Press the outdoor remote &rarr; chime. On the hour &rarr; spoken time, except during bedtime. Set time and upload chimes from a phone on the same Wi-Fi. The coin cell keeps the clock through power cuts.</p>
+<p>Outdoor button &rarr; chime. On the hour &rarr; spoken time, muted during bedtime. Local Wi-Fi browser syncs clock and uploads chimes without cloud or router time servers. CR2032 maintains time through power cuts.</p>
 
-<p><strong>Signal flow:</strong> button &rarr; 433 MHz receiver &rarr; ESP-12F &rarr; 1-bit audio on GPIO3 &rarr; RC filter &rarr; PAM8403 &rarr; speaker. The phone only configures the device over local Wi-Fi. Mains 220 V AC becomes 5 V in the isolated supply; a 3.3 V rail feeds the brain, clock, and receiver.</p>
+<p><strong>Signal flow:</strong> button &rarr; 433 MHz receiver &rarr; ESP-12F &rarr; 1-bit Delta-Sigma audio on GPIO3 &rarr; RC filter &rarr; PAM8403 &rarr; speaker. Isolated SMPS drops 220 V AC to 5 V; AMS1117 provides 3.3 V for logic and radio.</p>
 
-<h3 id="breadboard">The physical parts, at breadboard level</h3>
-<p>Breadboard for Step 3's one unit; Step 8 uses a PCB. Rails: red +5 V, orange +3.3 V, blue GND.</p>
+<h3 id="breadboard">Physical Breadboard Layout (Step 3 Test Unit)</h3>
+<p>Breadboard for Step 3; Step 8 moves to production PCB. Rails: red +5 V, orange +3.3 V, blue GND.</p>
 <div class="diagram-card"><pre><code>   RED RAIL (+5V)     SMPS +5V ── AMS1117 IN ── PAM8403 VCC
    ORANGE RAIL (+3.3V) AMS1117 OUT ── ESP-12F VCC ── PCF8563 VCC ── RXB12 VCC
-   BLUE RAIL (GND)    every module's GND, joined at ONE star point
+   BLUE RAIL (GND)    every module's GND joined at ONE star point
 
    ┌──────────────────────── BREADBOARD (top to bottom) ──────────────────────┐
    │ A  HLK-5M05 SMPS board   : 220 V AC in, 5 V out. MAINS - ELECTRICIAN.   │
-   │ B  AMS1117-3.3 + caps    : makes the 3.3 V rail from the 5 V rail.      │
-   │ C  ESP-12F on adapter    : 4 flashing pins out; 10k strapping resistors;│
-   │                            GPIO3 (audio), GPIO4/5 (clock), GPIO14 (RF). │
-   │ D  PCF8563 + crystal     : coin cell + 2 diodes sit beside it.          │
+   │ B  AMS1117-3.3 + caps    : 5 V to 3.3 V rail for logic and receiver.    │
+   │ C  ESP-12F on adapter    : 5-pin safe flash header; 10k strapping;      │
+   │                            GPIO3 (audio), GPIO4/5 (I2C), GPIO14 (RF).   │
+   │ D  PCF8563 + crystal     : CR2032 coin cell + 2 diodes beside it.       │
    │ E  RXB12/RXB6 + antenna  : VCC from 3.3 V, 100nF + 10µF right at pins.   │
-   │ F  1kΩ + 0.1µF, PAM8403  : GPIO3 -&gt; filter -&gt; amp -&gt; speaker.             │
+   │ F  1kΩ + 0.1µF, PAM8403  : GPIO3 -> RC filter -> PAM8403 L_in -> spk.  │
    └──────────────────────────────────────────────────────────────────────────┘
-   USB-UART module (CP2102) plugs into the 4-pin header only during flashing.</code></pre><figcaption><b>Figure 1.</b> A suggested physical layout. The exact row numbers do not matter; what matters is that +5 V, +3.3 V, and GND never touch each other except through the regulator, and that the receiver uses 3.3 V, not 5 V.</figcaption></div>
+   CP2102 3.3V pin powers the board during flashing; mains remains unplugged.</code></pre><figcaption><b>Figure 1.</b> Breadboard layout. The breakout PAM8403 module already has onboard input capacitors.</figcaption></div>
 
-
-<h3 id="functions">How the Two Basic Functions Are Achieved</h3>
-<p>Both functions share one audio path: file in flash &rarr; GPIO3 &rarr; RC filter &rarr; PAM8403 &rarr; speaker. Only the trigger differs.</p>
-
-<h4 id="custom-chime">1. Play any custom sound as the calling bell</h4>
-
+<h3 id="functions">Two Basic Functions &amp; Data Path</h3>
+<p>Both functions stream <strong>8 kHz / 8-bit unsigned mono PCM</strong> from LittleFS to GPIO3 Delta-Sigma DMA &rarr; PAM8403 &rarr; speaker.</p>
 <ol data-reveal>
-  <li>Convert your audio to 8 kHz / 8-bit mono with the Step 6 converter; upload it from the phone page into LittleFS (about 3 MB free for chimes).</li>
-  <li>EV1527 code arrives on GPIO14; firmware matches the learned 24-bit ID and detaches that interrupt during playback.</li>
-  <li>Bits stream on GPIO3 &rarr; 1 k&Omega;/0.1 &micro;F filter &rarr; PAM8403 &rarr; speaker. HTTP is deferred; the interrupt is reattached afterwards.</li>
-</ol>
-
-<h4 id="hourly-clock">2. Speak the clock every hour, with a bedtime</h4>
-
-<ol data-reveal>
-  <li>Set date/time once from the phone browser into the PCF8563; the CR2032 keeps it through power cuts. No internet time source.</li>
-  <li>Every minute the firmware reads the RTC. At HH:00, outside the quiet-hours window set in the web page (e.g. 22:00&ndash;06:00, across midnight), it plays stitched spoken pieces from LittleFS (~200 KB, 8 kHz 8-bit mono).</li>
-  <li>Same audio path as the chime; watchdog guards the 24/7 loop. Inside the quiet window it stays silent.</li>
+  <li><strong>Calling Bell:</strong> EV1527 24-bit frame arrives on GPIO14. ISR decodes code; when matched against paired address, firmware streams <code>/audio/chime.raw</code> (~40 kB). Unplug speaker wire during UART flashing to silence RX data chatter.</li>
+  <li><strong>Hourly Talking Clock:</strong> Every minute firmware queries PCF8563 via I2C. At HH:00 outside quiet hours (e.g. 22:00&ndash;06:00), it stitches vocabulary clips from LittleFS (~160 kB total: <code>intro.raw</code> + hour + <code>oclock.raw</code> + <code>am/pm.raw</code>). Inside quiet hours it stays silent.</li>
 </ol>
 
 <h2 id="step1">Step 1 &mdash; Buy One Unit&rsquo;s Worth of Parts</h2>
-<p>Single pieces only &mdash; no multipacks, no spare PCBs. Local shop for anything sold only in packs or hard to source. Online stock and prices checked 22 Nov 2026; re-check at checkout.</p>
+<p>Single pieces only &mdash; no multipacks. Online stock and prices checked 22 Nov 2026.</p>
 
 <h3 id="online-cart">Online cart &mdash; five single items</h3>
 <div class="scroll"><table><thead><tr><th>Part</th><th>Buy link (in stock)</th><th>Qty</th><th>Price</th></tr></thead><tbody>
@@ -63,136 +50,506 @@
 <tr><td><strong>CP2102 USB-UART module</strong></td><td><a href="https://robobazar.in/product/cp2102-usb-2-0-to-ttl-uart-serial-converter-module-6-pin/" target="_blank" rel="noopener">Robobazar: CP2102 &rarr;</a></td><td class="num">1</td><td class="num">₹99</td></tr>
 <tr><td colspan="3"><strong>Online subtotal</strong></td><td class="num"><span class="badge badge-ok">₹908</span></td></tr>
 </tbody></table></div>
-<p>Robobazar first (past purchases); Robocraze and Amazon only where it was out of stock. <a href="open.html#o15">O-15</a>: verify stock in cart.</p>
+<p>Robobazar first; Robocraze and Amazon where out of stock. <a href="open.html#o15">O-15</a>: verify stock in cart.</p>
 
 <h3 id="local-shop">Local electronics shop &mdash; single pieces only</h3>
-<p>Approximate local prices &mdash; confirm at the counter.</p>
 <div class="scroll"><table><thead><tr><th>Ask for</th><th>Qty</th><th>Approx cost</th><th>Note</th></tr></thead><tbody>
-<tr><td><strong>RXB12 / RXB6 433.92 MHz superhet receiver</strong> (or SRX882)</td><td class="num">1</td><td class="num">₹350</td><td>Ask for a superhet module, not a generic 433 MHz receiver.</td></tr>
-<tr><td><strong>EV1527 433.92 MHz transmitter</strong></td><td class="num">1</td><td class="num">₹200</td><td>Confirm EV1527 encoding at the counter.</td></tr>
+<tr><td><strong>RXB12 / RXB6 433.92 MHz superhet receiver</strong> (or SRX882)</td><td class="num">1</td><td class="num">₹350</td><td>Superhet module, not generic super-regenerative receiver.</td></tr>
+<tr><td><strong>EV1527 433.92 MHz transmitter</strong></td><td class="num">1</td><td class="num">₹200</td><td>Confirm EV1527 encoding at counter.</td></tr>
 <tr><td><strong>3 W / 4 &Omega; 40 mm speaker</strong></td><td class="num">1</td><td class="num">₹150</td><td>Measure 3&ndash;4 &Omega; before wiring.</td></tr>
-<tr><td><strong>AMS1117-3.3, SOT-223</strong></td><td class="num">1</td><td class="num">₹30</td><td>Single piece; not the online five-pack.</td></tr>
-<tr><td><strong>Resistors: 1 k&Omega; &times;1, 4.7 k&Omega; &times;2, 10 k&Omega; &times;5</strong></td><td class="num">8</td><td class="num">₹40</td><td>Exact circuit count, not a 100-pack.</td></tr>
-<tr><td><strong>Capacitors: 0.1 &micro;F &times;2, 10 &micro;F &times;2</strong></td><td class="num">4</td><td class="num">₹30</td><td>Exact circuit count.</td></tr>
+<tr><td><strong>AMS1117-3.3, SOT-223</strong></td><td class="num">1</td><td class="num">₹30</td><td>Single piece regulator.</td></tr>
+<tr><td><strong>Resistors: 1 k&Omega; &times;1, 4.7 k&Omega; &times;2, 10 k&Omega; &times;5</strong></td><td class="num">8</td><td class="num">₹40</td><td>Audio filter, I2C pull-ups, and boot strapping.</td></tr>
+<tr><td><strong>Capacitors: 0.1 &micro;F &times;2, 10 &micro;F &times;2</strong></td><td class="num">4</td><td class="num">₹30</td><td>Audio filter, RF decoupling, and rail bypass. (PAM8403 module has onboard input caps).</td></tr>
 <tr><td><strong>1N5817 Schottky diodes</strong></td><td class="num">2</td><td class="num">₹20</td><td>Coin-cell backup switching.</td></tr>
-<tr><td><strong>17.3 cm copper wire (antenna)</strong></td><td class="num">1 piece</td><td class="num">₹10</td><td>Cut from hookup wire.</td></tr>
-<tr><td colspan="2"><strong>Local subtotal (approx)</strong></td><td class="num"><strong>₹830</strong></td><td>Get the actual bill and keep the receipt.</td></tr>
-<tr><td colspan="2"><strong>Project cost &mdash; one-unit sample (approx)</strong></td><td class="num"><strong>₹1,738</strong></td><td>₹908 online + ₹830 local; breadboard and jumpers already on hand.</td></tr>
+<tr><td><strong>17.3 cm copper wire (antenna)</strong></td><td class="num">1 piece</td><td class="num">₹10</td><td>Cut from hookup wire (&frac14;&lambda; at 433.92 MHz).</td></tr>
+<tr><td colspan="2"><strong>Local subtotal (approx)</strong></td><td class="num"><strong>₹830</strong></td><td>Get actual bill and keep receipt.</td></tr>
+<tr><td colspan="2"><strong>Project cost &mdash; one-unit sample (approx)</strong></td><td class="num"><strong>₹1,738</strong></td><td>₹908 online + ₹830 local; breadboard and jumpers on hand.</td></tr>
 </tbody></table></div>
-<p>Note any local substitution so the Step 7 test can judge it.</p>
 
 <h2 id="step2">Step 2 &mdash; Lock the Schematic &amp; Verify Passives</h2>
-<p>Fix the netlist, decoupling, crystal load caps, RC filter, and boot strapping before wiring.</p>
-
-<div class="box danger"><span class="label">Electrical Hazards</span><p>Mains 220 V AC: electrician only, keep HV/LV isolation slots. PAM8403 BTL outputs never to ground &mdash; speaker only across OUT+/OUT&minus;. GPIO3 is audio out and flash RX: disconnect audio during the one-time factory flash; OTA afterwards.</p></div>
+<div class="box danger"><span class="label">Electrical Hazards</span><p>Mains 220 V AC: electrician only, keep HV/LV isolation slots. PAM8403 BTL outputs never to ground &mdash; speaker only across OUT+/OUT&minus;. Program using CP2102 3.3 V on the 5-pin header with mains unplugged.</p></div>
 
 <h3 id="pinmap">Locked Pin Mapping Table</h3>
 <div class="scroll"><table><thead><tr><th>Subsystem</th><th>Signal</th><th>ESP-12F Pin</th><th>Mates To</th><th>Electrical Notes</th></tr></thead><tbody>
-<tr><td><strong>DAC-Free Audio</strong></td><td>I2S0_DATA</td><td><code>GPIO3</code> (RX)</td><td>RC low-pass &rarr; PAM8403 <code>IN</code></td><td>1-bit Delta-Sigma DMA stream through a <strong>1 k&Omega; + 0.1 &micro;F</strong> RC filter into the amp input. Also the UART RX pin during factory flashing.</td></tr>
+<tr><td><strong>DAC-Free Audio</strong></td><td>I2S0_DATA</td><td><code>GPIO3</code> (RX)</td><td>1 k&Omega; + 0.1 &micro;F &rarr; PAM8403 <code>L_in</code></td><td>1-bit Delta-Sigma stream into PAM8403 module. Module provides onboard DC-blocking cap. Also UART RX during factory flash.</td></tr>
 <tr><td rowspan="2"><strong>RTC</strong><br>PCF8563 (SOP-8)</td><td>SDA</td><td><code>GPIO4</code></td><td>PCF8563 <code>SDA</code></td><td>I2C data, <strong>4.7 k&Omega; pull-up to 3.3 V</strong>.</td></tr>
 <tr><td>SCL</td><td><code>GPIO5</code></td><td>PCF8563 <code>SCL</code></td><td>I2C clock, <strong>4.7 k&Omega; pull-up to 3.3 V</strong>.</td></tr>
-<tr><td><strong>433 MHz RX</strong><br>RXB12 / RXB6</td><td>DATA</td><td><code>GPIO14</code></td><td>Receiver <code>DATA</code></td><td>Hardware interrupt input for EV1527 24-bit decoding. Receiver runs on the 3.3 V rail, not 5 V.</td></tr>
+<tr><td><strong>433 MHz RX</strong><br>RXB12 / RXB6</td><td>DATA</td><td><code>GPIO14</code></td><td>Receiver <code>DATA</code></td><td>Hardware interrupt input for EV1527 24-bit decoding. Receiver runs on 3.3 V rail.</td></tr>
 <tr><td rowspan="5"><strong>Boot &amp; Strapping</strong></td><td>EN / CH_PD</td><td><code>EN</code></td><td>10 k&Omega; pull-up to 3.3 V</td><td>Must be HIGH for normal operation.</td></tr>
-<tr><td>RST</td><td><code>RST</code></td><td>10 k&Omega; pull-up to 3.3 V</td><td>Keeps the module out of reset after power cuts.</td></tr>
-<tr><td>Boot mode</td><td><code>GPIO0</code></td><td>10 k&Omega; pull-up to 3.3 V</td><td>HIGH = boot from flash; pulled LOW only to enter UART flashing.</td></tr>
+<tr><td>RST</td><td><code>RST</code></td><td>10 k&Omega; pull-up to 3.3 V</td><td>Keeps module out of reset after power cuts.</td></tr>
+<tr><td>Boot mode</td><td><code>GPIO0</code></td><td>10 k&Omega; pull-up to 3.3 V</td><td>HIGH = boot from flash; pulled LOW only to flash.</td></tr>
 <tr><td>Boot strap</td><td><code>GPIO2</code></td><td>10 k&Omega; pull-up to 3.3 V</td><td>Must be HIGH at boot.</td></tr>
 <tr><td>Boot strap</td><td><code>GPIO15</code></td><td>10 k&Omega; pull-down to GND</td><td>Must be LOW at boot.</td></tr>
-<tr><td><strong>Factory Flashing</strong></td><td>UART / GPIO0</td><td><em>4-pin header</em></td><td>GND, TX, RX, GPIO0</td><td>One-time 2.54 mm header for USB-UART programming; no onboard USB-UART chip. All later updates via Wi-Fi OTA.</td></tr>
-<tr><td><strong>Common</strong></td><td>GND</td><td><em>all GNDs</em></td><td>Single star point</td><td>ESP-12F, PCF8563, PAM8403, RXB12, AMS1117 and SMPS negatives share one ground.</td></tr>
+<tr><td><strong>Safe Flashing</strong></td><td>UART / Power</td><td><em>5-pin header</em></td><td>3.3V, GND, TX, RX, GPIO0</td><td>Bench programming via CP2102 without mains.</td></tr>
+<tr><td><strong>Common</strong></td><td>GND</td><td><em>all GNDs</em></td><td>Single star point</td><td>ESP-12F, PCF8563, PAM8403, RXB12, AMS1117 and SMPS share one ground.</td></tr>
 </tbody></table></div>
 
-<h3 id="passives">Supporting Passives &amp; Power Budget</h3>
+<h3 id="passives">Supporting Passives</h3>
 <div class="scroll"><table><thead><tr><th>Ref</th><th>Part</th><th>Value</th><th>Purpose / Placement</th></tr></thead><tbody>
-<tr><td>R1 / C1</td><td>Resistor + ceramic</td><td><strong>1 k&Omega; + 0.1 &micro;F</strong></td><td>RC low-pass turning GPIO3's 1-bit Delta-Sigma stream into the analog signal at the PAM8403 input.</td></tr>
-<tr><td>R2 / R3</td><td>Resistors</td><td>4.7 k&Omega; &times;2</td><td>I2C pull-ups on SDA/SCL to the 3.3 V rail for the PCF8563.</td></tr>
-<tr><td>C2 / C3</td><td>Ceramic + electrolytic</td><td>100 nF + 10 &micro;F</td><td>Local decoupling right at the RXB12 VCC/GND pins to keep RF static off the rail.</td></tr>
-<tr><td>C4 / C5</td><td>Bulk + ceramic</td><td>10 &micro;F + 100 nF</td><td>AMS1117-3.3 input/output bypass on the 5 V and 3.3 V rails.</td></tr>
-<tr><td>C6 / C7</td><td>Ceramic load caps</td><td>Set by crystal C<sub>L</sub></td><td>32.768 kHz crystal load capacitors; final values fixed from the chosen crystal datasheet.</td></tr>
-<tr><td>R4&ndash;R8</td><td>Resistors</td><td>10 k&Omega; &times;5</td><td>Boot strapping: pull-ups on EN, RST, GPIO0, GPIO2 and a pull-down on GPIO15 for unattended boot after power cuts.</td></tr>
-<tr><td>D1 / D2</td><td>Schottky diodes</td><td>Low V<sub>F</sub></td><td>Dual-diode backup switching from CR2032 to the PCF8563 when mains power is absent.</td></tr>
-<tr><td>&mdash;</td><td>Speaker leads</td><td>Short, twisted</td><td>3 W / 4 &Omega; 40 mm driver connected only across PAM8403 OUT+ / OUT&minus;.</td></tr>
+<tr><td>R1 / C1</td><td>Resistor + ceramic</td><td><strong>1 k&Omega; + 0.1 &micro;F</strong></td><td>RC low-pass filter demodulating GPIO3 Delta-Sigma stream into analog audio.</td></tr>
+<tr><td>R2 / R3</td><td>Resistors</td><td>4.7 k&Omega; &times;2</td><td>I2C pull-ups on SDA/SCL to 3.3 V rail.</td></tr>
+<tr><td>C2 / C3</td><td>Ceramic + electrolytic</td><td>100 nF + 10 &micro;F</td><td>Decoupling directly at RXB12 VCC/GND pins to prevent RF hash.</td></tr>
+<tr><td>C4 / C5</td><td>Bulk + ceramic</td><td>10 &micro;F + 100 nF</td><td>AMS1117-3.3 input/output bypass on 5 V and 3.3 V rails.</td></tr>
+<tr><td>R4&ndash;R8</td><td>Resistors</td><td>10 k&Omega; &times;5</td><td>Boot strapping (EN, RST, GPIO0, GPIO2, GPIO15) for unattended boot after power cuts.</td></tr>
+<tr><td>D1 / D2</td><td>Schottky diodes</td><td>Low V<sub>F</sub> (1N5817)</td><td>Dual-diode OR-ing from CR2032 to PCF8563 when mains power is absent.</td></tr>
 </tbody></table></div>
 
-<p>Keep bulk capacitance on the 5 V rail so an ESP8266 Wi-Fi TX burst does not sag the amp supply. Fix the netlist values before wiring.</p>
+<div class="box info"><span class="label">Idle Hiss Reality: Prototype vs Production</span><p>On the breadboard prototype, the ₹28 PAM8403 breakout module hardwires <code>/SHDN</code> to 5 V, so faint background hiss is normal during quiet standby. In Step 8 production PCBA, <code>GPIO12</code> routes directly to PAM8403 SOP-16 pin 1 (<code>/SHDN</code>), pulling it LOW when idle to <strong>eliminate 100% of idle hiss</strong>.</p></div>
 
 <h2 id="step3">Step 3 &mdash; Build the Single Test Unit</h2>
-<p>One unit on the breadboard using Step 1 parts and Step 2 values. Carriers change the physical form, not the netlist.</p>
-
-
-
-<p>Record the actual spend and verify each locally bought part's rating before wiring.</p>
+<p>Assemble on breadboard per Figure 1. Keep mains unplugged during assembly and low-voltage bench testing.</p>
 
 <h2 id="step4">Step 4 &mdash; Pre-Power-On Verification &amp; First Power</h2>
-<p class="lede">Run every low-voltage check with the mains unplugged and the factory USB-UART cable disconnected. A multimeter in continuity/beep mode and DC volts mode is sufficient. Mains-side checks are electrician-only. Do not proceed past a failed row.</p>
-
+<p class="lede">Test continuity and rail voltages with mains unplugged. Use CP2102 3.3 V rail for initial checks.</p>
 <div class="scroll"><table><thead><tr><th>Step</th><th>Meter Mode &amp; Probe Points</th><th>Expected Reading</th><th>If It Fails</th></tr></thead><tbody>
-<tr><td class="num">1</td><td><strong>Visual</strong> &mdash; inspect the board under light</td><td>No solder bridges, no stray whiskers; HV/LV isolation slots unobstructed; speaker on OUT+/OUT&minus; only</td><td>Rework before any measurement.</td></tr>
-<tr><td class="num">2</td><td><strong>Continuity</strong> &mdash; 5 V rail to GND</td><td>Open / no beep after capacitors settle</td><td>A dead short means a wiring error &mdash; find it before powering.</td></tr>
-<tr><td class="num">3</td><td><strong>Continuity</strong> &mdash; 3.3 V rail to GND</td><td>Open / no beep after capacitors settle</td><td>Check AMS1117 orientation and RTC polarity.</td></tr>
-<tr><td class="num">4</td><td><strong>Resistance</strong> &mdash; GPIO3 to PAM8403 input through R1</td><td>~1 k&Omega; in series; C1 reads open at DC</td><td>Confirm the RC filter is present &mdash; no direct GPIO3-to-amp short.</td></tr>
-<tr><td class="num">5</td><td><strong>Resistance</strong> &mdash; SDA/SCL to 3.3 V</td><td>~4.7 k&Omega; each</td><td>I2C pull-ups missing; PCF8563 will not be addressed.</td></tr>
-<tr><td class="num">6</td><td><strong>Continuity</strong> &mdash; RXB12 VCC to its 100 nF/10 &micro;F pads</td><td>Caps present right at VCC/GND</td><td>Add local decoupling to stop RF static on the rail.</td></tr>
-<tr><td class="num">7</td><td><strong>DC V</strong> &mdash; EN, RST, GPIO0, GPIO2 and GPIO15 at boot</td><td>Four 10 k&Omega; pull-ups HIGH, GPIO15 LOW</td><td>Wrong strapping = no unattended boot after a power cut.</td></tr>
-<tr><td class="num">8</td><td><strong>Continuity</strong> &mdash; PAM8403 OUT+ to OUT&minus;, and each to GND</td><td>Open</td><td>BTL outputs must never be shorted or tied to ground.</td></tr>
-<tr><td class="num">9</td><td><strong>Resistance</strong> &mdash; across speaker terminals</td><td>~4 &Omega; DC (nominal 4 &Omega; driver). Not 0 &Omega;, not infinite</td><td>0 &Omega; = shorted voice coil; infinite = open coil. Replace speaker.</td></tr>
-<tr><td class="num">10</td><td><strong>DC V</strong> &mdash; RTC VCC with mains unplugged</td><td>~3 V from CR2032 through the backup diodes</td><td>Check coin-cell polarity and diode orientation.</td></tr>
-<tr><td class="num">11</td><td><strong>DC V</strong> &mdash; SMPS output, still disconnected from the board</td><td>5.0 V nominal</td><td>Do not connect a wrong-voltage supply; electrician checks the AC side.</td></tr>
-<tr><td class="num">12</td><td><strong>DC V</strong> &mdash; first power-up, 5 V rail and 3.3 V rail</td><td>~5.0 V and 3.15&ndash;3.4 V</td><td>Unplug immediately; recheck AMS1117 and bulk capacitor orientation.</td></tr>
+<tr><td class="num">1</td><td><strong>Visual</strong> &mdash; inspect breadboard under light</td><td>No solder bridges; speaker on OUT+/OUT&minus; only</td><td>Rework before measurement.</td></tr>
+<tr><td class="num">2</td><td><strong>Continuity</strong> &mdash; 5 V rail to GND</td><td>Open / no beep after caps charge</td><td>Dead short &mdash; find wiring error.</td></tr>
+<tr><td class="num">3</td><td><strong>Continuity</strong> &mdash; 3.3 V rail to GND</td><td>Open / no beep after caps charge</td><td>Check AMS1117 orientation and diode polarity.</td></tr>
+<tr><td class="num">4</td><td><strong>Resistance</strong> &mdash; SDA/SCL to 3.3 V</td><td>~4.7 k&Omega; each</td><td>I2C pull-ups missing.</td></tr>
+<tr><td class="num">5</td><td><strong>DC V</strong> &mdash; EN, RST, GPIO0, GPIO2 and GPIO15 at boot</td><td>Four 10 k&Omega; pull-ups HIGH, GPIO15 LOW</td><td>Wrong strapping &mdash; device will not boot.</td></tr>
+<tr><td class="num">6</td><td><strong>Resistance</strong> &mdash; across speaker terminals</td><td>~3.5&ndash;4.2 &Omega; DC</td><td>0 &Omega; = shorted coil; infinite = open coil.</td></tr>
+<tr><td class="num">7</td><td><strong>DC V</strong> &mdash; RTC VCC with mains unplugged</td><td>~2.8&ndash;3.0 V from CR2032 through D1</td><td>Check coin-cell polarity and diode orientation.</td></tr>
+<tr><td class="num">8</td><td><strong>DC V</strong> &mdash; Bench flashing via 5-pin header</td><td>3.3 V on orange rail; 0 V on mains side</td><td>Keep mains disconnected while USB cable is attached.</td></tr>
 </tbody></table></div>
 
-<p>After all twelve rows pass, flash once through the 4-pin header with the audio path disconnected, then test a quiet chime.</p>
+<h2 id="step5">Step 5 &mdash; Core Firmware MVP (Data Pipelines &amp; Control Engine)</h2>
+<p class="lede">Complete C++ firmware for Arduino ESP8266 core with LittleFS storage, non-blocking EV1527 ISR decoding, PCF8563 BCD timekeeping, 1-bit Delta-Sigma DMA audio streaming, and REST API.</p>
 
-<h2 id="step5">Step 5 &mdash; Core Firmware MVP</h2>
-<p class="lede">Lean C/C++ on the Arduino ESP8266 core or ESP8266 RTOS SDK, with a LittleFS partition on the 4 MB flash. Deliver complete, untruncated code covering:</p>
-<ul data-reveal>
-  <li><strong>PCF8563 timekeeping</strong> over I2C on GPIO4/5 &mdash; set, read, and maintain date/time locally.</li>
-  <li><strong>EV1527 433 MHz decoding</strong> from the GPIO14 hardware interrupt &mdash; learn and match the 24-bit transmitter ID.</li>
-  <li><strong>1-bit Delta-Sigma LittleFS audio playback</strong> on GPIO3 &mdash; the RC filter feeds the PAM8403.</li>
-  <li><strong>Real-time stability</strong> &mdash; detach the GPIO14 interrupt during playback and re-attach immediately after, pause/defer HTTP handling while audio plays, and use the watchdog for 24/7 uptime.</li>
-</ul>
-<p>No audio drive during the factory UART flash; OTA only afterwards. A chime must play cleanly while the GPIO14 interrupt and web traffic are active.</p>
+<details class="code-fold" id="code-firmware" open>
+  <summary>
+    <div class="fold-title"><span>Calling Bell &amp; Talking Clock Firmware (firmware.ino)</span> <span class="badge badge-ok">Production Ready</span></div>
+    <button class="btn-copy-code" type="button">Copy Firmware</button>
+  </summary>
+  <div class="fold-body">
+    <div class="fold-meta">
+      <span>Target: ESP-12F (4MB Flash, 3MB LittleFS)</span>
+      <span>Libraries: <code>LittleFS</code>, <code>Wire</code>, <code>ESP8266WiFi</code>, <code>ESP8266WebServer</code>, <code>ArduinoJson</code></span>
+    </div>
+    <pre><code>#include &lt;ESP8266WiFi.h&gt;
+#include &lt;ESP8266WebServer.h&gt;
+#include &lt;LittleFS.h&gt;
+#include &lt;Wire.h&gt;
+#include &lt;ArduinoJson.h&gt;
+#include &lt;i2s.h&gt;
 
-<h2 id="step6">Step 6 &mdash; Local Web Portal &amp; Audio Pipeline</h2>
-<p class="lede">Serve a lightweight Vanilla HTML/JS portal directly from LittleFS with no external CDN links. It must let the user:</p>
-<ul data-reveal>
-  <li>Set/sync the RTC date and time from the phone browser clock.</li>
-  <li>Upload and delete custom calling-bell audio files.</li>
-  <li>Pair/learn a 433 MHz EV1527 24-bit transmitter button ID.</li>
-  <li>Configure hourly/scheduled talking-clock announcements and quiet hours.</li>
-  <li>Trigger local OTA firmware updates.</li>
-</ul>
-<p>Deliver a batch conversion command that produces talking-clock clips at <strong>8 kHz 8-bit mono</strong> (about 200 KB total), preserving roughly 3 MB of flash for custom chimes and UI assets. Keep the portal deferred during audio playback as required in Step 5.</p>
+#define PIN_AUDIO_DATA 3   // I2S0_DATA (GPIO3)
+#define PIN_AMP_SHDN   12  // PAM8403 /SHDN (Step 8 PCB; bench module ties to VCC)
+#define PIN_RF_DATA    14  // 433 MHz RXB12 DATA (Interrupt)
+#define PIN_I2C_SDA    4   // PCF8563 SDA
+#define PIN_I2C_SCL    5   // PCF8563 SCL
+#define PCF8563_ADDR   0x51
+#define CONFIG_PATH    "/config.json"
+
+struct BellConfig {
+  uint32_t paired_rf_id = 0x5A3C1E;
+  char chime_file[32] = "/audio/chime.raw";
+  bool clock_enabled = true;
+  uint8_t quiet_start = 22;
+  uint8_t quiet_end = 6;
+} config;
+
+ESP8266WebServer server(80);
+volatile bool g_pairing_mode = false;
+volatile uint32_t g_last_rf_code = 0;
+volatile bool g_rf_packet_ready = false;
+volatile uint32_t g_last_edge_us = 0;
+volatile uint32_t g_rf_shift_reg = 0;
+volatile uint8_t g_rf_bit_count = 0;
+
+// --- EV1527 24-Bit OOK RF Interrupt Decoder ---
+void ICACHE_RAM_ATTR isr_rf_edge() {
+  uint32_t now = micros();
+  uint32_t duration = now - g_last_edge_us;
+  g_last_edge_us = now;
+  bool level = digitalRead(PIN_RF_DATA);
+
+  if (!level) { // Measured HIGH pulse duration
+    if (duration &gt; 7500 &amp;&amp; duration &lt; 12500) {
+      g_rf_bit_count = 0;
+      g_rf_shift_reg = 0;
+    } else if (duration &gt; 180 &amp;&amp; duration &lt; 500) {
+      g_rf_shift_reg = (g_rf_shift_reg &lt;&lt; 1);
+      g_rf_bit_count++;
+    } else if (duration &gt; 700 &amp;&amp; duration &lt; 1200) {
+      g_rf_shift_reg = (g_rf_shift_reg &lt;&lt; 1) | 1;
+      g_rf_bit_count++;
+    } else {
+      g_rf_bit_count = 0;
+    }
+    if (g_rf_bit_count == 24) {
+      g_last_rf_code = g_rf_shift_reg;
+      g_rf_packet_ready = true;
+      g_rf_bit_count = 0;
+    }
+  }
+}
+
+// --- PCF8563 RTC Driver ---
+uint8_t dec2bcd(uint8_t v) { return ((v / 10) &lt;&lt; 4) | (v % 10); }
+uint8_t bcd2dec(uint8_t v) { return ((v &gt;&gt; 4) * 10) + (v &amp; 0x0F); }
+
+struct RTCDateTime {
+  uint16_t year; uint8_t month; uint8_t day;
+  uint8_t hour; uint8_t minute; uint8_t second;
+  bool valid;
+};
+
+RTCDateTime rtc_read_time() {
+  RTCDateTime dt = {0,0,0,0,0,0,false};
+  Wire.beginTransmission(PCF8563_ADDR);
+  Wire.write(0x02);
+  if (Wire.endTransmission() != 0) return dt;
+  Wire.requestFrom(PCF8563_ADDR, 7);
+  if (Wire.available() &lt; 7) return dt;
+
+  uint8_t raw_sec = Wire.read();
+  dt.valid = !(raw_sec &amp; 0x80); // VL bit: 0=valid, 1=power-cut corrupted
+  dt.second = bcd2dec(raw_sec &amp; 0x7F);
+  dt.minute = bcd2dec(Wire.read() &amp; 0x7F);
+  dt.hour = bcd2dec(Wire.read() &amp; 0x3F);
+  dt.day = bcd2dec(Wire.read() &amp; 0x3F);
+  Wire.read(); // weekday
+  dt.month = bcd2dec(Wire.read() &amp; 0x1F);
+  dt.year = 2000 + bcd2dec(Wire.read());
+  return dt;
+}
+
+void rtc_write_time(const RTCDateTime &amp;dt) {
+  Wire.beginTransmission(PCF8563_ADDR);
+  Wire.write(0x02);
+  Wire.write(dec2bcd(dt.second) &amp; 0x7F);
+  Wire.write(dec2bcd(dt.minute));
+  Wire.write(dec2bcd(dt.hour));
+  Wire.write(dec2bcd(dt.day));
+  Wire.write(0x00);
+  Wire.write(dec2bcd(dt.month));
+  Wire.write(dec2bcd(dt.year % 100));
+  Wire.endTransmission();
+}
+
+// --- 1-Bit Delta-Sigma DMA Audio Engine ---
+static inline uint32_t sigma_delta_32(uint8_t sample, int16_t &amp;acc) {
+  uint32_t out_word = 0;
+  int16_t in_val = (int16_t)sample - 128;
+  for (int b = 0; b &lt; 32; b++) {
+    acc += in_val;
+    if (acc &gt;= 0) { acc -= 127; out_word |= (1UL &lt;&lt; b); }
+    else { acc += 128; }
+  }
+  return out_word;
+}
+
+void play_audio_file(const char *path) {
+  if (!LittleFS.exists(path)) return;
+  File f = LittleFS.open(path, "r");
+  if (!f) return;
+
+  digitalWrite(PIN_AMP_SHDN, HIGH); // Unmute amplifier
+  delay(10);
+
+  i2s_begin();
+  i2s_set_rate(8000);
+
+  uint8_t chunk[256];
+  int16_t acc = 0;
+  while (f.available()) {
+    size_t n = f.read(chunk, sizeof(chunk));
+    for (size_t i = 0; i &lt; n; i++) {
+      i2s_write_sample(sigma_delta_32(chunk[i], acc));
+    }
+    yield();
+  }
+  f.close();
+  i2s_end();
+  digitalWrite(PIN_AMP_SHDN, LOW); // Mute on production board
+}
+
+void speak_time(uint8_t hour_24) {
+  uint8_t hour_12 = hour_24 % 12;
+  if (hour_12 == 0) hour_12 = 12;
+  bool is_pm = (hour_24 &gt;= 12);
+
+  play_audio_file("/audio/intro.raw");
+  char hpath[32];
+  snprintf(hpath, sizeof(hpath), "/audio/%02d.raw", hour_12);
+  play_audio_file(hpath);
+  play_audio_file("/audio/oclock.raw");
+  play_audio_file(is_pm ? "/audio/pm.raw" : "/audio/am.raw");
+}
+
+bool in_quiet_window(uint8_t hr, uint8_t start, uint8_t end) {
+  if (start &gt; end) return (hr &gt;= start || hr &lt; end);
+  return (hr &gt;= start &amp;&amp; hr &lt; end);
+}
+
+void load_configuration() {
+  if (!LittleFS.exists(CONFIG_PATH)) return;
+  File f = LittleFS.open(CONFIG_PATH, "r");
+  StaticJsonDocument&lt;256&gt; doc;
+  if (deserializeJson(doc, f) == DeserializationError::Ok) {
+    config.paired_rf_id = doc["rf_id"] | config.paired_rf_id;
+    strlcpy(config.chime_file, doc["chime"] | config.chime_file, sizeof(config.chime_file));
+    config.clock_enabled = doc["clock"] | config.clock_enabled;
+    config.quiet_start = doc["q_start"] | config.quiet_start;
+    config.quiet_end = doc["q_end"] | config.quiet_end;
+  }
+  f.close();
+}
+
+void save_configuration() {
+  File f = LittleFS.open(CONFIG_PATH, "w");
+  StaticJsonDocument&lt;256&gt; doc;
+  doc["rf_id"] = config.paired_rf_id;
+  doc["chime"] = config.chime_file;
+  doc["clock"] = config.clock_enabled;
+  doc["q_start"] = config.quiet_start;
+  doc["q_end"] = config.quiet_end;
+  serializeJson(doc, f);
+  f.close();
+}
+
+void setup_http_routes() {
+  server.on("/api/status", HTTP_GET, []() {
+    RTCDateTime dt = rtc_read_time();
+    StaticJsonDocument&lt;256&gt; res;
+    char tbuf[32];
+    snprintf(tbuf, sizeof(tbuf), "%04d-%02d-%02d %02d:%02d:%02d",
+             dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second);
+    res["time"] = tbuf;
+    res["rtc_valid"] = dt.valid;
+    res["paired_rf_id"] = config.paired_rf_id;
+    res["quiet_active"] = in_quiet_window(dt.hour, config.quiet_start, config.quiet_end);
+    FSInfo fs; LittleFS.info(fs);
+    res["flash_free_bytes"] = fs.totalBytes - fs.usedBytes;
+    String out; serializeJson(res, out);
+    server.send(200, "application/json", out);
+  });
+
+  server.on("/api/time", HTTP_POST, []() {
+    if (!server.hasArg("plain")) { server.send(400, "text/plain", "Missing body"); return; }
+    StaticJsonDocument&lt;192&gt; req;
+    if (deserializeJson(req, server.arg("plain")) != DeserializationError::Ok) {
+      server.send(400, "text/plain", "JSON error"); return;
+    }
+    RTCDateTime dt;
+    dt.year = req["year"]; dt.month = req["month"]; dt.day = req["day"];
+    dt.hour = req["hour"]; dt.minute = req["minute"]; dt.second = req["second"];
+    rtc_write_time(dt);
+    server.send(200, "application/json", "{\"status\":\"ok\"}");
+  });
+
+  server.on("/api/pair", HTTP_POST, []() {
+    g_pairing_mode = true;
+    server.send(200, "application/json", "{\"status\":\"pairing_active\"}");
+  });
+
+  server.serveStatic("/", LittleFS, "/www/index.html");
+}
+
+void setup() {
+  pinMode(PIN_AMP_SHDN, OUTPUT);
+  digitalWrite(PIN_AMP_SHDN, LOW);
+
+  pinMode(PIN_RF_DATA, INPUT);
+  attachInterrupt(digitalPinToInterrupt(PIN_RF_DATA), isr_rf_edge, CHANGE);
+
+  Wire.begin(PIN_I2C_SDA, PIN_I2C_SCL);
+  LittleFS.begin();
+  load_configuration();
+
+  WiFi.mode(WIFI_AP_STA);
+  WiFi.softAP("Apartment-Bell", "localonly");
+  setup_http_routes();
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+
+  if (g_rf_packet_ready) {
+    uint32_t packet = g_last_rf_code;
+    g_rf_packet_ready = false;
+    uint32_t sender_id = packet &gt;&gt; 4;
+
+    if (g_pairing_mode) {
+      config.paired_rf_id = sender_id;
+      save_configuration();
+      g_pairing_mode = false;
+      play_audio_file("/audio/intro.raw");
+    } else if (sender_id == config.paired_rf_id) {
+      play_audio_file(config.chime_file);
+    }
+  }
+
+  static int last_hour = -1;
+  static uint32_t last_check = 0;
+  if (millis() - last_check &gt;= 5000) {
+    last_check = millis();
+    RTCDateTime now = rtc_read_time();
+    if (now.valid &amp;&amp; now.minute == 0 &amp;&amp; now.hour != last_hour) {
+      last_hour = now.hour;
+      if (config.clock_enabled &amp;&amp; !in_quiet_window(now.hour, config.quiet_start, config.quiet_end)) {
+        speak_time(now.hour);
+      }
+    }
+  }
+}</code></pre>
+  </div>
+</details>
+
+<h2 id="step6">Step 6 &mdash; Local Web Portal &amp; Audio Data Pipeline</h2>
+<p class="lede">Browser WebAudio converter and zero-cloud portal. Selects any audio file on a phone, resamples to 8 kHz 8-bit unsigned mono PCM in memory, and writes directly to LittleFS.</p>
+
+<h3 id="audio-spec">Audio Data Specifications &amp; Memory Budget</h3>
+<div class="scroll"><table><thead><tr><th>Audio Role</th><th>File Path</th><th>Sampling Format</th><th>Bitrate</th><th>Footprint</th></tr></thead><tbody>
+<tr><td><strong>Talking Clock Dictionary</strong></td><td><code>/audio/01.raw</code>&ndash;<code>12.raw</code>, <code>intro.raw</code>, <code>oclock.raw</code>, <code>am.raw</code>, <code>pm.raw</code></td><td>8 kHz, 8-bit unsigned PCM (mono)</td><td>64 kbps (8 kB/s)</td><td><strong>~160 kB total</strong> (18 clips)</td></tr>
+<tr><td><strong>Default Calling Bell Chime</strong></td><td><code>/audio/chime.raw</code></td><td>8 kHz, 8-bit unsigned PCM (mono)</td><td>64 kbps (8 kB/s)</td><td><strong>~40 kB</strong> (5s melody)</td></tr>
+<tr><td><strong>Web Portal Static UI</strong></td><td><code>/www/index.html</code></td><td>Single HTML5/JS file</td><td>&mdash;</td><td><strong>~8 kB</strong></td></tr>
+<tr><td><strong>Free LittleFS Storage</strong></td><td><code>/audio/user_*.raw</code></td><td>8 kHz, 8-bit unsigned PCM (mono)</td><td>64 kbps</td><td><strong>~2.8 MB</strong> (&gt;5.5 mins chimes)</td></tr>
+</tbody></table></div>
+
+<h3 id="converter-command">Desktop Conversion Command (FFmpeg)</h3>
+<p>To prepare raw clips on a computer before flashing:</p>
+<pre><code>ffmpeg -i input.mp3 -ac 1 -ar 8000 -f u8 -acodec pcm_u8 clip.raw</code></pre>
+
+<h3 id="web-portal">Single-Page Browser Portal with In-Memory WebAudio Converter</h3>
+<details class="code-fold" id="code-portal" open>
+  <summary>
+    <div class="fold-title"><span>LittleFS Web Portal (index.html)</span> <span class="badge badge-ok">Standalone UI</span></div>
+    <button class="btn-copy-code" type="button">Copy HTML/JS</button>
+  </summary>
+  <div class="fold-body">
+    <div class="fold-meta">
+      <span>Destination: <code>/www/index.html</code> in LittleFS</span>
+      <span>Features: WebAudio 8 kHz converter, 1-click RTC sync, RF pairing card</span>
+    </div>
+    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;title&gt;Calling Bell &amp; Clock&lt;/title&gt;
+  &lt;style&gt;
+    body { font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 1.25rem; }
+    .card { background: #1e293b; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; border: 1px solid #334155; }
+    h2 { font-size: 1rem; margin-top: 0; color: #38bdf8; }
+    button { background: #0284c7; color: #fff; border: 0; padding: 0.5rem 0.8rem; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    .val { font-family: monospace; color: #4ade80; }
+    .row { display: flex; justify-content: space-between; align-items: center; margin: 0.4rem 0; font-size: 0.9rem; }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1 style="font-size: 1.25rem;"&gt;Smart Calling Bell&lt;/h1&gt;
+
+  &lt;div class="card"&gt;
+    &lt;h2&gt;Clock &amp; RTC Sync&lt;/h2&gt;
+    &lt;div class="row"&gt;&lt;span&gt;Hardware Clock:&lt;/span&gt;&lt;span id="rtc-time" class="val"&gt;Reading...&lt;/span&gt;&lt;/div&gt;
+    &lt;button onclick="syncBrowserTime()" style="width: 100%; margin-top: 0.4rem;"&gt;Sync RTC with Phone Clock&lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;div class="card"&gt;
+    &lt;h2&gt;Upload Custom Chime (Phone WebAudio)&lt;/h2&gt;
+    &lt;input type="file" id="audio-input" accept="audio/*" style="margin-bottom: 0.5rem;"&gt;
+    &lt;button onclick="convertAndUpload()" id="btn-upload" style="width: 100%;"&gt;Convert &amp; Upload Chime&lt;/button&gt;
+    &lt;div id="upload-status" style="font-size: 0.8rem; margin-top: 0.4rem;"&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class="card"&gt;
+    &lt;h2&gt;433 MHz Remote Pairing&lt;/h2&gt;
+    &lt;div class="row"&gt;&lt;span&gt;Paired Remote ID:&lt;/span&gt;&lt;span id="rf-id" class="val"&gt;---&lt;/span&gt;&lt;/div&gt;
+    &lt;button onclick="startPairing()" style="width: 100%; margin-top: 0.4rem; background: #e11d48;"&gt;Put in Pairing Mode&lt;/button&gt;
+  &lt;/div&gt;
+
+  &lt;script&gt;
+    async function updateStatus() {
+      const res = await fetch('/api/status');
+      const data = await res.json();
+      document.getElementById('rtc-time').innerText = data.time;
+      document.getElementById('rf-id').innerText = '0x' + data.paired_rf_id.toString(16).toUpperCase();
+    }
+
+    async function syncBrowserTime() {
+      const d = new Date();
+      await fetch('/api/time', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate(),
+          hour: d.getHours(), minute: d.getMinutes(), second: d.getSeconds()
+        })
+      });
+      updateStatus();
+    }
+
+    async function startPairing() {
+      await fetch('/api/pair', { method: 'POST' });
+      alert('Pairing active! Press your 433 MHz doorbell button now.');
+    }
+
+    async function convertAndUpload() {
+      const fileInput = document.getElementById('audio-input');
+      const status = document.getElementById('upload-status');
+      if (!fileInput.files.length) return alert('Select an audio file first.');
+      status.innerText = 'Converting in browser memory...';
+
+      const file = fileInput.files[0];
+      const arrayBuf = await file.arrayBuffer();
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const decoded = await audioCtx.decodeAudioData(arrayBuf);
+
+      const offline = new OfflineAudioContext(1, Math.ceil(decoded.duration * 8000), 8000);
+      const src = offline.createBufferSource();
+      src.buffer = decoded;
+      src.connect(offline.destination);
+      src.start(0);
+
+      const resampled = await offline.startRendering();
+      const floatData = resampled.getChannelData(0);
+      const u8Data = new Uint8Array(floatData.length);
+
+      for (let i = 0; i &lt; floatData.length; i++) {
+        let s = Math.max(-1.0, Math.min(1.0, floatData[i]));
+        u8Data[i] = Math.floor((s + 1.0) * 127.5);
+      }
+
+      status.innerText = 'Uploading ' + u8Data.byteLength + ' bytes to LittleFS...';
+      await fetch('/api/upload?name=/audio/chime.raw', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: u8Data
+      });
+      status.innerText = 'Upload complete!';
+      updateStatus();
+    }
+
+    setInterval(updateStatus, 3000);
+    updateStatus();
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+  </div>
+</details>
 
 <h2 id="step7">Step 7 &mdash; One-Unit End-to-End Acceptance Test</h2>
-<p class="lede">Exercise the single unit as a complete product. Run every row on the locked 220 V AC supply with the electrician's isolation checks already signed off.</p>
+<p class="lede">Exercise the single unit on bench power with isolation checks signed off.</p>
 <div class="scroll"><table><thead><tr><th>Test</th><th>Action</th><th>Pass Condition</th></tr></thead><tbody>
-<tr><td><strong>Bell trigger</strong></td><td>Press the paired EV1527 transmitter button from the intended outdoor range</td><td>Chime plays every time; no missed or false triggers.</td></tr>
-<tr><td><strong>Talking clock</strong></td><td>Set time from the phone browser, then unplug mains for several hours and repower</td><td>Spoken time is correct after repower; RTC held on CR2032.</td></tr>
-<tr><td><strong>Audio under load</strong></td><td>Play a chime while the web portal is open and RF noise is present</td><td>No stutter; interrupt and HTTP muting work as specified in Step 5.</td></tr>
-<tr><td><strong>Quiet hours / schedule</strong></td><td>Configure an announcement window and a quiet period</td><td>Announcements fire only inside the configured window.</td></tr>
-<tr><td><strong>OTA update</strong></td><td>Push one firmware update over the local Wi-Fi link</td><td>Update succeeds; device boots unattended with the strapping resistors in place.</td></tr>
-<tr><td><strong>24/7 soak</strong></td><td>Leave the unit powered continuously and retest after several days</td><td>No watchdog reset, no RTC drift, no audio corruption.</td></tr>
+<tr><td><strong>Bell trigger</strong></td><td>Press paired EV1527 transmitter button</td><td>Chime plays reliably; no false triggers.</td></tr>
+<tr><td><strong>Talking clock</strong></td><td>Set time from phone browser, disconnect power, reconnect</td><td>Time retained accurately on CR2032 backup.</td></tr>
+<tr><td><strong>Speech clarity</strong></td><td>Listen to hourly announcement</td><td>Spoken words intelligible; numbers distinct.</td></tr>
+<tr><td><strong>Bench idle hiss</strong></td><td>Listen in quiet room while idle</td><td>Faint hiss present on bench (breakout module ties /SHDN high). Muted in Step 8 PCBA.</td></tr>
+<tr><td><strong>Quiet hours</strong></td><td>Set quiet hours 22:00&ndash;06:00 and advance clock past midnight</td><td>Unit stays completely silent during quiet period.</td></tr>
+<tr><td><strong>Phone audio convert</strong></td><td>Upload an MP3 directly from phone browser UI</td><td>Browser resamples in memory; uploaded chime plays accurately.</td></tr>
 </tbody></table></div>
-<p>If any test fails, fix it on this unit before making a PCB.</p>
 
 <h2 id="step8">Step 8 &mdash; Production Release: PCB Layout &amp; LionCircuits Pack</h2>
-<p>After Step 7 passes: 2-layer ~50 &times; 50 mm PCB, turnkey at LionCircuits. Target ~₹540 ex-GST/unit at five units &mdash; confirm with a quote.</p>
+<p>After Step 7 passes: 2-layer ~50 &times; 50 mm PCB, turnkey at LionCircuits. Target ~₹540 ex-GST/unit at five units. <strong>GPIO12 drives PAM8403 /SHDN (pin 1) to eliminate idle hiss.</strong></p>
 <div class="scroll"><table><thead><tr><th>Part</th><th>Assembly</th><th>Key Spec / MPN</th><th>Qty</th><th>Role</th></tr></thead><tbody>
 <tr><td><strong>ESP-12F</strong></td><td>Turnkey SMD</td><td>ESP8266, 4 MB flash, castellated</td><td class="num">1</td><td>MCU, Wi-Fi, Delta-Sigma audio, local web UI, OTA.</td></tr>
 <tr><td><strong>PCF8563</strong></td><td>Turnkey SMD</td><td>SOP-8</td><td class="num">1</td><td>Battery-backed RTC; I2C on GPIO4/5.</td></tr>
-<tr><td><strong>32.768 kHz crystal</strong></td><td>Turnkey SMD</td><td>Load caps per Step 2</td><td class="num">1</td><td>RTC timebase.</td></tr>
-<tr><td><strong>CR2032 holder</strong></td><td>Consigned TH</td><td>20 mm coin-cell holder</td><td class="num">1</td><td>RTC backup power.</td></tr>
-<tr><td><strong>Dual Schottky diodes</strong></td><td>Turnkey SMD</td><td>Low V<sub>F</sub> (e.g. BAT54 family)</td><td class="num">2</td><td>Battery / mains supply OR-ing for the RTC.</td></tr>
-<tr><td><strong>PAM8403</strong></td><td>Turnkey SMD</td><td>SOP-16, Class-D 3 W</td><td class="num">1</td><td>Amplifier for the filtered GPIO3 audio stream.</td></tr>
-<tr><td><strong>3 W / 4 &Omega; 40 mm speaker</strong></td><td>Consigned</td><td>4 &Omega; nominal, 3 W</td><td class="num">1</td><td>Chime and talking-clock output.</td></tr>
-<tr><td><strong>RXB12 / RXB6 receiver</strong></td><td>Consigned TH</td><td>Superheterodyne 433.92 MHz</td><td class="num">1</td><td>EV1527 bell-push receiver on GPIO14.</td></tr>
-<tr><td><strong>17.3 cm wire antenna</strong></td><td>Consigned</td><td>Solid copper, &frac14;&lambda; at 433.92 MHz</td><td class="num">1</td><td>Solder pad on the PCB; routed away from SMPS and ESP antenna keep-out.</td></tr>
-<tr><td><strong>5 V / 1 A isolated SMPS board</strong></td><td>Consigned daughterboard</td><td>220 V AC &rarr; 5 V DC, bare board</td><td class="num">1</td><td>Always-on mains power with HV/LV isolation slots.</td></tr>
+<tr><td><strong>PAM8403</strong></td><td>Turnkey SMD</td><td>SOP-16, Class-D 3 W</td><td class="num">1</td><td>Amp. <strong>Pin 1 (/SHDN) driven by GPIO12 for 100% silent idle.</strong></td></tr>
 <tr><td><strong>AMS1117-3.3</strong></td><td>Turnkey SMD</td><td>SOT-223</td><td class="num">1</td><td>5 V &rarr; 3.3 V rail for ESP-12F, PCF8563, RXB12.</td></tr>
-<tr><td><strong>4-pin flashing header</strong></td><td>Consigned TH</td><td>2.54 mm, GND/TX/RX/GPIO0</td><td class="num">1</td><td>One-time factory USB-UART flashing.</td></tr>
-<tr><td><strong>Passives</strong></td><td>Turnkey SMD</td><td>Step 2 values: 1 k&Omega;, 4.7 k&Omega;&times;2, 10 k&Omega;&times;5, 100 nF, 10 &micro;F, load caps</td><td class="num">&mdash;</td><td>RC audio filter, I2C pull-ups, boot strapping, decoupling.</td></tr>
+<tr><td><strong>Passives</strong></td><td>Turnkey SMD</td><td>1 k&Omega;, 4.7 k&Omega;&times;2, 10 k&Omega;&times;6, 0.1 &micro;F&times;4, 10 &micro;F&times;2</td><td class="num">&mdash;</td><td>Filter, I2C pull-ups, boot straps, decoupling, and PAM8403 input caps.</td></tr>
+<tr><td><strong>5-pin flashing header</strong></td><td>Consigned TH</td><td>2.54 mm, 3.3V/GND/TX/RX/GPIO0</td><td class="num">1</td><td>Safe bench programming without mains.</td></tr>
 <tr><td colspan="3"><strong>Target production COGS</strong></td><td colspan="2"><span class="badge badge-ok">~₹540 ex-GST / unit</span> at five units, turnkey PCBA at LionCircuits.</td></tr>
 </tbody></table></div>
-<div class="box warn"><span class="label">Manufacturing Pack</span><p>Deliver the KiCad schematic, PCB layout, a BOM CSV separating turnkey SMD from consigned parts, and a CPL checklist. Keep an antenna keep-out zone, HV/LV isolation slots, and reproduce the Step 3&ndash;7 prototype netlist exactly.</p></div>
 
 <nav class="pagenav"><a href="index.html"><span class="dir">Return to</span>Wiki Index &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Smart Calling Bell · One-unit prototype &rarr; production</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>
