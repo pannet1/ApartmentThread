@@ -9,7 +9,7 @@
 </details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><a class="companion-link" href="calling-bell.html">Smart Calling Bell guide <span aria-hidden="true">&rarr;</span></a><div class="license-pill"><span>ESP-12F · PAM8403 · 433 MHz</span></div></div></aside>
 <main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Hardware Components</span> &rsaquo; <span>Calling Bell</span></nav><h1>Calling Bell &amp; Talking Clock &mdash; Start With One Unit</h1><p class="lede">This page explains the whole box in plain language first, then walks through building and proving <strong>one physical unit</strong>. For that first unit, initial cost is deliberately uncapped: use a breadboard and breakout carriers so the circuit can be tested end to end. Only after the one-unit acceptance test passes does the design move to the 2-layer, ~50 &times; 50 mm LionCircuits PCBA with a ~₹540 ex-GST target at five units. The device is always-on and 220 V AC mains powered, strictly local-only, with a battery-backed PCF8563 RTC, a 433 MHz EV1527 trigger, and a DAC-free audio path into a PAM8403.</p>
 
-<div class="box info"><span class="label">Reading Order</span><p>Read the <a href="#overview">Bird's Eye View</a> first, then work the steps in order: <a href="#step1">1</a> &rarr; <a href="#step2">2</a> &rarr; <a href="#step3">3</a> &rarr; <a href="#step4">4</a> &rarr; <a href="#step5">5</a> &rarr; <a href="#step6">6</a> &rarr; <a href="#step7">7</a> &rarr; <a href="#step8">8</a>. Each step has a gate; do not move ahead of a failed gate. This is a separate product document, not a new section of the Apartment Thread blueprint. The circuit and part choices are locked: no alternative MCU, RTC, external DAC, or switch technology is proposed.</p></div>
+<div class="box info"><span class="label">Reading Order</span><p>Read the <a href="#overview">Bird's Eye View</a> first, including <a href="#functions">how the two basic functions work</a>, then work the steps in order: <a href="#step1">1</a> &rarr; <a href="#step2">2</a> &rarr; <a href="#step3">3</a> &rarr; <a href="#step4">4</a> &rarr; <a href="#step5">5</a> &rarr; <a href="#step6">6</a> &rarr; <a href="#step7">7</a> &rarr; <a href="#step8">8</a>. Each step has a gate; do not move ahead of a failed gate. This is a separate product document, not a new section of the Apartment Thread blueprint. The circuit and part choices are locked: no alternative MCU, RTC, external DAC, or switch technology is proposed.</p></div>
 
 <h2 id="overview">Bird's Eye View &mdash; What This Box Actually Does</h2>
 <p class="lede">Imagine a plastic box near the door. Someone presses a small remote outside; the box plays a chime. Every hour it also speaks the time. You set the time and upload chimes from your phone's browser &mdash; no internet account, no cloud, no router time server. If the power cuts, the clock keeps running on a coin cell inside.</p>
@@ -73,6 +73,44 @@
 <tr><td><strong>CP2102 USB-UART module</strong></td><td>Loads the program into the brain once; after that, updates arrive over Wi-Fi.</td><td>Only during flashing: GND, TX, RX, GPIO0 on the 4-pin header. Remove it before normal use.</td></tr>
 </tbody></table></div>
 <div class="box danger"><span class="label">Three Beginner Traps in This Circuit</span><p><strong>1. Two supply voltages.</strong> The amp uses 5 V; the brain, clock chip, and receiver use 3.3 V. Feeding 5 V into a 3.3 V pin destroys parts. <strong>2. GPIO3 has two jobs.</strong> It is the audio output in use, but also the serial input while flashing &mdash; do not let the amplifier drive it during programming. <strong>3. The speaker wires are not ground.</strong> PAM8403 uses a bridged (BTL) output: connect the speaker between OUT+ and OUT&minus;, never from either output to GND.</p></div>
+
+<h3 id="functions">How the Two Basic Functions Are Achieved</h3>
+<p class="lede">The hardware has only two jobs: play a chime you choose, and speak the time each hour except while you are asleep. Both jobs use the <em>same</em> audio path &mdash; a file in flash, GPIO3, the RC filter, the amplifier, and the speaker. The difference is only <strong>what tells the brain to start playing</strong>.</p>
+
+<h4 id="custom-chime">1. Play any custom sound as the calling bell</h4>
+<div class="diagram-card"><pre><code>   YOUR PHONE                      ESP-12F                    ________
+   [web page] -- upload bytes --> [web server] -- write --> | LittleFS |
+                                                            | bell file |
+   OUTDOOR BUTTON                  ESP-12F                    ‾‾‾‾‾‾‾‾
+   [EV1527 code] --> GPIO14 --> [match learned ID] -- read --┘
+                                      │
+                                      ▼
+                        GPIO3 1-bit audio --> 1kΩ + 0.1µF --> PAM8403 --> SPEAKER</code></pre><figcaption><b>Figure 4.</b> Uploading stores a sound file; pressing the button plays that exact file. No internet is involved.</figcaption></div>
+<ol data-reveal>
+  <li><strong>Prepare the sound.</strong> Run the converter from Step 6 on your source audio so it becomes the exact format the firmware streams: 8 kHz, 8-bit, mono. The brain can then play it by reading bytes &mdash; there is no music decoder chip.</li>
+  <li><strong>Upload it.</strong> Join the device's local Wi-Fi, open the page the brain serves from its own flash, pick the file, and upload. The web server on the ESP-12F writes the incoming bytes into a LittleFS file named for the bell. The same page can delete or replace it.</li>
+  <li><strong>It stays there.</strong> LittleFS lives in the ESP-12F's 4 MB flash, so your chime survives power cuts. Roughly 3 MB is free for chimes because the spoken-clock pieces use only about 200 KB.</li>
+  <li><strong>Press the button.</strong> The 433 MHz receiver hears the EV1527 code and puts it on GPIO14. The firmware compares the 24-bit ID with the one you paired in the web page. On a match, it detaches that interrupt so stray radio noise cannot disturb playback.</li>
+  <li><strong>Play it.</strong> The firmware reads the stored file and emits its bits as a 1-bit Delta-Sigma stream on GPIO3. The 1 k&Omega; + 0.1 &micro;F RC filter smooths that stream into an analog waveform; the PAM8403 amplifies it; the speaker connected across OUT+/OUT&minus; makes the sound.</li>
+  <li><strong>Finish cleanly.</strong> While audio plays, the web server is paused so page requests cannot stutter the sound. When playback ends, the GPIO14 interrupt is re-attached and normal operation resumes. The next press replays the same stored file until you upload a different one.</li>
+</ol>
+
+<h4 id="hourly-clock">2. Speak the clock every hour, with a bedtime</h4>
+<div class="diagram-card"><pre><code>   [CR2032-backed PCF8563 clock] --I2C--> ESP-12F
+                                             │
+                     every minute: is it HH:00 and NOT in quiet hours?
+                            ┌────────────────┴────────────────┐
+                          YES                                NO
+                            ▼                                ▼
+   [spoken-time pieces in LittleFS] --> GPIO3 --> RC --> AMP --> SPEAKER     stay silent</code></pre><figcaption><b>Figure 5.</b> The clock chip supplies the time; the firmware decides whether to speak; the audio path is identical to the bell.</figcaption></div>
+<ol data-reveal>
+  <li><strong>Set the time once.</strong> In the web page you tap a button; the phone browser sends its current date and time, and the firmware writes them into the PCF8563 over I2C (GPIO4/5). After that, the phone is no longer needed &mdash; there is no internet time server.</li>
+  <li><strong>Keep the time through power cuts.</strong> The PCF8563 runs on the CR2032 coin cell through the two Schottky diodes whenever mains power is absent, so the hour is still correct after a long outage or a reboot.</li>
+  <li><strong>Check the time every minute.</strong> The firmware reads the RTC in its main loop. When the clock reaches the top of an hour (HH:00), it prepares an announcement.</li>
+  <li><strong>Apply the bedtime rule.</strong> In the same web page you set a quiet-hours window, for example 22:00 to 06:00. The firmware compares the RTC time with that window before speaking. Inside the window it stays silent; outside it announces the hour. The check handles a window that crosses midnight.</li>
+  <li><strong>Speak the hour.</strong> Short recorded pieces (for example "the time is", the hour number, "o'clock") are stored in LittleFS at 8 kHz 8-bit mono, about 200 KB in total. The firmware stitches the right pieces together and sends them down the same GPIO3 &rarr; RC filter &rarr; PAM8403 &rarr; speaker path used by the chime. The watchdog protects the always-on loop so an hour is never missed because the firmware hung.</li>
+</ol>
+<div class="box info"><span class="label">Key Difference From the Earlier Approach</span><p>The phone is only a one-time setup tool, not a time source that must stay online. Timekeeping lives in the coin-cell-backed chip on the board; the quiet-hours decision is made locally by the firmware from that chip's time. Custom chimes and spoken-time pieces are plain files in flash, so changing a sound never requires rewiring or reflashing.</p></div>
 
 <h2 id="step1">Step 1 &mdash; Buy the Parts for One Unit</h2>
 <p class="lede">Supplier preference follows what has actually been bought and used here: <strong>robobazar.in</strong> is the recorded purchase source (the breadboard, jumper wires, resistors, and tactile switch were bought there together), with <strong>Robu.in</strong> and <strong>Robocraze</strong> as the suppliers used in this wiki's BOM and the earlier bell guide. Confirm price and stock in the cart before checkout &mdash; that is open gate <a href="open.html#o15">O-15</a>. Do not buy the production PCB or tooling yet.</p>
