@@ -251,6 +251,13 @@ a.brand:hover .brand-icon {
   display: grid; gap: .5rem;
 }
 .sidebar-footer b { color: var(--ink-soft); font-weight: 700; }
+.sidebar-footer .companion-link {
+  display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+  padding: .5rem .65rem; border-radius: var(--radius-sm);
+  background: var(--surface); color: var(--ink-soft);
+  font-weight: 600; text-decoration: none;
+}
+.sidebar-footer .companion-link:hover { background: var(--accent); color: var(--accent-ink); }
 .license-pill { display: flex; flex-wrap: wrap; gap: .35rem; }
 .license-pill span {
   background: var(--surface);
