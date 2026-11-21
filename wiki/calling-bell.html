@@ -9,43 +9,12 @@
 </details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><a class="companion-link" href="calling-bell.html">Smart Calling Bell guide <span aria-hidden="true">&rarr;</span></a><div class="license-pill"><span>ESP-12F · PAM8403 · 433 MHz</span></div></div></aside>
 <main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Hardware Components</span> &rsaquo; <span>Calling Bell</span></nav><h1>Calling Bell &amp; Talking Clock &mdash; Start With One Unit</h1><p class="lede">This page explains the whole box in plain language first, then walks through building and proving <strong>one physical unit</strong>. For that first unit, initial cost is deliberately uncapped: use a breadboard and breakout carriers so the circuit can be tested end to end. Only after the one-unit acceptance test passes does the design move to the 2-layer, ~50 &times; 50 mm LionCircuits PCBA with a ~₹540 ex-GST target at five units. The device is always-on and 220 V AC mains powered, strictly local-only, with a battery-backed PCF8563 RTC, a 433 MHz EV1527 trigger, and a DAC-free audio path into a PAM8403.</p>
 
-<div class="box info"><span class="label">Reading Order</span><p>Read the <a href="#overview">Bird's Eye View</a> first, including <a href="#functions">how the two basic functions work</a>, then work the steps in order: <a href="#step1">1</a> &rarr; <a href="#step2">2</a> &rarr; <a href="#step3">3</a> &rarr; <a href="#step4">4</a> &rarr; <a href="#step5">5</a> &rarr; <a href="#step6">6</a> &rarr; <a href="#step7">7</a> &rarr; <a href="#step8">8</a>. Each step has a gate; do not move ahead of a failed gate. This is a separate product document, not a new section of the Apartment Thread blueprint. The circuit and part choices are locked: no alternative MCU, RTC, external DAC, or switch technology is proposed.</p></div>
+<p>Start with the <a href="#overview">Bird's Eye View</a> and <a href="#functions">how the two functions work</a>, then Steps <a href="#step1">1</a> &rarr; <a href="#step2">2</a> &rarr; <a href="#step3">3</a> &rarr; <a href="#step4">4</a> &rarr; <a href="#step5">5</a> &rarr; <a href="#step6">6</a> &rarr; <a href="#step7">7</a> &rarr; <a href="#step8">8</a>. Parts are locked; no alternatives.</p>
 
 <h2 id="overview">Bird's Eye View &mdash; What This Box Actually Does</h2>
 <p class="lede">Imagine a plastic box near the door. Someone presses a small remote outside; the box plays a chime. Every hour it also speaks the time. You set the time and upload chimes from your phone's browser &mdash; no internet account, no cloud, no router time server. If the power cuts, the clock keeps running on a coin cell inside.</p>
 
-<h3 id="signal-flow">The whole system in one picture</h3>
-<div class="diagram-card"><pre><code>    OUTDOOR BUTTON (EV1527, 433.92 MHz)
-            │  radio code, no pairing to the internet
-            ▼
-   ┌────────────────────┐        ┌──────────────────────────────┐
-   │ RXB12/RXB6 receiver│        │ ESP-12F = THE BRAIN           │
-   │ 3.3 V + 17.3cm wire│─DATA──►│ GPIO14: hears the button     │
-   └────────────────────┘        │ GPIO4/5: talks to the clock  │
-                                 │ GPIO3: speaks (1-bit audio)  │
-   PHONE BROWSER ── local Wi-Fi ►│ web page stored on the chip  │
-   (set time, upload chime)      └──────┬───────────────┬────────┘
-                                        │ I2C           │ audio
-                                        ▼               ▼
-                          ┌──────────────────────┐  ┌────────────────────┐
-                          │ PCF8563 CLOCK CHIP   │  │ 1kΩ + 0.1µF filter │
-                          │ + 32.768kHz crystal  │  │ (turns bits into   │
-                          │ + CR2032 coin cell   │  │  a smooth signal)  │
-                          └──────────────────────┘  └─────────┬──────────┘
-                                                              ▼
-                                                    ┌────────────────────┐
-                                                    │ PAM8403 AMP        │
-                                                    │ BTL OUT+/OUT-      │
-                                                    └─────────┬──────────┘
-                                                              ▼
-                                                     4 Ω / 3 W SPEAKER
-
-   220 V AC MAINS ──► [ ISOLATED 5 V / 1 A SMPS ] ──► 5 V rail ──► PAM8403
-                                                       │
-                                                  [AMS1117-3.3] ──► 3.3 V rail
-                                                                    ├─ ESP-12F
-                                                                    ├─ PCF8563
-                                                                    └─ RXB12 receiver</code></pre><figcaption><b>Figure 1.</b> Follow the arrows: the button is heard by the receiver, the receiver tells the brain, the brain asks the clock for the time and sends an audio stream to the amplifier, and the amplifier drives the speaker. The phone only talks to the brain over the home Wi-Fi; nothing goes to the internet.</figcaption></div>
+<p><strong>Signal flow:</strong> button &rarr; 433 MHz receiver &rarr; ESP-12F &rarr; 1-bit audio on GPIO3 &rarr; RC filter &rarr; PAM8403 &rarr; speaker. The phone only configures the device over local Wi-Fi. Mains 220 V AC becomes 5 V in the isolated supply; a 3.3 V rail feeds the brain, clock, and receiver.</p>
 
 <h3 id="breadboard">The physical parts, at breadboard level</h3>
 <p>Yes &mdash; the breadboard applies to this design, but only for <strong>Step 3's single test unit</strong>. The production board in Step 8 is a printed PCB. On the breadboard you build seven small zones and join them with three rails. The rails are just long rows of connected holes: red = +5 V, orange = +3.3 V, blue = ground (GND).</p>
@@ -62,7 +31,7 @@
    │ E  RXB12/RXB6 + antenna  : VCC from 3.3 V, 100nF + 10µF right at pins.   │
    │ F  1kΩ + 0.1µF, PAM8403  : GPIO3 -&gt; filter -&gt; amp -&gt; speaker.             │
    └──────────────────────────────────────────────────────────────────────────┘
-   USB-UART module (CP2102) plugs into the 4-pin header only during flashing.</code></pre><figcaption><b>Figure 2.</b> A suggested physical layout. The exact row numbers do not matter; what matters is that +5 V, +3.3 V, and GND never touch each other except through the regulator, and that the receiver uses 3.3 V, not 5 V.</figcaption></div>
+   USB-UART module (CP2102) plugs into the 4-pin header only during flashing.</code></pre><figcaption><b>Figure 1.</b> A suggested physical layout. The exact row numbers do not matter; what matters is that +5 V, +3.3 V, and GND never touch each other except through the regulator, and that the receiver uses 3.3 V, not 5 V.</figcaption></div>
 <div class="scroll"><table><thead><tr><th>Physical thing you hold</th><th>Plain-language job</th><th>Where it goes on the breadboard</th></tr></thead><tbody>
 <tr><td><strong>HLK-5M05 SMPS board</strong></td><td>Converts wall AC to safe low-voltage 5 V DC for everything else.</td><td>Zone A. Its AC side is mains; an electrician connects it. Its DC output goes to the red +5 V rail.</td></tr>
 <tr><td><strong>AMS1117-3.3 regulator</strong></td><td>Makes a second, lower 3.3 V rail from 5 V.</td><td>Zone B. Input on +5 V, output on the orange +3.3 V rail, with a 10 &micro;F and 100 nF capacitor alongside.</td></tr>
@@ -72,7 +41,7 @@
 <tr><td><strong>1 k&Omega; resistor + 0.1 &micro;F capacitor + PAM8403 + speaker</strong></td><td>Turns the brain's digital audio into sound you can hear.</td><td>Zone F. Filter sits between GPIO3 and the amp input; speaker goes only across OUT+ and OUT&minus;.</td></tr>
 <tr><td><strong>CP2102 USB-UART module</strong></td><td>Loads the program into the brain once; after that, updates arrive over Wi-Fi.</td><td>Only during flashing: GND, TX, RX, GPIO0 on the 4-pin header. Remove it before normal use.</td></tr>
 </tbody></table></div>
-<div class="box danger"><span class="label">Three Beginner Traps in This Circuit</span><p><strong>1. Two supply voltages.</strong> The amp uses 5 V; the brain, clock chip, and receiver use 3.3 V. Feeding 5 V into a 3.3 V pin destroys parts. <strong>2. GPIO3 has two jobs.</strong> It is the audio output in use, but also the serial input while flashing &mdash; do not let the amplifier drive it during programming. <strong>3. The speaker wires are not ground.</strong> PAM8403 uses a bridged (BTL) output: connect the speaker between OUT+ and OUT&minus;, never from either output to GND.</p></div>
+<p><strong>Three traps:</strong> the amp uses 5 V while the brain, clock, and receiver use 3.3 V; GPIO3 is both audio output and flash input; PAM8403 is a bridged output, so the speaker goes between OUT+ and OUT&minus;, never to ground.</p>
 
 <h3 id="functions">How the Two Basic Functions Are Achieved</h3>
 <p class="lede">The hardware has only two jobs: play a chime you choose, and speak the time each hour except while you are asleep. Both jobs use the <em>same</em> audio path &mdash; a file in flash, GPIO3, the RC filter, the amplifier, and the speaker. The difference is only <strong>what tells the brain to start playing</strong>.</p>
@@ -85,7 +54,7 @@
    [EV1527 code] --> GPIO14 --> [match learned ID] -- read --┘
                                       │
                                       ▼
-                        GPIO3 1-bit audio --> 1kΩ + 0.1µF --> PAM8403 --> SPEAKER</code></pre><figcaption><b>Figure 4.</b> Uploading stores a sound file; pressing the button plays that exact file. No internet is involved.</figcaption></div>
+                        GPIO3 1-bit audio --> 1kΩ + 0.1µF --> PAM8403 --> SPEAKER</code></pre><figcaption><b>Figure 3.</b> Uploading stores a sound file; pressing the button plays that exact file. No internet is involved.</figcaption></div>
 <ol data-reveal>
   <li><strong>Prepare the sound.</strong> Run the converter from Step 6 on your source audio so it becomes the exact format the firmware streams: 8 kHz, 8-bit, mono. The brain can then play it by reading bytes &mdash; there is no music decoder chip.</li>
   <li><strong>Upload it.</strong> Join the device's local Wi-Fi, open the page the brain serves from its own flash, pick the file, and upload. The web server on the ESP-12F writes the incoming bytes into a LittleFS file named for the bell. The same page can delete or replace it.</li>
@@ -102,7 +71,7 @@
                             ┌────────────────┴────────────────┐
                           YES                                NO
                             ▼                                ▼
-   [spoken-time pieces in LittleFS] --> GPIO3 --> RC --> AMP --> SPEAKER     stay silent</code></pre><figcaption><b>Figure 5.</b> The clock chip supplies the time; the firmware decides whether to speak; the audio path is identical to the bell.</figcaption></div>
+   [spoken-time pieces in LittleFS] --> GPIO3 --> RC --> AMP --> SPEAKER     stay silent</code></pre><figcaption><b>Figure 4.</b> The clock chip supplies the time; the firmware decides whether to speak; the audio path is identical to the bell.</figcaption></div>
 <ol data-reveal>
   <li><strong>Set the time once.</strong> In the web page you tap a button; the phone browser sends its current date and time, and the firmware writes them into the PCF8563 over I2C (GPIO4/5). After that, the phone is no longer needed &mdash; there is no internet time server.</li>
   <li><strong>Keep the time through power cuts.</strong> The PCF8563 runs on the CR2032 coin cell through the two Schottky diodes whenever mains power is absent, so the hour is still correct after a long outage or a reboot.</li>
@@ -110,7 +79,6 @@
   <li><strong>Apply the bedtime rule.</strong> In the same web page you set a quiet-hours window, for example 22:00 to 06:00. The firmware compares the RTC time with that window before speaking. Inside the window it stays silent; outside it announces the hour. The check handles a window that crosses midnight.</li>
   <li><strong>Speak the hour.</strong> Short recorded pieces (for example "the time is", the hour number, "o'clock") are stored in LittleFS at 8 kHz 8-bit mono, about 200 KB in total. The firmware stitches the right pieces together and sends them down the same GPIO3 &rarr; RC filter &rarr; PAM8403 &rarr; speaker path used by the chime. The watchdog protects the always-on loop so an hour is never missed because the firmware hung.</li>
 </ol>
-<div class="box info"><span class="label">Key Difference From the Earlier Approach</span><p>The phone is only a one-time setup tool, not a time source that must stay online. Timekeeping lives in the coin-cell-backed chip on the board; the quiet-hours decision is made locally by the firmware from that chip's time. Custom chimes and spoken-time pieces are plain files in flash, so changing a sound never requires rewiring or reflashing.</p></div>
 
 <h2 id="step1">Step 1 &mdash; Buy One Unit&rsquo;s Worth of Parts</h2>
 <p class="lede">Buy <strong>exactly one unit&rsquo;s worth</strong> of each part &mdash; no 100-piece resistor packs, no 3-piece remote bundles, no spare PCBs or tooling. If a part is sold only as a multipack online, is expensive, or is hard to source, buy the single piece from a <strong>local electronics shop</strong> instead. Every online link below was checked in stock on 22 Nov 2026; prices are listed unit prices before shipping and checkout charges.</p>
@@ -127,24 +95,25 @@
 <p>Robobazar is the recorded purchase preference (breadboard and jumpers were bought there on 16 Aug 2026); Robocraze and Amazon are used only where Robobazar was out of stock. Only single pieces are listed &mdash; no receiver listings costing thousands and no 100-piece passive packs.</p>
 
 <h3 id="local-shop">Local electronics shop &mdash; single pieces only</h3>
-<p class="lede">Ask for these by name and buy only the counts shown. This is where the difficult or pack-only parts go. Prices are left blank deliberately &mdash; confirm them at the counter and add them to the ₹908 online subtotal to get your actual sample cost.</p>
-<div class="scroll"><table><thead><tr><th>Ask for</th><th>Count for one unit</th><th>Unit price</th><th>Why local</th></tr></thead><tbody>
-<tr><td><strong>RXB12 / RXB6 433.92 MHz superheterodyne receiver</strong> (or SRX882 superhet)</td><td class="num">1</td><td class="num">&mdash;</td><td>The in-stock online listing was ₹1,890 with one piece left. Ask the shop for the superhet receiver; a generic 433 MHz super-regenerative module is <em>not</em> a substitute.</td></tr>
-<tr><td><strong>EV1527 433.92 MHz keychain transmitter</strong></td><td class="num">1</td><td class="num">&mdash;</td><td>Online was a 3-piece bundle. Confirm EV1527 encoding and 433.92 MHz at the counter.</td></tr>
-<tr><td><strong>3 W / 4 &Omega; 40 mm speaker</strong></td><td class="num">1</td><td class="num">&mdash;</td><td>No verified in-stock 40 mm listing at the preferred suppliers. Measure 3&ndash;4 &Omega; with a multimeter before wiring.</td></tr>
-<tr><td><strong>AMS1117-3.3 regulator, SOT-223</strong></td><td class="num">1</td><td class="num">&mdash;</td><td>Online only as a pack of five.</td></tr>
-<tr><td><strong>Resistors: 1 k&Omega; &times;1, 4.7 k&Omega; &times;2, 10 k&Omega; &times;5</strong></td><td class="num">8</td><td class="num">&mdash;</td><td>Online only as 100-piece packs. Buy the exact circuit count, not a pack.</td></tr>
-<tr><td><strong>Capacitors: 0.1 &micro;F &times;2, 10 &micro;F / 25 V &times;2</strong></td><td class="num">4</td><td class="num">&mdash;</td><td>Online only as 50-piece / 5-piece packs.</td></tr>
-<tr><td><strong>1N5817 (or equivalent) Schottky diodes</strong></td><td class="num">2</td><td class="num">&mdash;</td><td>Online only as a pack of five; needed for coin-cell backup switching.</td></tr>
-<tr><td><strong>17.3 cm solid copper wire</strong></td><td class="num">1 piece</td><td class="num">&mdash;</td><td>Cut from hookup wire; this is the receiver antenna.</td></tr>
+<p class="lede">Ask for these by name and buy only the counts shown. Approximate local prices are estimates; confirm them at the counter.</p>
+<div class="scroll"><table><thead><tr><th>Ask for</th><th>Qty</th><th>Approx cost</th><th>Note</th></tr></thead><tbody>
+<tr><td><strong>RXB12 / RXB6 433.92 MHz superhet receiver</strong> (or SRX882)</td><td class="num">1</td><td class="num">₹350</td><td>Ask for a superhet module, not a generic 433 MHz receiver.</td></tr>
+<tr><td><strong>EV1527 433.92 MHz transmitter</strong></td><td class="num">1</td><td class="num">₹200</td><td>Confirm EV1527 encoding at the counter.</td></tr>
+<tr><td><strong>3 W / 4 &Omega; 40 mm speaker</strong></td><td class="num">1</td><td class="num">₹150</td><td>Measure 3&ndash;4 &Omega; before wiring.</td></tr>
+<tr><td><strong>AMS1117-3.3, SOT-223</strong></td><td class="num">1</td><td class="num">₹30</td><td>Single piece; not the online five-pack.</td></tr>
+<tr><td><strong>Resistors: 1 k&Omega; &times;1, 4.7 k&Omega; &times;2, 10 k&Omega; &times;5</strong></td><td class="num">8</td><td class="num">₹40</td><td>Exact circuit count, not a 100-pack.</td></tr>
+<tr><td><strong>Capacitors: 0.1 &micro;F &times;2, 10 &micro;F &times;2</strong></td><td class="num">4</td><td class="num">₹30</td><td>Exact circuit count.</td></tr>
+<tr><td><strong>1N5817 Schottky diodes</strong></td><td class="num">2</td><td class="num">₹20</td><td>Coin-cell backup switching.</td></tr>
+<tr><td><strong>17.3 cm copper wire (antenna)</strong></td><td class="num">1 piece</td><td class="num">₹10</td><td>Cut from hookup wire.</td></tr>
+<tr><td colspan="2"><strong>Local subtotal (approx)</strong></td><td class="num"><strong>₹830</strong></td><td>Get the actual bill and keep the receipt.</td></tr>
+<tr><td colspan="2"><strong>Project cost &mdash; one-unit sample (approx)</strong></td><td class="num"><strong>₹1,738</strong></td><td>₹908 online + ₹830 local; breadboard and jumpers already on hand.</td></tr>
 </tbody></table></div>
-<div class="box ok"><span class="label">Sample Cost = ₹908 Online + Your Local Bill</span><p>That is the whole costing rule: the five online items are fixed at ₹908; the local shop supplies one unit&rsquo;s worth of the remaining parts. Breadboard and jumpers are already on hand (₹0 extra). Record the local bill in Step 3 as the actual prototype spend. No other cost figures or pack prices belong in this sample.</p></div>
-<div class="box info"><span class="label">Sourcing Notes</span><p>No out-of-stock product link is used. All five online links were confirmed in stock on 22 Nov 2026; stock can change, so re-check at checkout (open gate <a href="open.html#o15">O-15</a>). The local-shop list is intentionally unpriced &mdash; get the counter price and keep the receipt. The 40 mm speaker and RXB12/RXB6 remain the locked production parts in Step 8; if the shop only has a near equivalent, note exactly what you substituted so the Step 7 acceptance test can judge it.</p></div>
+<p>All five online links were in stock when checked; re-check at checkout (<a href="open.html#o15">O-15</a>). If the shop only has a near equivalent, note exactly what you substituted so the Step 7 test can judge it.</p>
 
 <h2 id="step2">Step 2 &mdash; Lock the Schematic &amp; Verify Passives</h2>
 <p class="lede">Produce the complete pin-by-pin netlist first: power rails and decoupling, PAM8403 application circuit, PCF8563 crystal load caps, the GPIO3 RC filter, and the ESP-12F boot strapping. Fix these values on paper before wiring the parts from Step 1.</p>
 
-<div class="box danger"><span class="label">Locked Stack &amp; Electrical Hazards &mdash; Read Before Any Work</span><p><strong>Locked parts:</strong> ESP-12F (ESP8266, 4 MB flash), PCF8563 RTC + 32.768 kHz crystal + CR2032, PAM8403 Class-D amp with a DAC-free 1-bit Delta-Sigma audio path, RXB12/RXB6 433.92 MHz receiver, AMS1117-3.3 LDO, and a bare 5 V 1 A isolated SMPS. <strong>Mains:</strong> 220 V AC is present on the SMPS board &mdash; maintain HV/LV creepage and clearance with isolation slots, and let an electrician handle all mains wiring. <strong>PAM8403:</strong> its BTL outputs must never be tied together or to ground; the 4 &Omega; speaker connects only between OUT+ and OUT&minus;. <strong>GPIO3:</strong> it is the ESP-12F UART RX pin during flashing and is also the audio data output &mdash; keep the audio path disconnected/muted during the one-time factory USB-UART flash and use OTA for all later updates.</p></div>
+<div class="box danger"><span class="label">Electrical Hazards &mdash; Read Before Wiring</span><p><strong>Locked parts:</strong> ESP-12F (ESP8266, 4 MB flash), PCF8563 RTC + 32.768 kHz crystal + CR2032, PAM8403 Class-D amp with a DAC-free 1-bit Delta-Sigma audio path, RXB12/RXB6 433.92 MHz receiver, AMS1117-3.3 LDO, and a bare 5 V 1 A isolated SMPS. <strong>Mains:</strong> 220 V AC is present on the SMPS board &mdash; maintain HV/LV creepage and clearance with isolation slots, and let an electrician handle all mains wiring. <strong>PAM8403:</strong> its BTL outputs must never be tied together or to ground; the 4 &Omega; speaker connects only between OUT+ and OUT&minus;. <strong>GPIO3:</strong> it is the ESP-12F UART RX pin during flashing and is also the audio data output &mdash; keep the audio path disconnected/muted during the one-time factory USB-UART flash and use OTA for all later updates.</p></div>
 
 <h3 id="pinmap">Locked Pin Mapping Table</h3>
 <div class="scroll"><table><thead><tr><th>Subsystem</th><th>Signal</th><th>ESP-12F Pin</th><th>Mates To</th><th>Electrical Notes</th></tr></thead><tbody>
@@ -196,7 +165,7 @@
                                  ├── OUT+ ──► SPK+  (3W 4Ω 40mm)
                                  ├── OUT- ──► SPK-   (BTL: never to GND)
                                  └── VCC ◄── +5V rail
-   ★ All grounds join at ONE star point. HV/LV isolation slots separate mains from LV.</code></pre><figcaption><b>Figure 3.</b> The isolated 5 V SMPS feeds the PAM8403 directly and, through the AMS1117-3.3 LDO, the ESP-12F, PCF8563, and RXB12. GPIO3's 1-bit Delta-Sigma stream is filtered by a single 1 k&Omega;/0.1 &micro;F RC network before the amp, so no external I2S DAC is needed. ASCII is used deliberately because the wiki loads no Mermaid runtime, so the diagram renders offline.</figcaption></div>
+   ★ All grounds join at ONE star point. HV/LV isolation slots separate mains from LV.</code></pre><figcaption><b>Figure 2.</b> The isolated 5 V SMPS feeds the PAM8403 directly and, through the AMS1117-3.3 LDO, the ESP-12F, PCF8563, and RXB12. GPIO3's 1-bit Delta-Sigma stream is filtered by a single 1 k&Omega;/0.1 &micro;F RC network before the amp, so no external I2S DAC is needed. ASCII is used deliberately because the wiki loads no Mermaid runtime, so the diagram renders offline.</figcaption></div>
 
 <h3 id="passives">Supporting Passives &amp; Power Budget</h3>
 <div class="scroll"><table><thead><tr><th>Ref</th><th>Part</th><th>Value</th><th>Purpose / Placement</th></tr></thead><tbody>
@@ -210,7 +179,7 @@
 <tr><td>&mdash;</td><td>Speaker leads</td><td>Short, twisted</td><td>3 W / 4 &Omega; 40 mm driver connected only across PAM8403 OUT+ / OUT&minus;.</td></tr>
 </tbody></table></div>
 
-<div class="box verdict"><span class="label">Step 2 Gate &mdash; Power Budget Signed Off</span><p>PAM8403 delivers about 3 W into 4 &Omega; from the 5 V rail, so the amp is powered directly from the isolated SMPS. The ESP-12F generates audio with a 1-bit Delta-Sigma stream on GPIO3; a single 1 k&Omega;/0.1 &micro;F RC network reconstructs it for the amp input, which removes the cost of an external I2S DAC. The AMS1117-3.3 drops 5 V to 3.3 V for the ESP-12F, PCF8563, and RXB12. Confirm bulk capacitance on the 5 V rail so an ESP8266 Wi-Fi TX burst does not sag the amp supply. Move to Step 3 only when the netlist, decoupling, strapping, and filter values are fixed.</p></div>
+<p>Keep bulk capacitance on the 5 V rail so an ESP8266 Wi-Fi TX burst does not sag the amp supply. Fix the netlist values before wiring.</p>
 
 <h2 id="step3">Step 3 &mdash; Build the Single Test Unit</h2>
 <p class="lede">One unit only. Its cost is <strong>not</strong> constrained &mdash; use the breadboard zones from the <a href="#breadboard">Bird's Eye View</a> and the parts from Step 1. Keep the exact parts, values, and pinout from Step 2; a carrier board changes only the physical form, not the netlist. This is the prototype path, not the production BOM in Step 8.</p>
@@ -224,7 +193,7 @@
 <tr><td><strong>Interconnect</strong></td><td>Short hookup wire, common star ground, 4-pin 2.54 mm flashing header</td><td class="num">1 set</td><td>One-time factory USB-UART flashing; OTA afterwards.</td></tr>
 </tbody></table></div>
 
-<div class="box warn"><span class="label">Prototype Cost Is Intentionally Uncapped</span><p>Do not treat the ₹540 production target as a budget for this one unit. Breakout carriers, small-quantity parts, and manual assembly will cost several times the eventual unit cost &mdash; that premium buys a working reference before any PCB tooling is committed. Record the actual spend for the one-unit build, but judge this step on electrical correctness, not price. A supplier is preferred, not mandatory: buy what is available locally and verify each part's electrical rating before wiring.</p></div>
+<p>Record the actual spend for this one unit; judge it on electrical correctness, not price. Verify each locally bought part's electrical rating before wiring.</p>
 
 <h2 id="step4">Step 4 &mdash; Pre-Power-On Verification &amp; First Power</h2>
 <p class="lede">Run every low-voltage check with the mains unplugged and the factory USB-UART cable disconnected. A multimeter in continuity/beep mode and DC volts mode is sufficient. Mains-side checks are electrician-only. Do not proceed past a failed row.</p>
@@ -244,7 +213,7 @@
 <tr><td class="num">12</td><td><strong>DC V</strong> &mdash; first power-up, 5 V rail and 3.3 V rail</td><td>~5.0 V and 3.15&ndash;3.4 V</td><td>Unplug immediately; recheck AMS1117 and bulk capacitor orientation.</td></tr>
 </tbody></table></div>
 
-<div class="box ok"><span class="label">Step 4 Gate &mdash; First Power</span><p>Only after all twelve rows pass, perform the one-time factory USB-UART flash through the 4-pin header (audio path disconnected), then reconnect the speaker and test a single quiet chime. The hardware is now ready for the firmware in Step 5.</p></div>
+<p>After all twelve rows pass, flash once through the 4-pin header with the audio path disconnected, then test a quiet chime.</p>
 
 <h2 id="step5">Step 5 &mdash; Core Firmware MVP</h2>
 <p class="lede">Lean C/C++ on the Arduino ESP8266 core or ESP8266 RTOS SDK, with a LittleFS partition on the 4 MB flash. Deliver complete, untruncated code covering:</p>
@@ -254,7 +223,7 @@
   <li><strong>1-bit Delta-Sigma LittleFS audio playback</strong> on GPIO3 &mdash; the RC filter feeds the PAM8403.</li>
   <li><strong>Real-time stability</strong> &mdash; detach the GPIO14 interrupt during playback and re-attach immediately after, pause/defer HTTP handling while audio plays, and use the watchdog for 24/7 uptime.</li>
 </ul>
-<div class="box warn"><span class="label">Step 5 Gate</span><p>Flag the GPIO3 boot/flashing conflict explicitly in the firmware notes: no audio drive during the factory UART flash, OTA only afterwards. Move on only when a chime plays cleanly while the GPIO14 interrupt and web traffic are active.</p></div>
+<p>No audio drive during the factory UART flash; OTA only afterwards. A chime must play cleanly while the GPIO14 interrupt and web traffic are active.</p>
 
 <h2 id="step6">Step 6 &mdash; Local Web Portal &amp; Audio Pipeline</h2>
 <p class="lede">Serve a lightweight Vanilla HTML/JS portal directly from LittleFS with no external CDN links. It must let the user:</p>
@@ -277,7 +246,7 @@
 <tr><td><strong>OTA update</strong></td><td>Push one firmware update over the local Wi-Fi link</td><td>Update succeeds; device boots unattended with the strapping resistors in place.</td></tr>
 <tr><td><strong>24/7 soak</strong></td><td>Leave the unit powered continuously and retest after several days</td><td>No watchdog reset, no RTC drift, no audio corruption.</td></tr>
 </tbody></table></div>
-<div class="box verdict"><span class="label">Step 7 Gate &mdash; Production Release Decision</span><p>Only when every acceptance row passes is the design released to production. If a row fails, fix it on this one unit first &mdash; changing the PCB at this point would move the fault into hardware.</p></div>
+<p>If any test fails, fix it on this unit before making a PCB.</p>
 
 <h2 id="step8">Step 8 &mdash; Production Release: PCB Layout &amp; LionCircuits Pack</h2>
 <p class="lede">After Step 7 passes, freeze the 2-layer, ~50 &times; 50 mm PCB for turnkey assembly at LionCircuits (India). Target hardware COGS is <strong>~₹540 ex-GST per unit at a five-unit batch</strong> &mdash; a target, not a quoted price; lock it with a LionCircuits quote before release.</p>
@@ -297,6 +266,6 @@
 <tr><td><strong>Passives</strong></td><td>Turnkey SMD</td><td>Step 2 values: 1 k&Omega;, 4.7 k&Omega;&times;2, 10 k&Omega;&times;5, 100 nF, 10 &micro;F, load caps</td><td class="num">&mdash;</td><td>RC audio filter, I2C pull-ups, boot strapping, decoupling.</td></tr>
 <tr><td colspan="3"><strong>Target production COGS</strong></td><td colspan="2"><span class="badge badge-ok">~₹540 ex-GST / unit</span> at five units, turnkey PCBA at LionCircuits.</td></tr>
 </tbody></table></div>
-<div class="box warn"><span class="label">Manufacturing Pack &amp; Layout Notes</span><p>Deliver the KiCad schematic, PCB layout, a BOM CSV with MPNs in separate turnkey-SMD and consigned columns, and a CPL (pick-and-place) checklist. Keep a clear antenna keep-out zone around the ESP-12F and route the 17.3 cm receiver antenna away from the SMPS. Maintain HV/LV creepage and clearance with isolation slots between the 220 V AC section and all low-voltage traces. The one-unit prototype from Steps 3&ndash;7 remains the electrical reference; the PCB must reproduce that netlist exactly.</p></div>
+<div class="box warn"><span class="label">Manufacturing Pack</span><p>Deliver the KiCad schematic, PCB layout, a BOM CSV separating turnkey SMD from consigned parts, and a CPL checklist. Keep an antenna keep-out zone, HV/LV isolation slots, and reproduce the Step 3&ndash;7 prototype netlist exactly.</p></div>
 
 <nav class="pagenav"><a href="index.html"><span class="dir">Return to</span>Wiki Index &rarr;</a></nav><footer class="page-footer"><div>&copy; 2026 Apartment Thread · Local-first build guide</div><div>Smart Calling Bell · One-unit prototype &rarr; production</div></footer></div></main></div><button class="theme-btn" id="theme-toggle" aria-label="Toggle colour theme"></button><script src="assets/theme.js"></script><script src="assets/motion.js"></script><script src="assets/state.js"></script></body></html>
