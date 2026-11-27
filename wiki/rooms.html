@@ -7,7 +7,7 @@
 <div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3a · Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="install-door.html"><span>3b · Door Sensor</span><span class="badge badge-warn">DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
 <div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
 </details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><a class="companion-link" href="calling-bell.html">Smart Calling Bell guide <span aria-hidden="true">&rarr;</span></a><div class="license-pill"><span>Home Assistant</span></div></div></aside>
-<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Room Patterns</span> &rsaquo; <span>All Rooms & Automations</span></nav><h1>Room Automation Patterns</h1><p class="lede">Three rooms, three distinct automation patterns. We identify reusable architectural patterns for Indian apartments: timer-driven hall lighting without sensors, mmWave presence-driven study light and fan, and door contact-triggered bathroom lighting and ventilation.</p>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Room Patterns</span> &rsaquo; <span>All Rooms & Automations</span></nav><h1>Room Automation Patterns</h1><p class="lede">Three rooms, three distinct automation patterns. The <strong>Hall</strong> and <strong>Bathroom</strong> patterns run entirely standalone on the Tinxy switch hardware &mdash; no Home Assistant server required. Only the <strong>Study</strong> pattern (mmWave presence-driven) needs a central server. The immediate build priority is the Bathroom pattern: assembling the hardwired MC-38 magnetic reed switch door sensor.</p>
 
 <h2 id="entities">Entities &amp; Pattern Mapping</h2>
 <p class="lede">Each room pattern is equipped with its own dedicated in-wall <strong><a href="switch.html">Tinxy 4+1 Fan Smart Switch</a></strong> controlling local lights and fan, paired with that pattern's specific trigger mechanism:</p>
@@ -28,13 +28,14 @@
 <p>Confirm each entity flips when the physical device or wall switch changes before enabling any automation (<a href="open.html#o14">O-14</a>). Physical wall switches connected to each Tinxy 4+1 module operate instantly 24/7 independently of software. For the full component breakdown and store links mapped to these patterns, see <a href="pattern-hardware.html">Hardware by Automation Pattern &rarr;</a>.</p>
 
 <h2 id="hallway">1. The Hall Pattern &mdash; Timer-Driven Lighting (No Sensor)</h2>
-<div class="box verdict"><span class="label">Pattern Philosophy &mdash; Zero Sensor Cost</span><p>Hallways and living rooms have high transient foot traffic, wide open sightlines, and roaming pets where radar sensors often create nuisance triggers and drain batteries. <strong>No presence sensor is required.</strong> Instead, deterministic time/schedule automations trigger the Tinxy switch to turn the light on and off, with the physical wall switch always ready for manual use.</p></div>
+<div class="box verdict"><span class="label">Pattern Philosophy &mdash; Zero Sensor Cost · No Server Required</span><p>Hallways and living rooms have high transient foot traffic, wide open sightlines, and roaming pets where radar sensors often create nuisance triggers and drain batteries. <strong>No presence sensor is required.</strong> The <strong>Tinxy 4-node smart switch already supports scheduled start and stop natively through the Tinxy mobile app</strong> — no Home Assistant server or any central hub is needed. The physical wall switch is always ready for manual use.</p></div>
 
 <h3>Automation Rules &amp; Schedule</h3>
 <ul>
-  <li><strong>Evening Schedule:</strong> 15 minutes before sunset or at 18:30 &rarr; Turn ON <code>switch.hall_light</code> automatically.</li>
-  <li><strong>Bedtime Schedule:</strong> At 23:00 &rarr; Turn OFF <code>switch.hall_light</code> automatically.</li>
+  <li><strong>Evening Schedule:</strong> Set via the Tinxy mobile app &mdash; e.g. 18:30 &rarr; Turn ON hall light automatically.</li>
+  <li><strong>Bedtime Schedule:</strong> Set via the Tinxy mobile app &mdash; e.g. 23:00 &rarr; Turn OFF hall light automatically.</li>
   <li><strong>Manual Override:</strong> Outside scheduled hours, the occupant simply taps the physical wall switch on the Tinxy plate.</li>
+  <li><strong>No Server Needed:</strong> All scheduling runs natively on the Tinxy module + cloud app. No Home Assistant, no Radxa server, no Thread mesh required.</li>
 </ul>
 <p><a href="install-commissioning.html#yaml-hall" class="badge badge-accent">Copy Deployment YAML in Stage 5 (HL-01) &rarr;</a></p>
 
@@ -72,7 +73,7 @@
 <tr><td class="num">S-06</td><td>Manual wall switch toggle</td><td>Manual switch overrides; automation respects manual state</td></tr>
 </tbody></table></div>
 
-<h2 id="bathroom">3. The Bathroom Pattern &mdash; Hardwired Door Contact State Machine</h2>
+<h2 id="bathroom">3. The Bathroom Pattern &mdash; Hardwired Door Contact State Machine (No Server Required)</h2>
 <div class="box verdict"><span class="label">Pattern Philosophy &mdash; Physical Boundary Determinism &amp; The Hardwired Dummy Channel</span><p>Bathrooms possess an absolute physical boundary: the door. In standard Indian apartments, the switchboard is positioned directly adjacent to the door frame. Rather than relying on battery-powered wireless links or central hub polling, the <strong>hardwired door contact sensor (<a href="door-sensor.html">DS-1</a>) connects directly to the switchboard as a "Dummy Channel" (switch input S2 on the Tinxy module)</strong>. An on-chip state machine executes locally on the microcontroller silicon with zero hub dependency, while exposing full bidirectional state to Home Assistant when a server is present.</p></div>
 
 <h3>The Automation State Machine &mdash; Solving Entry &amp; Exit Locally</h3>

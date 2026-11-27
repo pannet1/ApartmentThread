@@ -7,14 +7,14 @@
 <div class="nav-group"><h4>Installation</h4><a href="install.html"><span>Overview &amp; Sequence</span></a><a href="install-server.html"><span>1 · Server Setup</span><span class="badge badge-ok">SRV</span></a><a href="install-thread.html"><span>2 · Thread Border Router</span><span class="badge badge-ok">BR</span></a><a href="install-sensors.html"><span>3a · Presence Sensor</span><span class="badge badge-warn">PS</span></a><a href="install-door.html" aria-current="page"><span>3b · Door Sensor</span><span class="badge badge-warn">DS</span></a><a href="install-plates.html"><span>4 · Switch Plates</span><span class="badge badge-warn">SW</span></a><a href="install-commissioning.html"><span>5 · Mounting &amp; Tuning</span><span class="badge badge-warn">TUNE</span></a></div>
 <div class="nav-group"><h4>Reference</h4><a href="mounting.html"><span>Radar Placement</span></a><a href="sensing.html"><span>Radar vs PIR</span></a></div>
 </details><div class="sidebar-footer"><div><b>Local-first · India build</b></div><a class="companion-link" href="calling-bell.html">Smart Calling Bell guide <span aria-hidden="true">&rarr;</span></a><div class="license-pill"><span>Home Assistant</span></div></div></aside>
-<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Installation</span> &rsaquo; <span>3b · Door Sensor</span></nav><h1>Stage 3b &mdash; Door Contact Sensor Bench Build (DS-1)</h1><p class="lede">Bench-assembling, wiring, flashing, and testing the ultra-low-latency Matter-over-Thread door contact sensor. Joins the same IEEE 802.15.4 Thread mesh established in Stage 2 to deliver instantaneous lighting triggers before stepping across the bathroom threshold.</p>
+<main class="main"><div class="doc wide"><nav class="breadcrumb" aria-label="Breadcrumb"><a href="index.html">Wiki</a> &rsaquo; <span>Installation</span> &rsaquo; <span>3b · Door Sensor</span></nav><h1>Stage 3b &mdash; Door Contact Sensor Bench Build (DS-1)</h1><p class="lede">Assembling and wiring the hardwired MC-38 magnetic reed switch door contact sensor into the Tinxy switch module's S2 dummy channel input. This is the immediate build priority &mdash; runs 100% standalone on the Tinxy on-chip state machine with no Home Assistant server required. The alternative wireless Matter-over-Thread build (Track B) is documented below for layouts where the switchboard is distant from the door.</p>
 
-<div class="box verdict"><span class="label">Stage 3b Objective</span><p>Build and verify the <strong>DS-1 Door Contact Sensor</strong>. In Indian apartments where the bathroom switchboard is directly adjacent to the door frame, the default approach is the <strong>Hardwired Dummy Channel</strong>: an <a href="https://robocraze.com/products/mc-38-wired-magnetic-house-security-alarm-sensor-for-door-and-windows" target="_blank" rel="noopener">MC-38 reed switch</a> (₹57 on Robocraze / <a href="https://www.amazon.in/s?k=MC-38+magnetic+door+sensor" target="_blank" rel="noopener">Amazon India</a>) connected into switch input <code>S2</code> of the in-wall Tinxy module running on-chip ESPHome logic (<a href="open.html#o12">O-12</a>, <a href="open.html#o13">O-13</a>). For distant switchboards without conduit, the alternative battery-powered <strong>Matter over Thread (XIAO ESP32-C6)</strong> build is also provided.</p></div>
+<div class="box verdict"><span class="label">Stage 3b Objective</span><p>Build and verify the <strong>DS-1 Door Contact Sensor</strong>. In Indian apartments where the bathroom switchboard is directly adjacent to the door frame, the default approach is the <strong>Hardwired Dummy Channel</strong>: a reed switch connected into switch input <code>S2</code> of the in-wall Tinxy module (<a href="open.html#o12">O-12</a>, <a href="open.html#o13">O-13</a>). <strong>No firmware changes needed:</strong> it works out of the box with the stock Tinxy mobile app (using Routines and auto-off timers). For advanced users who want custom offline state machines, flashing ESPHome is optional.</p></div>
 
 <h2 id="ds1-arch">1. Sensor Architecture: Hardwired Dummy Channel vs Wireless</h2>
 <p>Because the bathroom door serves as an absolute physical boundary, detecting door transitions enables instant lighting and continuous occupancy locking:</p>
 <ul>
-  <li><strong>Track A (Default &mdash; Hardwired Dummy Channel):</strong> Senses door state via a dry contact <a href="https://robocraze.com/products/mc-38-wired-magnetic-house-security-alarm-sensor-for-door-and-windows" target="_blank" rel="noopener">MC-38 reed switch</a> wired straight into the bathroom switchboard's <code>S2</code> input. The onboard ESP8266 runs custom ESPHome firmware, evaluating the occupancy state machine directly on silicon (&lt;5ms latency). It operates 100% standalone with zero hub/server dependency, and requires zero batteries forever.</li>
+  <li><strong>Track A (Default &mdash; Hardwired Dummy Channel):</strong> Senses door state via a dry contact reed switch wired straight into the bathroom switchboard's <code>S2</code> input. <strong>Works with stock factory firmware</strong> via the Tinxy mobile app (Routines &amp; Auto-off timer) &mdash; zero flashing, zero server required. (Optional: custom ESPHome can be flashed if you want complex on-chip state machines without the Tinxy app).</li>
   <li><strong>Track B (Wireless &mdash; Matter over Thread):</strong> Uses a Seeed Studio XIAO ESP32-C6 running as a Thread Sleepy End Device (&lt;5&mu;A deep sleep, 4–5 year LiPo life) joining the central M5Stack ESP32-H2 border router mesh when running conduit to the switchboard is impractical.</li>
 </ul>
 
@@ -22,22 +22,87 @@
 <p>Select the wiring scheme matching your bathroom layout:</p>
 
 <h3>Track A: Hardwired Dummy Channel Wiring (Tinxy In-Wall Module)</h3>
-<div class="box ok"><span class="label">Switchboard Dummy Channel Connections</span>
+
+<h4 id="tracka-parts">A1. Hardware: Bare Glass Reed Switch vs MC-38 Kit</h4>
+<p>Whether you bought a complete MC-38 kit or just a <strong>bare glass reed switch</strong> (looks like a miniature glass fuse with two iron wire leads):</p>
 <ul>
-  <li><strong>Mounting:</strong> Mount the passive <a href="https://robocraze.com/products/mc-38-wired-magnetic-house-security-alarm-sensor-for-door-and-windows" target="_blank" rel="noopener">MC-38 reed switch</a> capsule on the exterior door frame header or strike jamb; mount the magnet on the moving door leaf (&le;15mm gap).</li>
-  <li><strong>Cable Pull:</strong> Pull a thin, mains-rated 2-core insulated cable (0.5–0.75 mm&sup2;, 1,100V grade) through concealed casing or conduit into the adjacent bathroom switchboard box.</li>
-  <li><strong>Tinxy Module Wiring:</strong>
+  <li><strong>Bare Glass Reed Switch:</strong> A sealed glass capsule with two nickel/iron leads. You solder one insulated wire to each lead, insulate them with heat-shrink, and place the delicate tube inside the TicTac plastic shell.</li>
+  <li><strong>The Magnet:</strong> If using a bare reed switch, use <strong>any small magnet</strong> (a ₹20 neodymium disc magnet, a craft magnet, or a strong fridge magnet) mounted on the moving door leaf.</li>
+  <li><strong>No Polarity (+ve / &minus;ve):</strong> A reed switch is purely mechanical dry contacts. There is no positive or negative. The two wires connect to the switch terminals in any order.</li>
+</ul>
+
+<div class="box ok"><span class="label">Pure Dry Contact &mdash; Zero Polarity</span><p>Just like a standard mechanical wall light switch, a reed switch simply makes or breaks an electrical circuit when a magnetic field is applied. Connect wire 1 to <code>S2</code> and wire 2 to <code>COM</code> in any order.</p></div>
+
+<h4 id="tracka-enclosure">A2. Preparing &amp; Soldering the Bare Reed Switch (TicTac Shell)</h4>
+<p>Because the glass capsule is fragile, take care when soldering and mounting:</p>
+<ol>
+  <li><strong>Heat-Sink While Soldering:</strong> Grip the metal lead with needle-nose pliers or tweezers between the solder point and the glass body. The pliers absorb heat so excessive soldering iron heat does not crack the airtight glass-to-metal seal.</li>
+  <li><strong>Solder Two Wires:</strong> Solder one thin insulated wire (0.5 mm&sup2;) to each lead. Slip heat-shrink tubing over both solder joints to prevent them from shorting together.</li>
+  <li><strong>Prepare the TicTac Shell:</strong>
     <ul>
-      <li><code>Phase (P)</code> &amp; <code>Neutral (N)</code>: Connected to 230V AC mains.</li>
-      <li><code>L1 (Load 1)</code>: Connected to the bathroom light (and exhaust fan in parallel).</li>
-      <li><code>S1 (Switch 1)</code>: Connected to the manual wall rocker switch on the faceplate.</li>
-      <li><code>L2 (Load 2)</code>: <strong>Left completely unconnected</strong> (the Dummy Channel).</li>
-      <li><code>S2 (Switch 2)</code>: The two wires from the door's MC-38 reed switch connect across <code>S2</code> and <code>Phase</code> (or the module's switch common terminal).</li>
+      <li>Drill or melt two tiny 2 mm holes in the bottom or side of a cleaned, empty TicTac box.</li>
+      <li>Pass the two wires through the holes.</li>
+      <li>Cushion the glass tube inside using a drop of hot glue, double-sided foam tape, or a piece of cotton/foam so door vibrations do not shatter the glass.</li>
+      <li>Snap the TicTac lid shut. The hard plastic shell protects the glass from accidental impacts.</li>
     </ul>
   </li>
-  <li><strong>Safety Isolation:</strong> Ensure all connections inside the switchboard use heat-shrink or screw terminals to maintain total isolation from exposed metal frames.</li>
+  <li><strong>Mount to Door Frame:</strong> Stick the TicTac box to the exterior door frame header or strike jamb using 3M VHB double-sided tape.</li>
+</ol>
+
+<div class="box danger"><span class="label">Caution &mdash; Fragile Glass</span><p>Never bend the iron leads directly flush against the glass tube; always hold the lead with pliers and bend beyond the pliers. Cracking the glass allows air in, causing the switch contacts to oxidize and fail.</p></div>
+
+<h4 id="tracka-magnet">A3. Magnet Selection &amp; Placement (Moving Door)</h4>
+<ul>
+  <li><strong>What Magnet to Use:</strong> Any small neodymium magnet (e.g. 10&times;2 mm or 12&times;3 mm disc), a furniture cabinet magnetic catch, or a fridge magnet.</li>
+  <li><strong>Mounting:</strong> Mount the magnet on the moving door leaf directly facing the glass reed switch inside the TicTac box.</li>
+  <li><strong>Operating Gap:</strong> Set the gap to <strong>5&ndash;10 mm</strong> when the door is fully shut. When closed, the magnetic field pulls the internal reeds together (circuit closed). When the door swings open, the reeds separate (circuit open).</li>
 </ul>
+
+<h4 id="tracka-wiring">A4. Wiring to the Tinxy Module Inside the Switchboard</h4>
+<p>The two wires coming out of the TicTac box route into the bathroom switchboard box and connect across the Tinxy module&rsquo;s <strong>S2 input</strong>:</p>
+
+<div class="box ok"><span class="label">Wiring Schematic &mdash; Just Two Wires into S2</span>
+<pre><code>  DOOR FRAME (TicTac Box)         TINXY MODULE (Inside Switchboard)
+  ======================         =================================
+
+  [Bare Reed Switch]
+     Lead 1 + Wire 1  &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&rarr;  S2 (Switch 2 terminal)
+     Lead 2 + Wire 2  &mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&rarr;  COM / Switch Common terminal
+
+                                 CHANNEL 1 &mdash; Bathroom Light:
+                                   L1 &rarr; Bathroom light bulb
+                                   S1 &larr; Manual wall rocker switch
+
+                                 CHANNEL 2 &mdash; Dummy Channel:
+                                   L2 &rarr; LEAVE UNCONNECTED (empty)
+
+  * Polarity does not matter: Wire 1 and Wire 2 are completely interchangeable.
+  * Channel 2 relay output (L2) stays empty so S2 acts as an on-chip sensor input.</code></pre>
 </div>
+
+<ol>
+  <li><strong>Channel 1 (Light &amp; Fan):</strong> <code>L1</code> powers the bathroom light fixture. <code>S1</code> is connected to the manual wall rocker switch on the faceplate (manual override always functional).</li>
+  <li><strong>Channel 2 (Dummy Door Trigger):</strong> <code>L2</code> is left empty. The two wires from your reed switch connect to <code>S2</code> and its common reference terminal.</li>
+</ol>
+
+<div class="box danger"><span class="label">Mains Safety</span><p>The Tinxy module is powered by 230V AC mains. <strong>Ensure the mains MCB is switched OFF before opening the switchboard.</strong> Connect the two low-voltage reed switch wires securely into screw terminals or Wago connectors.</p></div>
+
+<h4 id="tracka-bench">A5. Bench Test</h4>
+<ol>
+  <li><strong>Multimeter continuity:</strong> Touch the two MC-38 wires. Hold magnet near &rarr; beep (closed). Pull magnet away &rarr; no beep (open).</li>
+  <li><strong>Tinxy app test:</strong> With the module powered and reed switch wired to S2, toggle the magnet. Channel 2 should change state in the Tinxy app.</li>
+  <li><strong>Gap check:</strong> Find the maximum working gap. Aim for 5&ndash;10 mm installed.</li>
+</ol>
+
+<h4 id="tracka-mount">A6. Final Door Frame Mounting</h4>
+<ol>
+  <li>Mount the reed switch (in TicTac shell or original MC-38 housing) on the exterior door frame using VHB tape or screws.</li>
+  <li>Mount the magnet on the moving door leaf, aligned with the reed switch, 5&ndash;10 mm gap when closed.</li>
+  <li>Route the wires along the door frame into the switchboard box.</li>
+  <li>Open and close the door several times &mdash; confirm Tinxy app shows Channel 2 toggling.</li>
+</ol>
+
+
 
 <h3>Track B: Battery-Powered Matter-over-Thread Wiring (XIAO ESP32-C6)</h3>
 <p>For wireless installations, the sensor requires only 4 connections on the XIAO ESP32-C6:</p>

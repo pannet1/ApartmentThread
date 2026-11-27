@@ -34,7 +34,7 @@
 </tbody></table></div>
 
 <h2 id="hall">1. Hall Pattern Hardware (Timer-Driven)</h2>
-<p>The Hallway pattern (<a href="rooms.html#hallway">HL-01</a>) relies on deterministic solar angle and schedule triggers (sunset lighting, bedtime dimming) without physical presence sensors:</p>
+<p>The Hallway pattern (<a href="rooms.html#hallway">HL-01</a>) uses the Tinxy mobile app's native scheduling feature (no Home Assistant server needed):</p>
 <ul>
   <li><strong>In-Wall Switch Plate:</strong> 1&times; <a href="switch.html">Tinxy 4+1 Fan Smart Switch</a> (₹1,299) fitted inside the hallway modular switch box. Delivers local relay control over the hallway lighting circuits and electronic capacitor fan speed regulation.</li>
   <li><strong>Sensors:</strong> <strong>Zero sensors required (₹0).</strong> Bypasses false presence triggers caused by passing foot traffic, pets, or wide hallway draft angles.</li>
@@ -56,8 +56,8 @@
   <li><strong>Pattern Cost:</strong> <strong>₹3,761 total</strong> (₹1,299 switch + ₹2,462 sensor kit).</li>
 </ul>
 
-<h2 id="bathroom">3. Bathroom Pattern Hardware (Door-Triggered)</h2>
-<p>The Bathroom pattern (<a href="rooms.html#bathroom">BA-01</a>) uses a door contact state machine to control vanity lighting and exhaust ventilation, eliminating false dropouts inside shower enclosures:</p>
+<h2 id="bathroom">3. Bathroom Pattern Hardware (Door-Triggered · No Server Required)</h2>
+<p>The Bathroom pattern (<a href="rooms.html#bathroom">BA-01</a>) uses a hardwired door contact state machine running autonomously on the Tinxy module's on-chip ESP8266. <strong>No Home Assistant server is required.</strong> This is the immediate build priority:</p>
 <ul>
   <li><strong>In-Wall Switch Plate:</strong> 1&times; <a href="switch.html">Tinxy Smart Switch</a> (₹1,299) controlling lighting and fan.</li>
   <li><strong>Hardwired Dummy Sensor (DS-1 &mdash; Default Architecture):</strong>
